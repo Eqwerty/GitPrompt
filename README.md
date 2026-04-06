@@ -32,33 +32,32 @@ The installer downloads the latest GitHub release asset for your OS and installs
 - Linux/macOS: `$HOME/.local/bin/gitprompt`
 - Windows Git Bash: `$HOME/promptgo/gitprompt.exe`
 
-From a cloned repo:
-
-    ./install.sh
-
-Without cloning:
+Install:
 
     curl -fsSL https://raw.githubusercontent.com/Eqwerty/Prompt/master/install.sh | sh
-
-Optional custom install location:
-
-    INSTALL_DIR=/usr/local/bin ./install.sh
-
-Optional custom installed name:
-
-    BIN_BASENAME=prompt ./install.sh
 
 Notes:
 
 - Installer supports Linux, macOS, and Windows Git Bash on amd64.
-- Ensure your install directory is in `PATH`.
+
+## Update
+
+Run the same install command again to update to the newest release:
+
+    curl -fsSL https://raw.githubusercontent.com/Eqwerty/Prompt/master/install.sh | sh
+
+Optional alias (Windows Git Bash, with schannel workaround):
+
+    alias updateprompt='curl -fsSL --ssl-no-revoke https://raw.githubusercontent.com/Eqwerty/Prompt/master/install.sh | sh'
 
 ## Bash Prompt Setup
 
-For Windows Git Bash, after running the installer with defaults, this works:
+After install, set `PS1` and you are done.
 
-    PS1='$(~/promptgo/gitprompt.exe)'
-
-For Linux/macOS, with default install path:
+Linux/macOS:
 
     PS1='$($HOME/.local/bin/gitprompt)'
+
+Windows Git Bash:
+
+    PS1='$(~/promptgo/gitprompt.exe)'

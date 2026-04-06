@@ -109,4 +109,8 @@ cp "$TMP_DIR/$EXTRACTED_NAME" "$INSTALL_DIR/$INSTALL_NAME"
 chmod +x "$INSTALL_DIR/$INSTALL_NAME" 2>/dev/null || true
 
 echo "Installed to $INSTALL_DIR/$INSTALL_NAME"
-echo "Make sure $INSTALL_DIR is in your PATH."
+if [ "$GOOS" = "windows" ]; then
+  echo "Make sure your PS1 is updated: PS1='\$(~/promptgo/gitprompt.exe)'"
+else
+  echo "Make sure your PS1 is updated: PS1='\$($HOME/.local/bin/gitprompt)'"
+fi
