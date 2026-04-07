@@ -1,17 +1,21 @@
 # Prompt
 
-This repository builds a single Go binary from `prompt.go` and auto-publishes GitHub Releases.
+This repository builds a single C#/.NET binary from `src/Prompt/Program.cs` and auto-publishes GitHub Releases.
 
 ## What Happens On Push
 
 The workflow in `.github/workflows/release.yml` runs only when both are true:
 
 - You push to `master`
-- The push includes changes to `prompt.go`
+- The push includes changes to one of:
+  - `src/Prompt/**`
+  - `.github/workflows/release.yml`
+  - `install.sh`
+  - `README.md`
 
 When it runs, it:
 
-- Builds cross-platform binaries
+- Builds cross-platform self-contained binaries with `dotnet publish`
 - Packages release artifacts
 - Replaces a fixed `latest` release tag with new artifacts
 
@@ -39,6 +43,7 @@ Install:
 Notes:
 
 - Installer supports Linux, macOS, and Windows Git Bash on amd64.
+- Release binaries are self-contained and do not require a preinstalled .NET runtime.
 
 ## Update
 

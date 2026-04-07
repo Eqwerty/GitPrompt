@@ -7,110 +7,111 @@ set -eu
 # Optional:
 #   INSTALL_DIR=/custom/bin ./install.sh
 
-BIN_BASENAME="${BIN_BASENAME:-gitprompt}"
+BINARY_BASENAME="${BIN_BASENAME:-gitprompt}"
 
-OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
-ARCH="$(uname -m)"
+OPERATING_SYSTEM="$(uname -s | tr '[:upper:]' '[:lower:]')"
+CPU_ARCHITECTURE="$(uname -m)"
 
-case "$OS" in
-  linux) GOOS="linux" ;;
-  darwin) GOOS="darwin" ;;
-  msys*|mingw*|cygwin*) GOOS="windows" ;;
+case "$OPERATING_SYSTEM" in
+  linux) TARGET_OS="linux" ;;
+  darwin) TARGET_OS="darwin" ;;
+  msys*|mingw*|cygwin*) TARGET_OS="windows" ;;
   *)
-    echo "Unsupported OS: $OS"
+    echo "Unsupported OS: $OPERATING_SYSTEM"
     echo "This installer currently supports Linux, macOS, and Windows (Git Bash)."
     exit 1
     ;;
 esac
 
-case "$ARCH" in
-  x86_64|amd64) GOARCH="amd64" ;;
+case "$CPU_ARCHITECTURE" in
+  x86_64|amd64) TARGET_ARCHITECTURE="amd64" ;;
   *)
-    echo "Unsupported architecture: $ARCH"
+    echo "Unsupported architecture: $CPU_ARCHITECTURE"
     echo "This installer currently supports amd64 only."
     exit 1
     ;;
 esac
 
 if [ -z "${INSTALL_DIR:-}" ]; then
-  if [ "$GOOS" = "windows" ]; then
+  if [ "$TARGET_OS" = "windows" ]; then
     INSTALL_DIR="$HOME/promptgo"
   else
     INSTALL_DIR="$HOME/.local/bin"
   fi
 fi
 
-if [ "$GOOS" = "windows" ]; then
-  ASSET="prompt_${GOOS}_${GOARCH}.zip"
-  EXTRACTED_NAME="prompt.exe"
-  INSTALL_NAME="${INSTALL_NAME:-${BIN_BASENAME}.exe}"
+if [ "$TARGET_OS" = "windows" ]; then
+  RELEASE_ASSET_NAME="prompt_${TARGET_OS}_${TARGET_ARCHITECTURE}.zip"
+  EXTRACTED_BINARY_NAME="prompt.exe"
+  INSTALLED_BINARY_NAME="${INSTALL_NAME:-${BINARY_BASENAME}.exe}"
 else
-  ASSET="prompt_${GOOS}_${GOARCH}.tar.gz"
-  EXTRACTED_NAME="prompt"
-  INSTALL_NAME="${INSTALL_NAME:-${BIN_BASENAME}}"
+  RELEASE_ASSET_NAME="prompt_${TARGET_OS}_${TARGET_ARCHITECTURE}.tar.gz"
+  EXTRACTED_BINARY_NAME="prompt"
+  INSTALLED_BINARY_NAME="${INSTALL_NAME:-${BINARY_BASENAME}}"
 fi
 
-URL="https://github.com/Eqwerty/Prompt/releases/download/latest/${ASSET}"
+RELEASE_ASSET_URL="https://github.com/Eqwerty/Prompt/releases/download/latest/${RELEASE_ASSET_NAME}"
 
-TMP_DIR="$(mktemp -d)"
-trap 'rm -rf "$TMP_DIR"' EXIT INT TERM
+TEMPORARY_DIRECTORY="$(mktemp -d)"
+trap 'rm -rf "$TEMPORARY_DIRECTORY"' EXIT INT TERM
 
-echo "Downloading ${URL}"
+echo "Downloading ${RELEASE_ASSET_URL}"
 
-DOWNLOADED=0
+DOWNLOAD_COMPLETED=0
 
 if command -v curl >/dev/null 2>&1; then
-  if [ "$GOOS" = "windows" ]; then
-    if curl --ssl-no-revoke -fsSL "$URL" -o "$TMP_DIR/$ASSET"; then
-      DOWNLOADED=1
+  if [ "$TARGET_OS" = "windows" ]; then
+    if curl --ssl-no-revoke -fsSL "$RELEASE_ASSET_URL" -o "$TEMPORARY_DIRECTORY/$RELEASE_ASSET_NAME"; then
+      DOWNLOAD_COMPLETED=1
     fi
   else
-    if curl -fsSL "$URL" -o "$TMP_DIR/$ASSET"; then
-      DOWNLOADED=1
+    if curl -fsSL "$RELEASE_ASSET_URL" -o "$TEMPORARY_DIRECTORY/$RELEASE_ASSET_NAME"; then
+      DOWNLOAD_COMPLETED=1
     fi
   fi
 fi
 
-if [ "$DOWNLOADED" -eq 0 ] && command -v wget >/dev/null 2>&1; then
-  if wget -qO "$TMP_DIR/$ASSET" "$URL"; then
-    DOWNLOADED=1
+if [ "$DOWNLOAD_COMPLETED" -eq 0 ] && command -v wget >/dev/null 2>&1; then
+  if wget -qO "$TEMPORARY_DIRECTORY/$RELEASE_ASSET_NAME" "$RELEASE_ASSET_URL"; then
+    DOWNLOAD_COMPLETED=1
   fi
 fi
 
-if [ "$DOWNLOADED" -eq 0 ] && [ "$GOOS" = "windows" ] && command -v powershell.exe >/dev/null 2>&1; then
-  if powershell.exe -NoProfile -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri '$URL' -OutFile '$TMP_DIR/$ASSET'" >/dev/null; then
-    DOWNLOADED=1
+if [ "$DOWNLOAD_COMPLETED" -eq 0 ] && [ "$TARGET_OS" = "windows" ] && command -v powershell.exe >/dev/null 2>&1; then
+  if powershell.exe -NoProfile -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri '$RELEASE_ASSET_URL' -OutFile '$TEMPORARY_DIRECTORY/$RELEASE_ASSET_NAME'" >/dev/null; then
+    DOWNLOAD_COMPLETED=1
   fi
 fi
 
-if [ "$DOWNLOADED" -eq 0 ]; then
+if [ "$DOWNLOAD_COMPLETED" -eq 0 ]; then
   echo "Failed to download release asset."
   echo "If this repository has only prereleases, latest/download will not work."
-  echo "Push a new commit changing prompt.go to publish a non-prerelease release."
+  echo "Push a new commit changing src/Prompt/Program.cs to publish a non-prerelease release."
   exit 1
 fi
 
 mkdir -p "$INSTALL_DIR"
 
-if [ "$GOOS" = "windows" ]; then
+if [ "$TARGET_OS" = "windows" ]; then
   if command -v unzip >/dev/null 2>&1; then
-    unzip -q "$TMP_DIR/$ASSET" -d "$TMP_DIR"
+    unzip -q "$TEMPORARY_DIRECTORY/$RELEASE_ASSET_NAME" -d "$TEMPORARY_DIRECTORY"
   elif command -v powershell.exe >/dev/null 2>&1; then
-    powershell.exe -NoProfile -Command "Expand-Archive -Path '$TMP_DIR/$ASSET' -DestinationPath '$TMP_DIR' -Force" >/dev/null
+    powershell.exe -NoProfile -Command "Expand-Archive -Path '$TEMPORARY_DIRECTORY/$RELEASE_ASSET_NAME' -DestinationPath '$TEMPORARY_DIRECTORY' -Force" >/dev/null
   else
     echo "Need unzip or powershell.exe to extract zip files."
     exit 1
   fi
 else
-  tar -xzf "$TMP_DIR/$ASSET" -C "$TMP_DIR"
+  tar -xzf "$TEMPORARY_DIRECTORY/$RELEASE_ASSET_NAME" -C "$TEMPORARY_DIRECTORY"
 fi
 
-cp "$TMP_DIR/$EXTRACTED_NAME" "$INSTALL_DIR/$INSTALL_NAME"
-chmod +x "$INSTALL_DIR/$INSTALL_NAME" 2>/dev/null || true
+cp "$TEMPORARY_DIRECTORY/$EXTRACTED_BINARY_NAME" "$INSTALL_DIR/$INSTALLED_BINARY_NAME"
+chmod +x "$INSTALL_DIR/$INSTALLED_BINARY_NAME" 2>/dev/null || true
 
-echo "Installed to $INSTALL_DIR/$INSTALL_NAME"
-if [ "$GOOS" = "windows" ]; then
+echo "Installed to $INSTALL_DIR/$INSTALLED_BINARY_NAME"
+if [ "$TARGET_OS" = "windows" ]; then
   echo "Make sure your PS1 is updated: PS1='\$(~/promptgo/gitprompt.exe)'"
 else
   echo "Make sure your PS1 is updated: PS1='\$($HOME/.local/bin/gitprompt)'"
 fi
+
