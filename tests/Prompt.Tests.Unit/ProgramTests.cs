@@ -287,6 +287,61 @@ u UU conflict.txt
         resolvedGitDirectoryPath.Should().Be(Path.GetFullPath(actualGitDirectoryPath));
     }
 
+    [Fact]
+    public void BuildGitStatusDisplay_UsesTrackedBranchColor()
+    {
+        using var gitDirectory = new TemporaryDirectory();
+
+        var gitStatusDisplay = Program.BuildGitStatusDisplay("(main)", 0, 0, new Program.StatusCounts(), gitDirectory.DirectoryPath);
+
+        gitStatusDisplay.Should().StartWith("\e[1;36m(main)\e[0m");
+    }
+
+    [Fact]
+    public void BuildGitStatusDisplay_UsesNoUpstreamBranchColor()
+    {
+        using var gitDirectory = new TemporaryDirectory();
+
+        var gitStatusDisplay = Program.BuildGitStatusDisplay("*(feature)", 0, 0, new Program.StatusCounts(), gitDirectory.DirectoryPath);
+
+        gitStatusDisplay.Should().StartWith("\e[1;36m*(feature)\e[0m");
+    }
+
+    [Fact]
+    public void BuildGitStatusDisplay_UsesAheadAndBehindColors()
+    {
+        using var gitDirectory = new TemporaryDirectory();
+
+        var gitStatusDisplay = Program.BuildGitStatusDisplay("(main)", 2, 3, new Program.StatusCounts(), gitDirectory.DirectoryPath);
+
+        gitStatusDisplay.Should().Contain(" \e[1;36m↑2\e[0m");
+        gitStatusDisplay.Should().Contain(" \e[1;36m↓3\e[0m");
+    }
+
+    [Fact]
+    public void BuildGitStatusDisplay_ResetsColorAfterEachRenderedSegment()
+    {
+        using var gitDirectory = new TemporaryDirectory();
+
+        var statusCounts = new Program.StatusCounts
+        {
+            StagedAdded = 1,
+            UnstagedModified = 1,
+            Untracked = 1,
+            Conflicts = 1
+        };
+
+        var gitStatusDisplay = Program.BuildGitStatusDisplay("(main)", 1, 1, statusCounts, gitDirectory.DirectoryPath);
+
+        gitStatusDisplay.Should().Contain("\e[1;36m(main)\e[0m");
+        gitStatusDisplay.Should().Contain(" \e[1;36m↑1\e[0m");
+        gitStatusDisplay.Should().Contain(" \e[1;36m↓1\e[0m");
+        gitStatusDisplay.Should().Contain(" \e[0;32m+1\e[0m");
+        gitStatusDisplay.Should().Contain(" \e[0;31m~1\e[0m");
+        gitStatusDisplay.Should().Contain(" \e[0;31m?1\e[0m");
+        gitStatusDisplay.Should().Contain(" \e[1;31m!1\e[0m");
+    }
+
     private sealed class TemporaryDirectory : IDisposable
     {
         public TemporaryDirectory()
