@@ -49,15 +49,37 @@ internal static class Program
 
         var promptPrefix = BuildPromptPrefixSegment();
         var gitStatusSegment = BuildGitStatusSegment();
+        var promptSymbol = GetPromptSymbol();
 
         if (!string.IsNullOrEmpty(gitStatusSegment))
         {
-            Console.Write($"{promptPrefix} {gitStatusSegment}\n{ColorPrompt}$ {ColorReset}");
+            Console.Write($"{promptPrefix} {gitStatusSegment}\n{ColorPrompt}{promptSymbol} {ColorReset}");
             return 0;
         }
 
-        Console.Write($"{promptPrefix}\n{ColorPrompt}$ {ColorReset}");
+        Console.Write($"{promptPrefix}\n{ColorPrompt}{promptSymbol} {ColorReset}");
         return 0;
+    }
+
+    internal static string GetPromptSymbol()
+    {
+        return IsCurrentUnixRootUser() ? "#" : "$";
+    }
+
+    private static bool IsCurrentUnixRootUser()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return false;
+        }
+
+        var userName = Environment.GetEnvironmentVariable("USER");
+        if (string.IsNullOrEmpty(userName))
+        {
+            userName = Environment.GetEnvironmentVariable("USERNAME");
+        }
+
+        return string.Equals(userName, "root", StringComparison.Ordinal);
     }
 
     internal static string BuildGitStatusSegment()
@@ -776,7 +798,7 @@ internal static class Program
                 }
 
                 var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                if (parts.Length is not  2)
+                if (parts.Length is not 2)
                 {
                     continue;
                 }

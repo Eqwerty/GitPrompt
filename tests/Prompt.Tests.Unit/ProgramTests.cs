@@ -81,7 +81,9 @@ public sealed class ProgramTests
     [Theory]
     [InlineData("MERGE_HEAD", "MERGE")]
     [InlineData("CHERRY_PICK_HEAD", "CHERRY-PICK")]
-    public void BuildGitStatusDisplay_WhenNoUpstreamBranchHasOperation_ShouldPlaceOperationInsideBranchLabel(string operationMarkerFileName, string expectedOperationMarker)
+    public void BuildGitStatusDisplay_WhenNoUpstreamBranchHasOperation_ShouldPlaceOperationInsideBranchLabel(
+        string operationMarkerFileName,
+        string expectedOperationMarker)
     {
         // Arrange
         using var gitDirectory = new TemporaryDirectory();
