@@ -57,7 +57,7 @@ internal static class Program
             return string.Empty;
         }
 
-        var gitStatusSnapshot = ParseGitStatusOutput(statusOutput);
+        var gitStatusSnapshot = GitStatusParser.Parse(statusOutput);
         var branchHeadName = gitStatusSnapshot.BranchHeadName;
         var headObjectId = gitStatusSnapshot.HeadObjectId;
         var commitsAhead = gitStatusSnapshot.CommitsAhead;
@@ -113,96 +113,6 @@ internal static class Program
         var branchDescription = BuildBranchLabel(branchHeadName, hasUpstream);
 
         return BuildGitStatusDisplay(branchDescription, commitsAhead, commitsBehind, statusCounts, gitDirectoryPath);
-    }
-
-    internal static GitStatusSnapshot ParseGitStatusOutput(string statusOutput)
-    {
-        var branchHeadName = string.Empty;
-        var headObjectId = string.Empty;
-        var commitsAhead = 0;
-        var commitsBehind = 0;
-        var upstreamReference = string.Empty;
-        var hasUpstream = false;
-        var hasAheadBehindCounts = false;
-        var statusCounts = new StatusCounts();
-
-        foreach (var line in EnumerateLines(statusOutput))
-        {
-            var statusBranchHeadPrefix = "# branch.head ";
-            if (line.StartsWith(statusBranchHeadPrefix, StringComparison.Ordinal))
-            {
-                branchHeadName = line[statusBranchHeadPrefix.Length..];
-                continue;
-            }
-
-            var statusBranchOidPrefix = "# branch.oid ";
-            if (line.StartsWith(statusBranchOidPrefix, StringComparison.Ordinal))
-            {
-                headObjectId = line[statusBranchOidPrefix.Length..];
-                continue;
-            }
-
-            var statusBranchAheadBehindPrefix = "# branch.ab ";
-            if (line.StartsWith(statusBranchAheadBehindPrefix, StringComparison.Ordinal))
-            {
-                var parts = line[statusBranchAheadBehindPrefix.Length..].Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                if (parts.Length >= 2)
-                {
-                    _ = int.TryParse(parts[0].TrimStart('+'), out commitsAhead);
-                    _ = int.TryParse(parts[1].TrimStart('-'), out commitsBehind);
-                }
-
-                hasUpstream = true;
-                hasAheadBehindCounts = true;
-                continue;
-            }
-
-            var statusBranchUpstreamPrefix = "# branch.upstream ";
-            if (line.StartsWith(statusBranchUpstreamPrefix, StringComparison.Ordinal))
-            {
-                upstreamReference = line[statusBranchUpstreamPrefix.Length..];
-                hasUpstream = true;
-                continue;
-            }
-
-            var isUntrackedRecord = line.StartsWith("? ", StringComparison.Ordinal);
-            var isUnmergedRecord = line.StartsWith("u ", StringComparison.Ordinal);
-            if (isUntrackedRecord || isUnmergedRecord)
-            {
-                if (isUntrackedRecord)
-                {
-                    statusCounts.TrackUntrackedFile();
-                }
-                else
-                {
-                    statusCounts.TrackConflict();
-                }
-
-                continue;
-            }
-
-            var isOrdinaryTrackedEntryRecord = line.Length >= 4 && line[0] is '1';
-            var isRenamedOrCopiedTrackedEntryRecord = line.Length >= 4 && line[0] is '2';
-            if (isOrdinaryTrackedEntryRecord || isRenamedOrCopiedTrackedEntryRecord)
-            {
-                var stagedStatusCode = line[2];
-                var unstagedStatusCode = line[3];
-                statusCounts.TrackStagedStatusCode(stagedStatusCode);
-                statusCounts.TrackUnstagedStatusCode(unstagedStatusCode);
-            }
-        }
-
-        return new GitStatusSnapshot
-        {
-            BranchHeadName = branchHeadName,
-            HeadObjectId = headObjectId,
-            CommitsAhead = commitsAhead,
-            CommitsBehind = commitsBehind,
-            UpstreamReference = upstreamReference,
-            HasUpstream = hasUpstream,
-            HasAheadBehindCounts = hasAheadBehindCounts,
-            StatusCounts = statusCounts
-        };
     }
 
     internal static string BuildGitStatusDisplay(
@@ -579,7 +489,8 @@ internal static class Program
             return 0;
         }
 
-        var baseReference = await RunGitCommandInRepositoryAsync(gitDirectoryPath, "symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD") ?? string.Empty;
+        var baseReference = await RunGitCommandInRepositoryAsync(gitDirectoryPath, "symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD") ??
+                            string.Empty;
 
         if (string.IsNullOrEmpty(baseReference))
         {
