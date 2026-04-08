@@ -7,7 +7,7 @@ namespace Prompt.Tests.Integration;
 public sealed class GitStatusIntegrationTests
 {
     [Fact]
-    public void BuildGitStatusSegment_WhenTrackedBranchHasLocalAndRemoteCommits_ShouldShowBranchAndAheadBehindCounts()
+    public async Task BuildGitStatusSegment_WhenTrackedBranchHasLocalAndRemoteCommits_ShouldShowBranchAndAheadBehindCounts()
     {
         // Arrange
         using var sandbox = new TemporaryDirectory();
@@ -19,7 +19,7 @@ public sealed class GitStatusIntegrationTests
         RunGit(sandbox.DirectoryPath, $"clone {Quote(remoteRepositoryPath)} {Quote(sourceRepositoryPath)}");
         ConfigureGitIdentity(sourceRepositoryPath);
 
-        File.WriteAllText(Path.Combine(sourceRepositoryPath, "base.txt"), "base\n");
+        await File.WriteAllTextAsync(Path.Combine(sourceRepositoryPath, "base.txt"), "base\n");
         RunGit(sourceRepositoryPath, "add base.txt");
         RunGit(sourceRepositoryPath, "commit -m \"base\"");
         RunGit(sourceRepositoryPath, "push -u origin main");
@@ -27,18 +27,18 @@ public sealed class GitStatusIntegrationTests
         RunGit(sandbox.DirectoryPath, $"clone {Quote(remoteRepositoryPath)} {Quote(localRepositoryPath)}");
         ConfigureGitIdentity(localRepositoryPath);
 
-        File.WriteAllText(Path.Combine(localRepositoryPath, "local-ahead.txt"), "ahead\n");
+        await File.WriteAllTextAsync(Path.Combine(localRepositoryPath, "local-ahead.txt"), "ahead\n");
         RunGit(localRepositoryPath, "add local-ahead.txt");
         RunGit(localRepositoryPath, "commit -m \"local ahead\"");
 
-        File.WriteAllText(Path.Combine(sourceRepositoryPath, "remote-ahead.txt"), "behind\n");
+        await File.WriteAllTextAsync(Path.Combine(sourceRepositoryPath, "remote-ahead.txt"), "behind\n");
         RunGit(sourceRepositoryPath, "add remote-ahead.txt");
         RunGit(sourceRepositoryPath, "commit -m \"remote ahead\"");
         RunGit(sourceRepositoryPath, "push");
         RunGit(localRepositoryPath, "fetch origin");
 
         // Act
-        var gitStatusSegment = ExecuteInDirectory(localRepositoryPath, Program.BuildGitStatusSegment);
+        var gitStatusSegment = await ExecuteInDirectory(localRepositoryPath, Program.BuildGitStatusSegmentAsync);
 
         // Assert
         gitStatusSegment.Should().Contain("(main)");
@@ -47,7 +47,7 @@ public sealed class GitStatusIntegrationTests
     }
 
     [Fact]
-    public void BuildGitStatusSegment_WhenBranchHasNoUpstreamAndLocalCommits_ShouldShowNoUpstreamMarkerAndAheadCount()
+    public async Task BuildGitStatusSegment_WhenBranchHasNoUpstreamAndLocalCommits_ShouldShowNoUpstreamMarkerAndAheadCount()
     {
         // Arrange
         using var sandbox = new TemporaryDirectory();
@@ -56,17 +56,17 @@ public sealed class GitStatusIntegrationTests
         RunGit(sandbox.DirectoryPath, $"init --initial-branch=main {Quote(repositoryPath)}");
         ConfigureGitIdentity(repositoryPath);
 
-        File.WriteAllText(Path.Combine(repositoryPath, "base.txt"), "base\n");
+        await File.WriteAllTextAsync(Path.Combine(repositoryPath, "base.txt"), "base\n");
         RunGit(repositoryPath, "add base.txt");
         RunGit(repositoryPath, "commit -m \"base\"");
         RunGit(repositoryPath, "checkout -b feature");
 
-        File.WriteAllText(Path.Combine(repositoryPath, "feature.txt"), "feature\n");
+        await File.WriteAllTextAsync(Path.Combine(repositoryPath, "feature.txt"), "feature\n");
         RunGit(repositoryPath, "add feature.txt");
         RunGit(repositoryPath, "commit -m \"feature commit\"");
 
         // Act
-        var gitStatusSegment = ExecuteInDirectory(repositoryPath, Program.BuildGitStatusSegment);
+        var gitStatusSegment = await ExecuteInDirectory(repositoryPath, Program.BuildGitStatusSegmentAsync);
 
         // Assert
         gitStatusSegment.Should().Contain("*(feature)");
@@ -74,7 +74,7 @@ public sealed class GitStatusIntegrationTests
     }
 
     [Fact]
-    public void BuildGitStatusSegment_WhenHeadIsDetached_ShouldShowCheckedOutCommit()
+    public async Task BuildGitStatusSegment_WhenHeadIsDetached_ShouldShowCheckedOutCommit()
     {
         // Arrange
         using var sandbox = new TemporaryDirectory();
@@ -83,26 +83,26 @@ public sealed class GitStatusIntegrationTests
         RunGit(sandbox.DirectoryPath, $"init --initial-branch=main {Quote(repositoryPath)}");
         ConfigureGitIdentity(repositoryPath);
 
-        File.WriteAllText(Path.Combine(repositoryPath, "commit-a.txt"), "a\n");
+        await File.WriteAllTextAsync(Path.Combine(repositoryPath, "commit-a.txt"), "a\n");
         RunGit(repositoryPath, "add commit-a.txt");
         RunGit(repositoryPath, "commit -m \"commit a\"");
         var commitAObjectId = RunGit(repositoryPath, "rev-parse HEAD").Trim();
 
-        File.WriteAllText(Path.Combine(repositoryPath, "commit-b.txt"), "b\n");
+        await File.WriteAllTextAsync(Path.Combine(repositoryPath, "commit-b.txt"), "b\n");
         RunGit(repositoryPath, "add commit-b.txt");
         RunGit(repositoryPath, "commit -m \"commit b\"");
 
         RunGit(repositoryPath, $"checkout --detach {commitAObjectId}");
 
         // Act
-        var gitStatusSegment = ExecuteInDirectory(repositoryPath, Program.BuildGitStatusSegment);
+        var gitStatusSegment = await ExecuteInDirectory(repositoryPath, Program.BuildGitStatusSegmentAsync);
 
         // Assert
         gitStatusSegment.Should().Contain($"({commitAObjectId[..7]}...)");
     }
 
     [Fact]
-    public void BuildGitStatusSegment_WhenStashExists_ShouldShowStashMarker()
+    public async Task BuildGitStatusSegment_WhenStashExists_ShouldShowStashMarker()
     {
         // Arrange
         using var sandbox = new TemporaryDirectory();
@@ -111,22 +111,22 @@ public sealed class GitStatusIntegrationTests
         RunGit(sandbox.DirectoryPath, $"init --initial-branch=main {Quote(repositoryPath)}");
         ConfigureGitIdentity(repositoryPath);
 
-        File.WriteAllText(Path.Combine(repositoryPath, "tracked.txt"), "base\n");
+        await File.WriteAllTextAsync(Path.Combine(repositoryPath, "tracked.txt"), "base\n");
         RunGit(repositoryPath, "add tracked.txt");
         RunGit(repositoryPath, "commit -m \"base\"");
 
-        File.WriteAllText(Path.Combine(repositoryPath, "tracked.txt"), "changed\n");
+        await File.WriteAllTextAsync(Path.Combine(repositoryPath, "tracked.txt"), "changed\n");
         RunGit(repositoryPath, "stash push -m \"wip\"");
 
         // Act
-        var gitStatusSegment = ExecuteInDirectory(repositoryPath, Program.BuildGitStatusSegment);
+        var gitStatusSegment = await ExecuteInDirectory(repositoryPath, Program.BuildGitStatusSegmentAsync);
 
         // Assert
         gitStatusSegment.Should().Contain("@1");
     }
 
     [Fact]
-    public void BuildGitStatusSegment_WhenMergeIsInProgress_ShouldShowMergeOperationMarker()
+    public async Task BuildGitStatusSegment_WhenMergeIsInProgress_ShouldShowMergeOperationMarker()
     {
         // Arrange
         using var sandbox = new TemporaryDirectory();
@@ -135,21 +135,21 @@ public sealed class GitStatusIntegrationTests
         RunGit(sandbox.DirectoryPath, $"init --initial-branch=main {Quote(repositoryPath)}");
         ConfigureGitIdentity(repositoryPath);
 
-        File.WriteAllText(Path.Combine(repositoryPath, "conflict.txt"), "base\n");
+        await File.WriteAllTextAsync(Path.Combine(repositoryPath, "conflict.txt"), "base\n");
         RunGit(repositoryPath, "add conflict.txt");
         RunGit(repositoryPath, "commit -m \"base\"");
 
         RunGit(repositoryPath, "checkout -b feature");
-        File.WriteAllText(Path.Combine(repositoryPath, "conflict.txt"), "feature\n");
+        await File.WriteAllTextAsync(Path.Combine(repositoryPath, "conflict.txt"), "feature\n");
         RunGit(repositoryPath, "commit -am \"feature change\"");
 
         RunGit(repositoryPath, "checkout main");
-        File.WriteAllText(Path.Combine(repositoryPath, "conflict.txt"), "main\n");
+        await File.WriteAllTextAsync(Path.Combine(repositoryPath, "conflict.txt"), "main\n");
         RunGit(repositoryPath, "commit -am \"main change\"");
 
         // Act
         var mergeCommandResult = RunGitAllowFailure(repositoryPath, "merge feature");
-        var gitStatusSegment = ExecuteInDirectory(repositoryPath, Program.BuildGitStatusSegment);
+        var gitStatusSegment = await ExecuteInDirectory(repositoryPath, Program.BuildGitStatusSegmentAsync);
 
         // Assert
         mergeCommandResult.ExitCode.Should().NotBe(0);
@@ -157,7 +157,7 @@ public sealed class GitStatusIntegrationTests
     }
 
     [Fact]
-    public void BuildGitStatusSegment_WhenCherryPickIsInProgress_ShouldShowCherryPickOperationMarker()
+    public async Task BuildGitStatusSegment_WhenCherryPickIsInProgress_ShouldShowCherryPickOperationMarker()
     {
         // Arrange
         using var sandbox = new TemporaryDirectory();
@@ -166,22 +166,22 @@ public sealed class GitStatusIntegrationTests
         RunGit(sandbox.DirectoryPath, $"init --initial-branch=main {Quote(repositoryPath)}");
         ConfigureGitIdentity(repositoryPath);
 
-        File.WriteAllText(Path.Combine(repositoryPath, "conflict.txt"), "base\n");
+        await File.WriteAllTextAsync(Path.Combine(repositoryPath, "conflict.txt"), "base\n");
         RunGit(repositoryPath, "add conflict.txt");
         RunGit(repositoryPath, "commit -m \"base\"");
 
         RunGit(repositoryPath, "checkout -b source");
-        File.WriteAllText(Path.Combine(repositoryPath, "conflict.txt"), "source\n");
+        await File.WriteAllTextAsync(Path.Combine(repositoryPath, "conflict.txt"), "source\n");
         RunGit(repositoryPath, "commit -am \"source change\"");
         var sourceCommitObjectId = RunGit(repositoryPath, "rev-parse HEAD").Trim();
 
         RunGit(repositoryPath, "checkout main");
-        File.WriteAllText(Path.Combine(repositoryPath, "conflict.txt"), "main\n");
+        await File.WriteAllTextAsync(Path.Combine(repositoryPath, "conflict.txt"), "main\n");
         RunGit(repositoryPath, "commit -am \"main change\"");
 
         // Act
         var cherryPickCommandResult = RunGitAllowFailure(repositoryPath, $"cherry-pick {sourceCommitObjectId}");
-        var gitStatusSegment = ExecuteInDirectory(repositoryPath, Program.BuildGitStatusSegment);
+        var gitStatusSegment = await ExecuteInDirectory(repositoryPath, Program.BuildGitStatusSegmentAsync);
 
         // Assert
         cherryPickCommandResult.ExitCode.Should().NotBe(0);
@@ -189,7 +189,7 @@ public sealed class GitStatusIntegrationTests
     }
 
     [Fact]
-    public void BuildGitStatusSegment_WhenNoUpstreamBranchIsMerging_ShouldShowMergeOperationInsideBranchLabel()
+    public async Task BuildGitStatusSegment_WhenNoUpstreamBranchIsMerging_ShouldShowMergeOperationInsideBranchLabel()
     {
         // Arrange
         using var sandbox = new TemporaryDirectory();
@@ -198,23 +198,23 @@ public sealed class GitStatusIntegrationTests
         RunGit(sandbox.DirectoryPath, $"init --initial-branch=main {Quote(repositoryPath)}");
         ConfigureGitIdentity(repositoryPath);
 
-        File.WriteAllText(Path.Combine(repositoryPath, "conflict.txt"), "base\n");
+        await File.WriteAllTextAsync(Path.Combine(repositoryPath, "conflict.txt"), "base\n");
         RunGit(repositoryPath, "add conflict.txt");
         RunGit(repositoryPath, "commit -m \"base\"");
 
         RunGit(repositoryPath, "checkout -b feature");
-        File.WriteAllText(Path.Combine(repositoryPath, "conflict.txt"), "feature\n");
+        await File.WriteAllTextAsync(Path.Combine(repositoryPath, "conflict.txt"), "feature\n");
         RunGit(repositoryPath, "commit -am \"feature change\"");
 
         RunGit(repositoryPath, "checkout -b other main");
-        File.WriteAllText(Path.Combine(repositoryPath, "conflict.txt"), "other\n");
+        await File.WriteAllTextAsync(Path.Combine(repositoryPath, "conflict.txt"), "other\n");
         RunGit(repositoryPath, "commit -am \"other change\"");
 
         RunGit(repositoryPath, "checkout feature");
 
         // Act
         var mergeCommandResult = RunGitAllowFailure(repositoryPath, "merge other");
-        var gitStatusSegment = ExecuteInDirectory(repositoryPath, Program.BuildGitStatusSegment);
+        var gitStatusSegment = await ExecuteInDirectory(repositoryPath, Program.BuildGitStatusSegmentAsync);
 
         // Assert
         mergeCommandResult.ExitCode.Should().NotBe(0);
@@ -222,7 +222,7 @@ public sealed class GitStatusIntegrationTests
     }
 
     [Fact]
-    public void BuildGitStatusSegment_WhenNoUpstreamBranchIsCherryPicking_ShouldShowCherryPickOperationInsideBranchLabel()
+    public async Task BuildGitStatusSegment_WhenNoUpstreamBranchIsCherryPicking_ShouldShowCherryPickOperationInsideBranchLabel()
     {
         // Arrange
         using var sandbox = new TemporaryDirectory();
@@ -231,22 +231,22 @@ public sealed class GitStatusIntegrationTests
         RunGit(sandbox.DirectoryPath, $"init --initial-branch=main {Quote(repositoryPath)}");
         ConfigureGitIdentity(repositoryPath);
 
-        File.WriteAllText(Path.Combine(repositoryPath, "conflict.txt"), "base\n");
+        await File.WriteAllTextAsync(Path.Combine(repositoryPath, "conflict.txt"), "base\n");
         RunGit(repositoryPath, "add conflict.txt");
         RunGit(repositoryPath, "commit -m \"base\"");
 
         RunGit(repositoryPath, "checkout -b source");
-        File.WriteAllText(Path.Combine(repositoryPath, "conflict.txt"), "source\n");
+        await File.WriteAllTextAsync(Path.Combine(repositoryPath, "conflict.txt"), "source\n");
         RunGit(repositoryPath, "commit -am \"source change\"");
         var sourceCommitObjectId = RunGit(repositoryPath, "rev-parse HEAD").Trim();
 
         RunGit(repositoryPath, "checkout -b feature main");
-        File.WriteAllText(Path.Combine(repositoryPath, "conflict.txt"), "feature\n");
+        await File.WriteAllTextAsync(Path.Combine(repositoryPath, "conflict.txt"), "feature\n");
         RunGit(repositoryPath, "commit -am \"feature change\"");
 
         // Act
         var cherryPickCommandResult = RunGitAllowFailure(repositoryPath, $"cherry-pick {sourceCommitObjectId}");
-        var gitStatusSegment = ExecuteInDirectory(repositoryPath, Program.BuildGitStatusSegment);
+        var gitStatusSegment = await ExecuteInDirectory(repositoryPath, Program.BuildGitStatusSegmentAsync);
 
         // Assert
         cherryPickCommandResult.ExitCode.Should().NotBe(0);
@@ -254,7 +254,7 @@ public sealed class GitStatusIntegrationTests
     }
 
     [Fact]
-    public void BuildGitStatusSegment_WhenRebaseIsInProgress_ShouldShowBranchNameInsteadOfDetachedCommit()
+    public async Task BuildGitStatusSegment_WhenRebaseIsInProgress_ShouldShowBranchNameInsteadOfDetachedCommit()
     {
         // Arrange
         using var sandbox = new TemporaryDirectory();
@@ -263,23 +263,23 @@ public sealed class GitStatusIntegrationTests
         RunGit(sandbox.DirectoryPath, $"init --initial-branch=main {Quote(repositoryPath)}");
         ConfigureGitIdentity(repositoryPath);
 
-        File.WriteAllText(Path.Combine(repositoryPath, "conflict.txt"), "base\n");
+        await File.WriteAllTextAsync(Path.Combine(repositoryPath, "conflict.txt"), "base\n");
         RunGit(repositoryPath, "add conflict.txt");
         RunGit(repositoryPath, "commit -m \"base\"");
 
         RunGit(repositoryPath, "checkout -b feature");
-        File.WriteAllText(Path.Combine(repositoryPath, "conflict.txt"), "feature\n");
+        await File.WriteAllTextAsync(Path.Combine(repositoryPath, "conflict.txt"), "feature\n");
         RunGit(repositoryPath, "commit -am \"feature change\"");
 
         RunGit(repositoryPath, "checkout main");
-        File.WriteAllText(Path.Combine(repositoryPath, "conflict.txt"), "main\n");
+        await File.WriteAllTextAsync(Path.Combine(repositoryPath, "conflict.txt"), "main\n");
         RunGit(repositoryPath, "commit -am \"main change\"");
 
         RunGit(repositoryPath, "checkout feature");
 
         // Act
         var rebaseCommandResult = RunGitAllowFailure(repositoryPath, "rebase main");
-        var gitStatusSegment = ExecuteInDirectory(repositoryPath, Program.BuildGitStatusSegment);
+        var gitStatusSegment = await ExecuteInDirectory(repositoryPath, Program.BuildGitStatusSegmentAsync);
 
         // Assert
         rebaseCommandResult.ExitCode.Should().NotBe(0);
@@ -311,13 +311,13 @@ public sealed class GitStatusIntegrationTests
         }
     }
 
-    private static string ExecuteInDirectory(string directoryPath, Func<string> operation)
+    private static async Task<string> ExecuteInDirectory(string directoryPath, Func<Task<string>> operation)
     {
         var previousDirectoryPath = Directory.GetCurrentDirectory();
         try
         {
             Directory.SetCurrentDirectory(directoryPath);
-            return operation();
+            return await operation();
         }
         finally
         {

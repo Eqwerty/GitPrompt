@@ -10,12 +10,12 @@ internal static class Program
 {
     private readonly record struct CountStyle(int Value, string Color, string Icon);
 
-    private static int Main()
+    private static async Task<int> Main()
     {
         Console.OutputEncoding = Encoding.UTF8;
 
         var promptPrefix = BuildPromptPrefixSegment();
-        var gitStatusSegment = BuildGitStatusSegment();
+        var gitStatusSegment = await BuildGitStatusSegmentAsync();
         var promptSymbol = GetPromptSymbol();
 
         if (!string.IsNullOrEmpty(gitStatusSegment))
@@ -49,9 +49,9 @@ internal static class Program
         return string.Equals(userName, "root", StringComparison.Ordinal);
     }
 
-    internal static string BuildGitStatusSegment()
+    internal static async Task<string> BuildGitStatusSegmentAsync()
     {
-        var statusOutput = RunGitStatusCommand();
+        var statusOutput = await RunGitStatusCommandAsync();
         if (statusOutput is null)
         {
             return string.Empty;
@@ -100,13 +100,13 @@ internal static class Program
 
         if (hasUpstream && !hasAheadBehindCounts && !string.IsNullOrEmpty(upstreamReference))
         {
-            var (computedAheadCount, computedBehindCount) = ComputeAheadBehindAgainstUpstream(gitDirectoryPath, upstreamReference);
+            var (computedAheadCount, computedBehindCount) = await ComputeAheadBehindAgainstUpstreamAsync(gitDirectoryPath, upstreamReference);
             commitsAhead = computedAheadCount;
             commitsBehind = computedBehindCount;
         }
         else if (!hasUpstream)
         {
-            commitsAhead = ComputeLocalAheadCommitCount(gitDirectoryPath);
+            commitsAhead = await ComputeLocalAheadCommitCountAsync(gitDirectoryPath);
             commitsBehind = 0;
         }
 
@@ -450,9 +450,9 @@ internal static class Program
         return $"{ColorUser}{user}{ColorReset} {ColorHost}{host}{ColorReset} {ColorPath}{workingDirectoryPath}{ColorReset}";
     }
 
-    private static string? RunGitStatusCommand()
+    private static Task<string?> RunGitStatusCommandAsync()
     {
-        return RunProcessForOutput(
+        return RunProcessForOutputAsync(
             fileName: "git",
             arguments: "status --porcelain=2 --branch --ahead-behind",
             workingDirectory: null,
@@ -541,7 +541,7 @@ internal static class Program
         }
     }
 
-    private static string? RunGitCommandInRepository(string gitDirectoryPath, params string[] args)
+    private static async Task<string?> RunGitCommandInRepositoryAsync(string gitDirectoryPath, params string[] args)
     {
         var repositoryRootPath = Path.GetDirectoryName(gitDirectoryPath);
         if (string.IsNullOrEmpty(repositoryRootPath))
@@ -550,7 +550,7 @@ internal static class Program
         }
 
         var joinedArguments = string.Join(' ', args.Select(EscapeCommandLineArgument));
-        var output = RunProcessForOutput(
+        var output = await RunProcessForOutputAsync(
             fileName: "git",
             arguments: joinedArguments,
             workingDirectory: repositoryRootPath,
@@ -560,14 +560,14 @@ internal static class Program
         return output?.Trim();
     }
 
-    private static int ComputeLocalAheadCommitCount(string gitDirectoryPath)
+    private static async Task<int> ComputeLocalAheadCommitCountAsync(string gitDirectoryPath)
     {
-        if (RunGitCommandInRepository(gitDirectoryPath, "rev-parse", "--is-inside-work-tree") is null)
+        if (await RunGitCommandInRepositoryAsync(gitDirectoryPath, "rev-parse", "--is-inside-work-tree") is null)
         {
             return 0;
         }
 
-        var currentBranch = RunGitCommandInRepository(gitDirectoryPath, "symbolic-ref", "--quiet", "--short", "HEAD");
+        var currentBranch = await RunGitCommandInRepositoryAsync(gitDirectoryPath, "symbolic-ref", "--quiet", "--short", "HEAD");
         if (string.IsNullOrEmpty(currentBranch))
         {
             return 0;
@@ -579,14 +579,14 @@ internal static class Program
             return 0;
         }
 
-        var baseReference = RunGitCommandInRepository(gitDirectoryPath, "symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD") ?? string.Empty;
+        var baseReference = await RunGitCommandInRepositoryAsync(gitDirectoryPath, "symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD") ?? string.Empty;
 
         if (string.IsNullOrEmpty(baseReference))
         {
             var baseReferenceCandidates = new[] { "origin/main", "origin/master", "main", "master" };
             foreach (var candidateReference in baseReferenceCandidates)
             {
-                if (RunProcessForOutput(fileName: "git",
+                if (await RunProcessForOutputAsync(fileName: "git",
                         arguments: $"-C {EscapeCommandLineArgument(repositoryRootPath)} show-ref --verify --quiet refs/remotes/{candidateReference}",
                         workingDirectory: null,
                         requireSuccess: true) is not null)
@@ -600,7 +600,7 @@ internal static class Program
                     ? candidateReference[remoteOriginPrefix.Length..]
                     : candidateReference;
 
-                if (RunProcessForOutput(fileName: "git",
+                if (await RunProcessForOutputAsync(fileName: "git",
                         arguments: $"-C {EscapeCommandLineArgument(repositoryRootPath)} show-ref --verify --quiet refs/heads/{localCandidateReference}",
                         workingDirectory: null,
                         requireSuccess: true) is not null)
@@ -613,7 +613,7 @@ internal static class Program
 
         if (string.IsNullOrEmpty(baseReference))
         {
-            var upstreamReference = RunGitCommandInRepository(gitDirectoryPath, "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}");
+            var upstreamReference = await RunGitCommandInRepositoryAsync(gitDirectoryPath, "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}");
             if (!string.IsNullOrEmpty(upstreamReference))
             {
                 baseReference = "@{u}";
@@ -625,28 +625,28 @@ internal static class Program
             return 0;
         }
 
-        var forkPointCommit = RunGitCommandInRepository(gitDirectoryPath, "merge-base", "--fork-point", baseReference, "HEAD") ?? string.Empty;
+        var forkPointCommit = await RunGitCommandInRepositoryAsync(gitDirectoryPath, "merge-base", "--fork-point", baseReference, "HEAD") ?? string.Empty;
         if (string.IsNullOrEmpty(forkPointCommit))
         {
-            forkPointCommit = RunGitCommandInRepository(gitDirectoryPath, "merge-base", baseReference, "HEAD") ?? string.Empty;
+            forkPointCommit = await RunGitCommandInRepositoryAsync(gitDirectoryPath, "merge-base", baseReference, "HEAD") ?? string.Empty;
         }
 
         var commitRangeSpec = !string.IsNullOrEmpty(forkPointCommit)
             ? $"{forkPointCommit}..HEAD"
             : $"{baseReference}..HEAD";
 
-        var commitCountOutput = RunGitCommandInRepository(gitDirectoryPath, "rev-list", "--count", commitRangeSpec);
+        var commitCountOutput = await RunGitCommandInRepositoryAsync(gitDirectoryPath, "rev-list", "--count", commitRangeSpec);
         return int.TryParse(commitCountOutput, out var commitCount) ? commitCount : 0;
     }
 
-    private static (int Ahead, int Behind) ComputeAheadBehindAgainstUpstream(string gitDirectoryPath, string upstreamReference)
+    private static async Task<(int Ahead, int Behind)> ComputeAheadBehindAgainstUpstreamAsync(string gitDirectoryPath, string upstreamReference)
     {
         if (string.IsNullOrEmpty(upstreamReference))
         {
             return (0, 0);
         }
 
-        var leftRightCountsOutput = RunGitCommandInRepository(
+        var leftRightCountsOutput = await RunGitCommandInRepositoryAsync(
             gitDirectoryPath,
             "rev-list",
             "--left-right",
@@ -801,7 +801,7 @@ internal static class Program
         return "\"" + argument.Replace("\\", @"\\", StringComparison.Ordinal).Replace("\"", "\\\"", StringComparison.Ordinal) + "\"";
     }
 
-    private static string? RunProcessForOutput(string fileName, string arguments, string? workingDirectory, bool requireSuccess)
+    private static async Task<string?> RunProcessForOutputAsync(string fileName, string arguments, string? workingDirectory, bool requireSuccess)
     {
         try
         {
@@ -819,27 +819,16 @@ internal static class Program
 
             process.Start();
 
-            // Drain stderr concurrently so a full stderr pipe never blocks stdout reading.
+            var stdoutTask = process.StandardOutput.ReadToEndAsync();
             var stderrTask = process.StandardError.ReadToEndAsync();
-            var output = process.StandardOutput.ReadToEnd();
-            process.WaitForExit();
-
-            // Wait for stderr to complete without blocking
-            try
-            {
-                stderrTask.Wait(TimeSpan.FromSeconds(1));
-            }
-            catch
-            {
-                // Ignore stderr timeout
-            }
+            await Task.WhenAll(stdoutTask, stderrTask, process.WaitForExitAsync());
 
             if (requireSuccess && process.ExitCode is not 0)
             {
                 return null;
             }
 
-            return process.ExitCode is 0 ? output : string.Empty;
+            return process.ExitCode is 0 ? await stdoutTask : string.Empty;
         }
         catch
         {

@@ -47,14 +47,14 @@ public sealed class ProgramTests
     }
 
     [Fact]
-    public void BuildGitStatusDisplay_WhenCountsAndOperationExist_ShouldIncludeReadableIndicators()
+    public async Task BuildGitStatusDisplay_WhenCountsAndOperationExist_ShouldIncludeReadableIndicators()
     {
         // Arrange
         using var gitDirectory = new TemporaryDirectory();
         var stashLogDirectoryPath = Path.Combine(gitDirectory.DirectoryPath, "logs", "refs");
         Directory.CreateDirectory(stashLogDirectoryPath);
-        File.WriteAllText(Path.Combine(stashLogDirectoryPath, "stash"), "entry-1\nentry-2\n");
-        File.WriteAllText(Path.Combine(gitDirectory.DirectoryPath, "MERGE_HEAD"), "merge\n");
+        await File.WriteAllTextAsync(Path.Combine(stashLogDirectoryPath, "stash"), "entry-1\nentry-2\n");
+        await File.WriteAllTextAsync(Path.Combine(gitDirectory.DirectoryPath, "MERGE_HEAD"), "merge\n");
 
         var statusCounts = new StatusCounts(
             stagedRenamed: 1,
@@ -79,13 +79,13 @@ public sealed class ProgramTests
     [Theory]
     [InlineData("MERGE_HEAD", "MERGE")]
     [InlineData("CHERRY_PICK_HEAD", "CHERRY-PICK")]
-    public void BuildGitStatusDisplay_WhenNoUpstreamBranchHasOperation_ShouldPlaceOperationInsideBranchLabel(
+    public async Task BuildGitStatusDisplay_WhenNoUpstreamBranchHasOperation_ShouldPlaceOperationInsideBranchLabel(
         string operationMarkerFileName,
         string expectedOperationMarker)
     {
         // Arrange
         using var gitDirectory = new TemporaryDirectory();
-        File.WriteAllText(Path.Combine(gitDirectory.DirectoryPath, operationMarkerFileName), "head\n");
+        await File.WriteAllTextAsync(Path.Combine(gitDirectory.DirectoryPath, operationMarkerFileName), "head\n");
 
         // Act
         var gitStatusDisplay = Program.BuildGitStatusDisplay("*(feature)", 0, 0, new StatusCounts(), gitDirectory.DirectoryPath);
@@ -95,13 +95,13 @@ public sealed class ProgramTests
     }
 
     [Fact]
-    public void ResolveRebaseBranchName_WhenRebaseHeadNameFileExists_ShouldReturnBranchName()
+    public async Task ResolveRebaseBranchName_WhenRebaseHeadNameFileExists_ShouldReturnBranchName()
     {
         // Arrange
         using var gitDirectory = new TemporaryDirectory();
         var rebaseDirectoryPath = Path.Combine(gitDirectory.DirectoryPath, "rebase-merge");
         Directory.CreateDirectory(rebaseDirectoryPath);
-        File.WriteAllText(Path.Combine(rebaseDirectoryPath, "head-name"), "refs/heads/feature\n");
+        await File.WriteAllTextAsync(Path.Combine(rebaseDirectoryPath, "head-name"), "refs/heads/feature\n");
 
         // Act
         var rebaseBranchName = Program.ResolveRebaseBranchName(gitDirectory.DirectoryPath);
@@ -111,15 +111,15 @@ public sealed class ProgramTests
     }
 
     [Fact]
-    public void FindMatchingRemoteReferences_WhenLooseAndPackedRefsContainMatches_ShouldReturnMatchingReferences()
+    public async Task FindMatchingRemoteReferences_WhenLooseAndPackedRefsContainMatches_ShouldReturnMatchingReferences()
     {
         // Arrange
         using var gitDirectory = new TemporaryDirectory();
         var remoteDirectoryPath = Path.Combine(gitDirectory.DirectoryPath, "refs", "remotes", "origin");
         Directory.CreateDirectory(remoteDirectoryPath);
 
-        File.WriteAllText(Path.Combine(remoteDirectoryPath, "main"), "abcdef1234567890\n");
-        File.WriteAllText(
+        await File.WriteAllTextAsync(Path.Combine(remoteDirectoryPath, "main"), "abcdef1234567890\n");
+        await File.WriteAllTextAsync(
             Path.Combine(gitDirectory.DirectoryPath, "packed-refs"),
             """
             # pack-refs with: peeled fully-peeled sorted
@@ -138,13 +138,13 @@ public sealed class ProgramTests
     }
 
     [Fact]
-    public void ReadStashEntryCount_WhenStashLogContainsEntries_ShouldCountStashLines()
+    public async Task ReadStashEntryCount_WhenStashLogContainsEntries_ShouldCountStashLines()
     {
         // Arrange
         using var gitDirectory = new TemporaryDirectory();
         var stashLogDirectoryPath = Path.Combine(gitDirectory.DirectoryPath, "logs", "refs");
         Directory.CreateDirectory(stashLogDirectoryPath);
-        File.WriteAllText(Path.Combine(stashLogDirectoryPath, "stash"), "first\nsecond\nthird\n");
+        await File.WriteAllTextAsync(Path.Combine(stashLogDirectoryPath, "stash"), "first\nsecond\nthird\n");
 
         // Act
         var stashEntryCount = Program.ReadStashEntryCount(gitDirectory.DirectoryPath);
@@ -252,11 +252,11 @@ public sealed class ProgramTests
     }
 
     [Fact]
-    public void ReadGitOperationMarker_WhenCherryPickHeadExists_ShouldReturnCherryPick()
+    public async Task ReadGitOperationMarker_WhenCherryPickHeadExists_ShouldReturnCherryPick()
     {
         // Arrange
         using var gitDirectory = new TemporaryDirectory();
-        File.WriteAllText(Path.Combine(gitDirectory.DirectoryPath, "CHERRY_PICK_HEAD"), "head\n");
+        await File.WriteAllTextAsync(Path.Combine(gitDirectory.DirectoryPath, "CHERRY_PICK_HEAD"), "head\n");
 
         // Act
         var operationMarker = Program.ReadGitOperationMarker(gitDirectory.DirectoryPath);
@@ -266,11 +266,11 @@ public sealed class ProgramTests
     }
 
     [Fact]
-    public void ReadGitOperationMarker_WhenRevertHeadExists_ShouldReturnRevert()
+    public async Task ReadGitOperationMarker_WhenRevertHeadExists_ShouldReturnRevert()
     {
         // Arrange
         using var gitDirectory = new TemporaryDirectory();
-        File.WriteAllText(Path.Combine(gitDirectory.DirectoryPath, "REVERT_HEAD"), "head\n");
+        await File.WriteAllTextAsync(Path.Combine(gitDirectory.DirectoryPath, "REVERT_HEAD"), "head\n");
 
         // Act
         var operationMarker = Program.ReadGitOperationMarker(gitDirectory.DirectoryPath);
@@ -280,11 +280,11 @@ public sealed class ProgramTests
     }
 
     [Fact]
-    public void ReadGitOperationMarker_WhenBisectLogExists_ShouldReturnBisect()
+    public async Task ReadGitOperationMarker_WhenBisectLogExists_ShouldReturnBisect()
     {
         // Arrange
         using var gitDirectory = new TemporaryDirectory();
-        File.WriteAllText(Path.Combine(gitDirectory.DirectoryPath, "BISECT_LOG"), "bisect\n");
+        await File.WriteAllTextAsync(Path.Combine(gitDirectory.DirectoryPath, "BISECT_LOG"), "bisect\n");
 
         // Act
         var operationMarker = Program.ReadGitOperationMarker(gitDirectory.DirectoryPath);
@@ -294,13 +294,13 @@ public sealed class ProgramTests
     }
 
     [Fact]
-    public void ReadGitOperationMarker_WhenRebaseAndOtherMarkersExist_ShouldPrioritizeRebase()
+    public async Task ReadGitOperationMarker_WhenRebaseAndOtherMarkersExist_ShouldPrioritizeRebase()
     {
         // Arrange
         using var gitDirectory = new TemporaryDirectory();
         Directory.CreateDirectory(Path.Combine(gitDirectory.DirectoryPath, "rebase-merge"));
-        File.WriteAllText(Path.Combine(gitDirectory.DirectoryPath, "MERGE_HEAD"), "head\n");
-        File.WriteAllText(Path.Combine(gitDirectory.DirectoryPath, "CHERRY_PICK_HEAD"), "head\n");
+        await File.WriteAllTextAsync(Path.Combine(gitDirectory.DirectoryPath, "MERGE_HEAD"), "head\n");
+        await File.WriteAllTextAsync(Path.Combine(gitDirectory.DirectoryPath, "CHERRY_PICK_HEAD"), "head\n");
 
         // Act
         var operationMarker = Program.ReadGitOperationMarker(gitDirectory.DirectoryPath);
@@ -325,7 +325,7 @@ public sealed class ProgramTests
     }
 
     [Fact]
-    public void ResolveGitDirectoryPath_WhenGitdirFileContainsRelativePath_ShouldResolveAbsoluteGitDirectoryPath()
+    public async Task ResolveGitDirectoryPath_WhenGitdirFileContainsRelativePath_ShouldResolveAbsoluteGitDirectoryPath()
     {
         // Arrange
         using var rootDirectory = new TemporaryDirectory();
@@ -335,7 +335,7 @@ public sealed class ProgramTests
         Directory.CreateDirectory(workingTreePath);
 
         var dotGitPath = Path.Combine(workingTreePath, ".git");
-        File.WriteAllText(dotGitPath, "gitdir: ../actual-git\n");
+        await File.WriteAllTextAsync(dotGitPath, "gitdir: ../actual-git\n");
 
         // Act
         var resolvedGitDirectoryPath = Program.ResolveGitDirectoryPath(dotGitPath);
