@@ -14,17 +14,17 @@ internal static class Program
     {
         Console.OutputEncoding = Encoding.UTF8;
 
-        var promptPrefix = BuildPromptPrefixSegment();
+        var promptContext = PromptContextBuilder.Build();
         var gitStatusSegment = await BuildGitStatusSegmentAsync();
         var promptSymbol = GetPromptSymbol();
 
         if (!string.IsNullOrEmpty(gitStatusSegment))
         {
-            Console.Write($"{promptPrefix} {gitStatusSegment}\n{ColorPrompt}{promptSymbol} {ColorReset}");
+            Console.Write($"{promptContext} {gitStatusSegment}\n{ColorPrompt}{promptSymbol} {ColorReset}");
             return 0;
         }
 
-        Console.Write($"{promptPrefix}\n{ColorPrompt}{promptSymbol} {ColorReset}");
+        Console.Write($"{promptContext}\n{ColorPrompt}{promptSymbol} {ColorReset}");
         return 0;
     }
 
@@ -293,72 +293,6 @@ internal static class Program
         }
     }
 
-    private static string BuildPromptPrefixSegment()
-    {
-        var user = Environment.GetEnvironmentVariable("USER");
-        if (string.IsNullOrEmpty(user))
-        {
-            user = Environment.GetEnvironmentVariable("USERNAME");
-        }
-
-        if (string.IsNullOrEmpty(user))
-        {
-            user = "?";
-        }
-
-        var host = Environment.MachineName;
-        if (string.IsNullOrEmpty(host))
-        {
-            host = "?";
-        }
-
-        var dotIndex = host.IndexOf('.');
-        if (dotIndex > 0)
-        {
-            host = host[..dotIndex];
-        }
-
-        string workingDirectoryPath;
-        try
-        {
-            workingDirectoryPath = Directory.GetCurrentDirectory();
-        }
-        catch
-        {
-            workingDirectoryPath = "?";
-        }
-
-        if (!string.IsNullOrEmpty(workingDirectoryPath) && workingDirectoryPath is not "?")
-        {
-            try
-            {
-                var homeDirectoryPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-                if (!string.IsNullOrEmpty(homeDirectoryPath))
-                {
-                    var fullWorkingDirectoryPath = Path.GetFullPath(workingDirectoryPath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-                    var fullHomeDirectoryPath = Path.GetFullPath(homeDirectoryPath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-                    var pathComparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-
-                    if (string.Equals(fullWorkingDirectoryPath, fullHomeDirectoryPath, pathComparison))
-                    {
-                        workingDirectoryPath = "~";
-                    }
-                    else if (fullWorkingDirectoryPath.StartsWith(fullHomeDirectoryPath + Path.DirectorySeparatorChar, pathComparison))
-                    {
-                        workingDirectoryPath = "~" + fullWorkingDirectoryPath[fullHomeDirectoryPath.Length..];
-                    }
-                }
-            }
-            catch
-            {
-                // Ignore path normalization failures and keep the raw working directory.
-            }
-
-            workingDirectoryPath = workingDirectoryPath.Replace('\\', '/');
-        }
-
-        return $"{ColorUser}{user}{ColorReset} {ColorHost}{host}{ColorReset} {ColorPath}{workingDirectoryPath}{ColorReset}";
-    }
 
     private static Task<string?> RunGitStatusCommandAsync()
     {
