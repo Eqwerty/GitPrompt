@@ -1,5 +1,5 @@
-using FluentAssertions;
 using System.Diagnostics;
+using FluentAssertions;
 
 namespace Prompt.Tests.Integration;
 
@@ -7,8 +7,9 @@ namespace Prompt.Tests.Integration;
 public sealed class GitStatusIntegrationTests
 {
     [Fact]
-    public void BuildGitStatusSegment_OnTrackedBranch_ShowsBranchAndAheadBehindCounts()
+    public void BuildGitStatusSegment_WhenTrackedBranchHasLocalAndRemoteCommits_ShouldShowBranchAndAheadBehindCounts()
     {
+        // Arrange
         using var sandbox = new TemporaryDirectory();
         var remoteRepositoryPath = Path.Combine(sandbox.DirectoryPath, "remote.git");
         var sourceRepositoryPath = Path.Combine(sandbox.DirectoryPath, "source");
@@ -36,16 +37,19 @@ public sealed class GitStatusIntegrationTests
         RunGit(sourceRepositoryPath, "push");
         RunGit(localRepositoryPath, "fetch origin");
 
+        // Act
         var gitStatusSegment = ExecuteInDirectory(localRepositoryPath, Program.BuildGitStatusSegment);
 
+        // Assert
         gitStatusSegment.Should().Contain("(main)");
         gitStatusSegment.Should().Contain("↑1");
         gitStatusSegment.Should().Contain("↓1");
     }
 
     [Fact]
-    public void BuildGitStatusSegment_OnBranchWithoutUpstream_ShowsNoUpstreamMarkerAndAheadCount()
+    public void BuildGitStatusSegment_WhenBranchHasNoUpstreamAndLocalCommits_ShouldShowNoUpstreamMarkerAndAheadCount()
     {
+        // Arrange
         using var sandbox = new TemporaryDirectory();
         var repositoryPath = Path.Combine(sandbox.DirectoryPath, "repo");
 
@@ -61,15 +65,18 @@ public sealed class GitStatusIntegrationTests
         RunGit(repositoryPath, "add feature.txt");
         RunGit(repositoryPath, "commit -m \"feature commit\"");
 
+        // Act
         var gitStatusSegment = ExecuteInDirectory(repositoryPath, Program.BuildGitStatusSegment);
 
+        // Assert
         gitStatusSegment.Should().Contain("*(feature)");
         gitStatusSegment.Should().Contain("↑1");
     }
 
     [Fact]
-    public void BuildGitStatusSegment_OnDetachedHead_ShowsCheckedOutCommit()
+    public void BuildGitStatusSegment_WhenHeadIsDetached_ShouldShowCheckedOutCommit()
     {
+        // Arrange
         using var sandbox = new TemporaryDirectory();
         var repositoryPath = Path.Combine(sandbox.DirectoryPath, "repo");
 
@@ -87,14 +94,17 @@ public sealed class GitStatusIntegrationTests
 
         RunGit(repositoryPath, $"checkout --detach {commitAObjectId}");
 
+        // Act
         var gitStatusSegment = ExecuteInDirectory(repositoryPath, Program.BuildGitStatusSegment);
 
+        // Assert
         gitStatusSegment.Should().Contain($"({commitAObjectId[..7]}...)");
     }
 
     [Fact]
-    public void BuildGitStatusSegment_ShowsStashMarkerWhenStashExists()
+    public void BuildGitStatusSegment_WhenStashExists_ShouldShowStashMarker()
     {
+        // Arrange
         using var sandbox = new TemporaryDirectory();
         var repositoryPath = Path.Combine(sandbox.DirectoryPath, "repo");
 
@@ -108,14 +118,17 @@ public sealed class GitStatusIntegrationTests
         File.WriteAllText(Path.Combine(repositoryPath, "tracked.txt"), "changed\n");
         RunGit(repositoryPath, "stash push -m \"wip\"");
 
+        // Act
         var gitStatusSegment = ExecuteInDirectory(repositoryPath, Program.BuildGitStatusSegment);
 
+        // Assert
         gitStatusSegment.Should().Contain("@1");
     }
 
     [Fact]
-    public void BuildGitStatusSegment_ShowsOperationMarker_WhenMergeIsInProgress()
+    public void BuildGitStatusSegment_WhenMergeIsInProgress_ShouldShowMergeOperationMarker()
     {
+        // Arrange
         using var sandbox = new TemporaryDirectory();
         var repositoryPath = Path.Combine(sandbox.DirectoryPath, "repo");
 
@@ -134,17 +147,19 @@ public sealed class GitStatusIntegrationTests
         File.WriteAllText(Path.Combine(repositoryPath, "conflict.txt"), "main\n");
         RunGit(repositoryPath, "commit -am \"main change\"");
 
+        // Act
         var mergeCommandResult = RunGitAllowFailure(repositoryPath, "merge feature");
-        mergeCommandResult.ExitCode.Should().NotBe(0);
-
         var gitStatusSegment = ExecuteInDirectory(repositoryPath, Program.BuildGitStatusSegment);
 
+        // Assert
+        mergeCommandResult.ExitCode.Should().NotBe(0);
         gitStatusSegment.Should().Contain("|MERGE");
     }
 
     [Fact]
-    public void BuildGitStatusSegment_ShowsOperationMarker_WhenCherryPickIsInProgress()
+    public void BuildGitStatusSegment_WhenCherryPickIsInProgress_ShouldShowCherryPickOperationMarker()
     {
+        // Arrange
         using var sandbox = new TemporaryDirectory();
         var repositoryPath = Path.Combine(sandbox.DirectoryPath, "repo");
 
@@ -164,17 +179,19 @@ public sealed class GitStatusIntegrationTests
         File.WriteAllText(Path.Combine(repositoryPath, "conflict.txt"), "main\n");
         RunGit(repositoryPath, "commit -am \"main change\"");
 
+        // Act
         var cherryPickCommandResult = RunGitAllowFailure(repositoryPath, $"cherry-pick {sourceCommitObjectId}");
-        cherryPickCommandResult.ExitCode.Should().NotBe(0);
-
         var gitStatusSegment = ExecuteInDirectory(repositoryPath, Program.BuildGitStatusSegment);
 
+        // Assert
+        cherryPickCommandResult.ExitCode.Should().NotBe(0);
         gitStatusSegment.Should().Contain("|CHERRY-PICK");
     }
 
     [Fact]
-    public void BuildGitStatusSegment_OnNoUpstreamBranch_ShowsMergeOperationInsideBranchLabel()
+    public void BuildGitStatusSegment_WhenNoUpstreamBranchIsMerging_ShouldShowMergeOperationInsideBranchLabel()
     {
+        // Arrange
         using var sandbox = new TemporaryDirectory();
         var repositoryPath = Path.Combine(sandbox.DirectoryPath, "repo");
 
@@ -194,17 +211,20 @@ public sealed class GitStatusIntegrationTests
         RunGit(repositoryPath, "commit -am \"other change\"");
 
         RunGit(repositoryPath, "checkout feature");
-        var mergeCommandResult = RunGitAllowFailure(repositoryPath, "merge other");
-        mergeCommandResult.ExitCode.Should().NotBe(0);
 
+        // Act
+        var mergeCommandResult = RunGitAllowFailure(repositoryPath, "merge other");
         var gitStatusSegment = ExecuteInDirectory(repositoryPath, Program.BuildGitStatusSegment);
 
+        // Assert
+        mergeCommandResult.ExitCode.Should().NotBe(0);
         gitStatusSegment.Should().Contain("*(feature|MERGE)");
     }
 
     [Fact]
-    public void BuildGitStatusSegment_OnNoUpstreamBranch_ShowsCherryPickOperationInsideBranchLabel()
+    public void BuildGitStatusSegment_WhenNoUpstreamBranchIsCherryPicking_ShouldShowCherryPickOperationInsideBranchLabel()
     {
+        // Arrange
         using var sandbox = new TemporaryDirectory();
         var repositoryPath = Path.Combine(sandbox.DirectoryPath, "repo");
 
@@ -224,17 +244,19 @@ public sealed class GitStatusIntegrationTests
         File.WriteAllText(Path.Combine(repositoryPath, "conflict.txt"), "feature\n");
         RunGit(repositoryPath, "commit -am \"feature change\"");
 
+        // Act
         var cherryPickCommandResult = RunGitAllowFailure(repositoryPath, $"cherry-pick {sourceCommitObjectId}");
-        cherryPickCommandResult.ExitCode.Should().NotBe(0);
-
         var gitStatusSegment = ExecuteInDirectory(repositoryPath, Program.BuildGitStatusSegment);
 
+        // Assert
+        cherryPickCommandResult.ExitCode.Should().NotBe(0);
         gitStatusSegment.Should().Contain("*(feature|CHERRY-PICK)");
     }
 
     [Fact]
-    public void BuildGitStatusSegment_WhenRebaseIsInProgress_ShowsBranchNameInsteadOfDetachedCommit()
+    public void BuildGitStatusSegment_WhenRebaseIsInProgress_ShouldShowBranchNameInsteadOfDetachedCommit()
     {
+        // Arrange
         using var sandbox = new TemporaryDirectory();
         var repositoryPath = Path.Combine(sandbox.DirectoryPath, "repo");
 
@@ -254,11 +276,13 @@ public sealed class GitStatusIntegrationTests
         RunGit(repositoryPath, "commit -am \"main change\"");
 
         RunGit(repositoryPath, "checkout feature");
-        var rebaseCommandResult = RunGitAllowFailure(repositoryPath, "rebase main");
-        rebaseCommandResult.ExitCode.Should().NotBe(0);
 
+        // Act
+        var rebaseCommandResult = RunGitAllowFailure(repositoryPath, "rebase main");
         var gitStatusSegment = ExecuteInDirectory(repositoryPath, Program.BuildGitStatusSegment);
 
+        // Assert
+        rebaseCommandResult.ExitCode.Should().NotBe(0);
         gitStatusSegment.Should().Contain("feature|REBASE");
         gitStatusSegment.Should().NotContain("...|REBASE");
     }
@@ -310,7 +334,7 @@ public sealed class GitStatusIntegrationTests
     private static string RunGit(string workingDirectoryPath, string arguments)
     {
         var commandResult = RunGitAllowFailure(workingDirectoryPath, arguments);
-        if (commandResult.ExitCode != 0)
+        if (commandResult.ExitCode is not  0)
         {
             throw new InvalidOperationException($"git {arguments} failed in {workingDirectoryPath}: {commandResult.StandardError}");
         }
@@ -342,9 +366,8 @@ public sealed class GitStatusIntegrationTests
 
     private static string Quote(string value)
     {
-        return "\"" + value.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("\"", "\\\"", StringComparison.Ordinal) + "\"";
+        return "\"" + value.Replace("\\", @"\\", StringComparison.Ordinal).Replace("\"", "\\\"", StringComparison.Ordinal) + "\"";
     }
 
     private readonly record struct GitCommandResult(int ExitCode, string StandardOutput, string StandardError);
 }
-

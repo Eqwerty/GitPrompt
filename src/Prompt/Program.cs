@@ -1,51 +1,13 @@
 ﻿using System.Diagnostics;
 using System.Text;
+using static Prompt.Constants.PromptColors;
+using static Prompt.Constants.BranchLabelTokens;
+using static Prompt.Constants.PromptIcons;
 
 namespace Prompt;
 
 internal static class Program
 {
-    private const string ReadLineStart = "\u0001";
-    private const string ReadLineEnd = "\u0002";
-    private const string AnsiEscape = "\e";
-
-    private const string ColorUser = $"{ReadLineStart}{AnsiEscape}[0;32m{ReadLineEnd}";
-    private const string ColorHost = $"{ReadLineStart}{AnsiEscape}[1;35m{ReadLineEnd}";
-    private const string ColorPath = $"{ReadLineStart}{AnsiEscape}[38;5;172m{ReadLineEnd}";
-    private const string ColorBranch = $"{ReadLineStart}{AnsiEscape}[1;36m{ReadLineEnd}";
-    private const string ColorBranchNoUpstream = $"{ReadLineStart}{AnsiEscape}[1;36m{ReadLineEnd}";
-    private const string ColorAhead = $"{ReadLineStart}{AnsiEscape}[1;36m{ReadLineEnd}";
-    private const string ColorBehind = $"{ReadLineStart}{AnsiEscape}[1;36m{ReadLineEnd}";
-    private const string ColorStaged = $"{ReadLineStart}{AnsiEscape}[0;32m{ReadLineEnd}";
-    private const string ColorUnstaged = $"{ReadLineStart}{AnsiEscape}[0;31m{ReadLineEnd}";
-    private const string ColorUntracked = $"{ReadLineStart}{AnsiEscape}[0;31m{ReadLineEnd}";
-    private const string ColorStash = $"{ReadLineStart}{AnsiEscape}[1;35m{ReadLineEnd}";
-    private const string ColorState = $"{ReadLineStart}{AnsiEscape}[1;31m{ReadLineEnd}";
-    private const string ColorPrompt = $"{ReadLineStart}{AnsiEscape}[0;37m{ReadLineEnd}";
-    private const string ColorReset = $"{ReadLineStart}{AnsiEscape}[0m{ReadLineEnd}";
-
-    // Centralized formatting tokens for all git status rendering.
-    private const string NoUpstreamBranchMarker = "*";
-    private const string BranchLabelOpen = "(";
-    private const string BranchLabelClose = ")";
-    private const string BranchOperationSeparator = "|";
-
-    private const string IconAhead = "↑";
-    private const string IconBehind = "↓";
-    private const string IconAdded = "+";
-    private const string IconModified = "~";
-    private const string IconRenamed = "→";
-    private const string IconDeleted = "-";
-    private const string IconUntracked = "?";
-    private const string IconStash = "@";
-    private const string IconConflicts = "!";
-
-    private const string OperationRebase = "REBASE";
-    private const string OperationMerge = "MERGE";
-    private const string OperationCherryPick = "CHERRY-PICK";
-    private const string OperationRevert = "REVERT";
-    private const string OperationBisect = "BISECT";
-
     internal sealed class StatusCounts
     {
         public int StagedAdded;
@@ -63,12 +25,19 @@ internal static class Program
     internal sealed class GitStatusSnapshot
     {
         public string BranchHeadName { get; init; } = string.Empty;
+
         public string HeadObjectId { get; init; } = string.Empty;
+
         public int CommitsAhead { get; init; }
+
         public int CommitsBehind { get; init; }
+
         public string UpstreamReference { get; init; } = string.Empty;
+
         public bool HasUpstream { get; init; }
+
         public bool HasAheadBehindCounts { get; init; }
+
         public StatusCounts StatusCounts { get; init; } = new();
     }
 
@@ -115,7 +84,7 @@ internal static class Program
             return string.Empty;
         }
 
-        if (branchHeadName == "(detached)" || string.IsNullOrEmpty(branchHeadName))
+        if (branchHeadName is "(detached)" || string.IsNullOrEmpty(branchHeadName))
         {
             var rebaseBranchName = ResolveRebaseBranchName(gitDirectoryPath);
             if (!string.IsNullOrEmpty(rebaseBranchName))
@@ -132,7 +101,7 @@ internal static class Program
 
             var matchingRemoteReferences = FindMatchingRemoteReferences(gitDirectoryPath, headObjectId);
             var detachedBranchDescription = BuildBranchLabel($"{shortObjectId}...");
-            if (matchingRemoteReferences.Count == 1)
+            if (matchingRemoteReferences.Count is 1)
             {
                 detachedBranchDescription = BuildBranchLabel($"{matchingRemoteReferences[0]} {shortObjectId}...");
             }
@@ -170,21 +139,24 @@ internal static class Program
 
         foreach (var line in EnumerateLines(statusOutput))
         {
-            if (line.StartsWith("# branch.head ", StringComparison.Ordinal))
+            var statusBranchHeadPrefix = "# branch.head ";
+            if (line.StartsWith(statusBranchHeadPrefix, StringComparison.Ordinal))
             {
-                branchHeadName = line[14..];
+                branchHeadName = line[statusBranchHeadPrefix.Length..];
                 continue;
             }
 
-            if (line.StartsWith("# branch.oid ", StringComparison.Ordinal))
+            var statusBranchOidPrefix = "# branch.oid ";
+            if (line.StartsWith(statusBranchOidPrefix, StringComparison.Ordinal))
             {
-                headObjectId = line[13..];
+                headObjectId = line[statusBranchOidPrefix.Length..];
                 continue;
             }
 
-            if (line.StartsWith("# branch.ab ", StringComparison.Ordinal))
+            var statusBranchAheadBehindPrefix = "# branch.ab ";
+            if (line.StartsWith(statusBranchAheadBehindPrefix, StringComparison.Ordinal))
             {
-                var parts = line[12..].Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                var parts = line[statusBranchAheadBehindPrefix.Length..].Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
                 if (parts.Length >= 2)
                 {
                     _ = int.TryParse(parts[0].TrimStart('+'), out commitsAhead);
@@ -196,9 +168,10 @@ internal static class Program
                 continue;
             }
 
-            if (line.StartsWith("# branch.upstream ", StringComparison.Ordinal))
+            var statusBranchUpstreamPrefix = "# branch.upstream ";
+            if (line.StartsWith(statusBranchUpstreamPrefix, StringComparison.Ordinal))
             {
-                upstreamReference = line[18..];
+                upstreamReference = line[statusBranchUpstreamPrefix.Length..];
                 hasUpstream = true;
                 continue;
             }
@@ -215,7 +188,7 @@ internal static class Program
                 continue;
             }
 
-            if (line.Length >= 4 && (line[0] == '1' || line[0] == '2'))
+            if (line.Length >= 4 && line[0] is '1' or '2')
             {
                 var stagedStatusCode = line[2];
                 var unstagedStatusCode = line[3];
@@ -292,7 +265,12 @@ internal static class Program
         }
     }
 
-    internal static string BuildGitStatusDisplay(string branchDescription, int commitsAhead, int commitsBehind, StatusCounts statusCounts, string gitDirectoryPath)
+    internal static string BuildGitStatusDisplay(
+        string branchDescription,
+        int commitsAhead,
+        int commitsBehind,
+        StatusCounts statusCounts,
+        string gitDirectoryPath)
     {
         var statusBuilder = new StringBuilder();
 
@@ -315,7 +293,6 @@ internal static class Program
         {
             statusBuilder.Append(' ').Append(ColorBehind).Append(IconBehind).Append(commitsBehind).Append(ColorReset);
         }
-
 
         AppendCountIndicators(
             statusBuilder,
@@ -357,27 +334,27 @@ internal static class Program
 
         if (Directory.Exists(Path.Combine(gitDirectoryPath, "rebase-merge")) || Directory.Exists(Path.Combine(gitDirectoryPath, "rebase-apply")))
         {
-            return OperationRebase;
+            return "REBASE";
         }
 
         if (File.Exists(Path.Combine(gitDirectoryPath, "MERGE_HEAD")))
         {
-            return OperationMerge;
+            return "MERGE";
         }
 
         if (File.Exists(Path.Combine(gitDirectoryPath, "CHERRY_PICK_HEAD")))
         {
-            return OperationCherryPick;
+            return "CHERRY-PICK";
         }
 
         if (File.Exists(Path.Combine(gitDirectoryPath, "REVERT_HEAD")))
         {
-            return OperationRevert;
+            return "REVERT";
         }
 
         if (File.Exists(Path.Combine(gitDirectoryPath, "BISECT_LOG")))
         {
-            return OperationBisect;
+            return "BISECT";
         }
 
         return string.Empty;
@@ -396,12 +373,13 @@ internal static class Program
             return branchLabel;
         }
 
+        var branchOperationSeparator = "|";
         if (branchLabel.EndsWith(BranchLabelClose, StringComparison.Ordinal))
         {
-            return branchLabel[..^BranchLabelClose.Length] + BranchOperationSeparator + operationName + BranchLabelClose;
+            return branchLabel[..^BranchLabelClose.Length] + branchOperationSeparator + operationName + BranchLabelClose;
         }
 
-        return branchLabel + BranchOperationSeparator + operationName;
+        return branchLabel + branchOperationSeparator + operationName;
     }
 
     internal static string ResolveRebaseBranchName(string gitDirectoryPath)
@@ -500,7 +478,7 @@ internal static class Program
             workingDirectoryPath = "?";
         }
 
-        if (!string.IsNullOrEmpty(workingDirectoryPath) && workingDirectoryPath != "?")
+        if (!string.IsNullOrEmpty(workingDirectoryPath) && workingDirectoryPath is not "?")
         {
             try
             {
@@ -541,7 +519,6 @@ internal static class Program
             requireSuccess: true
         );
     }
-
 
     private static string? FindGitDirectoryPath()
     {
@@ -669,17 +646,24 @@ internal static class Program
             var baseReferenceCandidates = new[] { "origin/main", "origin/master", "main", "master" };
             foreach (var candidateReference in baseReferenceCandidates)
             {
-                if (RunProcessForOutput("git", $"-C {EscapeCommandLineArgument(repositoryRootPath)} show-ref --verify --quiet refs/remotes/{candidateReference}", null, true) != null)
+                if (RunProcessForOutput(fileName: "git",
+                        arguments: $"-C {EscapeCommandLineArgument(repositoryRootPath)} show-ref --verify --quiet refs/remotes/{candidateReference}",
+                        workingDirectory: null,
+                        requireSuccess: true) is not null)
                 {
                     baseReference = candidateReference;
                     break;
                 }
 
-                var localCandidateReference = candidateReference.StartsWith("origin/", StringComparison.Ordinal)
-                    ? candidateReference[7..]
+                var remoteOriginPrefix = "origin/";
+                var localCandidateReference = candidateReference.StartsWith(remoteOriginPrefix, StringComparison.Ordinal)
+                    ? candidateReference[remoteOriginPrefix.Length..]
                     : candidateReference;
 
-                if (RunProcessForOutput("git", $"-C {EscapeCommandLineArgument(repositoryRootPath)} show-ref --verify --quiet refs/heads/{localCandidateReference}", null, true) != null)
+                if (RunProcessForOutput(fileName: "git",
+                        arguments: $"-C {EscapeCommandLineArgument(repositoryRootPath)} show-ref --verify --quiet refs/heads/{localCandidateReference}",
+                        workingDirectory: null,
+                        requireSuccess: true) is not null)
                 {
                     baseReference = localCandidateReference;
                     break;
@@ -715,7 +699,6 @@ internal static class Program
         return int.TryParse(commitCountOutput, out var commitCount) ? commitCount : 0;
     }
 
-
     private static (int Ahead, int Behind) ComputeAheadBehindAgainstUpstream(string gitDirectoryPath, string upstreamReference)
     {
         if (string.IsNullOrEmpty(upstreamReference))
@@ -733,7 +716,7 @@ internal static class Program
 
         if (string.IsNullOrWhiteSpace(leftRightCountsOutput))
         {
-            return (0, 0);
+            return (Ahead: 0, Behind: 0);
         }
 
         var countParts = leftRightCountsOutput.Split(
@@ -743,14 +726,13 @@ internal static class Program
 
         if (countParts.Length < 2)
         {
-            return (0, 0);
+            return (Ahead: 0, Behind: 0);
         }
 
         _ = int.TryParse(countParts[0], out var commitsBehind);
         _ = int.TryParse(countParts[1], out var commitsAhead);
         return (commitsAhead, commitsBehind);
     }
-
 
     internal static List<string> FindMatchingRemoteReferences(string gitDirectoryPath, string headObjectId)
     {
@@ -788,13 +770,13 @@ internal static class Program
         {
             foreach (var line in EnumerateLines(File.ReadAllText(packedReferencesPath)))
             {
-                if (string.IsNullOrEmpty(line) || line[0] == '#' || line[0] == '^')
+                if (string.IsNullOrEmpty(line) || line[0] is '#' or '^')
                 {
                     continue;
                 }
 
                 var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                if (parts.Length != 2)
+                if (parts.Length is not  2)
                 {
                     continue;
                 }
@@ -803,7 +785,8 @@ internal static class Program
                 var fullReferenceName = parts[1];
                 const string prefix = "refs/remotes/";
 
-                if (!fullReferenceName.StartsWith(prefix, StringComparison.Ordinal) || !string.Equals(referenceObjectId, headObjectId, StringComparison.Ordinal))
+                if (!fullReferenceName.StartsWith(prefix, StringComparison.Ordinal) ||
+                    !string.Equals(referenceObjectId, headObjectId, StringComparison.Ordinal))
                 {
                     continue;
                 }
@@ -830,7 +813,7 @@ internal static class Program
             var count = 0;
             foreach (var value in data)
             {
-                if (value == (byte)'\n')
+                if (value is (byte)'\n')
                 {
                     count++;
                 }
@@ -865,17 +848,17 @@ internal static class Program
 
     internal static string EscapeCommandLineArgument(string argument)
     {
-        if (argument.Length == 0)
+        if (argument.Length is 0)
         {
             return "\"\"";
         }
 
-        if (!argument.Any(static c => char.IsWhiteSpace(c) || c == '"'))
+        if (!argument.Any(static c => char.IsWhiteSpace(c) || c is '"'))
         {
             return argument;
         }
 
-        return "\"" + argument.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("\"", "\\\"", StringComparison.Ordinal) + "\"";
+        return "\"" + argument.Replace("\\", @"\\", StringComparison.Ordinal).Replace("\"", "\\\"", StringComparison.Ordinal) + "\"";
     }
 
     private static string? RunProcessForOutput(string fileName, string arguments, string? workingDirectory, bool requireSuccess)
@@ -900,7 +883,7 @@ internal static class Program
             var stderrTask = process.StandardError.ReadToEndAsync();
             var output = process.StandardOutput.ReadToEnd();
             process.WaitForExit();
-            
+
             // Wait for stderr to complete without blocking
             try
             {
@@ -911,12 +894,12 @@ internal static class Program
                 // Ignore stderr timeout
             }
 
-            if (requireSuccess && process.ExitCode != 0)
+            if (requireSuccess && process.ExitCode is not 0)
             {
                 return null;
             }
 
-            return process.ExitCode == 0 ? output : string.Empty;
+            return process.ExitCode is 0 ? output : string.Empty;
         }
         catch
         {
