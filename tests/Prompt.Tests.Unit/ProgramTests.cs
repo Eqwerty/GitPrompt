@@ -56,13 +56,11 @@ public sealed class ProgramTests
         File.WriteAllText(Path.Combine(stashLogDirectoryPath, "stash"), "entry-1\nentry-2\n");
         File.WriteAllText(Path.Combine(gitDirectory.DirectoryPath, "MERGE_HEAD"), "merge\n");
 
-        var statusCounts = new Program.StatusCounts
-        {
-            StagedRenamed = 1,
-            UnstagedModified = 1,
-            Untracked = 1,
-            Conflicts = 1
-        };
+        var statusCounts = new StatusCounts(
+            stagedRenamed: 1,
+            unstagedModified: 1,
+            untracked: 1,
+            conflicts: 1);
 
         // Act
         var gitStatusDisplay = Program.BuildGitStatusDisplay("(main)", 4, 2, statusCounts, gitDirectory.DirectoryPath);
@@ -90,7 +88,7 @@ public sealed class ProgramTests
         File.WriteAllText(Path.Combine(gitDirectory.DirectoryPath, operationMarkerFileName), "head\n");
 
         // Act
-        var gitStatusDisplay = Program.BuildGitStatusDisplay("*(feature)", 0, 0, new Program.StatusCounts(), gitDirectory.DirectoryPath);
+        var gitStatusDisplay = Program.BuildGitStatusDisplay("*(feature)", 0, 0, new StatusCounts(), gitDirectory.DirectoryPath);
 
         // Assert
         gitStatusDisplay.Should().Contain($"*(feature|{expectedOperationMarker})");
@@ -353,7 +351,7 @@ public sealed class ProgramTests
         using var gitDirectory = new TemporaryDirectory();
 
         // Act
-        var gitStatusDisplay = Program.BuildGitStatusDisplay("(main)", 0, 0, new Program.StatusCounts(), gitDirectory.DirectoryPath);
+        var gitStatusDisplay = Program.BuildGitStatusDisplay("(main)", 0, 0, new StatusCounts(), gitDirectory.DirectoryPath);
 
         // Assert
         gitStatusDisplay.Should().StartWith("\u0001\e[1;36m\u0002(main)\u0001\e[0m\u0002");
@@ -366,7 +364,7 @@ public sealed class ProgramTests
         using var gitDirectory = new TemporaryDirectory();
 
         // Act
-        var gitStatusDisplay = Program.BuildGitStatusDisplay("*(feature)", 0, 0, new Program.StatusCounts(), gitDirectory.DirectoryPath);
+        var gitStatusDisplay = Program.BuildGitStatusDisplay("*(feature)", 0, 0, new StatusCounts(), gitDirectory.DirectoryPath);
 
         // Assert
         gitStatusDisplay.Should().StartWith("\u0001\e[1;36m\u0002*(feature)\u0001\e[0m\u0002");
@@ -379,7 +377,7 @@ public sealed class ProgramTests
         using var gitDirectory = new TemporaryDirectory();
 
         // Act
-        var gitStatusDisplay = Program.BuildGitStatusDisplay("(main)", 2, 3, new Program.StatusCounts(), gitDirectory.DirectoryPath);
+        var gitStatusDisplay = Program.BuildGitStatusDisplay("(main)", 2, 3, new StatusCounts(), gitDirectory.DirectoryPath);
 
         // Assert
         gitStatusDisplay.Should().Contain(" \u0001\e[1;36m\u0002↑2\u0001\e[0m\u0002");
@@ -392,13 +390,11 @@ public sealed class ProgramTests
         // Arrange
         using var gitDirectory = new TemporaryDirectory();
 
-        var statusCounts = new Program.StatusCounts
-        {
-            StagedAdded = 1,
-            UnstagedModified = 1,
-            Untracked = 1,
-            Conflicts = 1
-        };
+        var statusCounts = new StatusCounts(
+            stagedAdded: 1,
+            unstagedModified: 1,
+            untracked: 1,
+            conflicts: 1);
 
         // Act
         var gitStatusDisplay = Program.BuildGitStatusDisplay("(main)", 1, 1, statusCounts, gitDirectory.DirectoryPath);

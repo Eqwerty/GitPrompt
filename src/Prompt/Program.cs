@@ -8,39 +8,6 @@ namespace Prompt;
 
 internal static class Program
 {
-    internal sealed class StatusCounts
-    {
-        public int StagedAdded;
-        public int StagedModified;
-        public int StagedDeleted;
-        public int StagedRenamed;
-        public int UnstagedAdded;
-        public int UnstagedModified;
-        public int UnstagedDeleted;
-        public int UnstagedRenamed;
-        public int Untracked;
-        public int Conflicts;
-    }
-
-    internal sealed class GitStatusSnapshot
-    {
-        public string BranchHeadName { get; init; } = string.Empty;
-
-        public string HeadObjectId { get; init; } = string.Empty;
-
-        public int CommitsAhead { get; init; }
-
-        public int CommitsBehind { get; init; }
-
-        public string UpstreamReference { get; init; } = string.Empty;
-
-        public bool HasUpstream { get; init; }
-
-        public bool HasAheadBehindCounts { get; init; }
-
-        public StatusCounts StatusCounts { get; init; } = new();
-    }
-
     private readonly record struct CountStyle(int Value, string Color, string Icon);
 
     private static int Main()
@@ -198,24 +165,30 @@ internal static class Program
                 continue;
             }
 
-            if (line.StartsWith("? ", StringComparison.Ordinal))
+            var isUntrackedRecord = line.StartsWith("? ", StringComparison.Ordinal);
+            var isUnmergedRecord = line.StartsWith("u ", StringComparison.Ordinal);
+            if (isUntrackedRecord || isUnmergedRecord)
             {
-                statusCounts.Untracked++;
+                if (isUntrackedRecord)
+                {
+                    statusCounts.TrackUntrackedFile();
+                }
+                else
+                {
+                    statusCounts.TrackConflict();
+                }
+
                 continue;
             }
 
-            if (line.StartsWith("u ", StringComparison.Ordinal))
-            {
-                statusCounts.Conflicts++;
-                continue;
-            }
-
-            if (line.Length >= 4 && line[0] is '1' or '2')
+            var isOrdinaryTrackedEntryRecord = line.Length >= 4 && line[0] is '1';
+            var isRenamedOrCopiedTrackedEntryRecord = line.Length >= 4 && line[0] is '2';
+            if (isOrdinaryTrackedEntryRecord || isRenamedOrCopiedTrackedEntryRecord)
             {
                 var stagedStatusCode = line[2];
                 var unstagedStatusCode = line[3];
-                AccumulateFileStatus(stagedStatusCode, isStaged: true, statusCounts);
-                AccumulateFileStatus(unstagedStatusCode, isStaged: false, statusCounts);
+                statusCounts.TrackStagedStatusCode(stagedStatusCode);
+                statusCounts.TrackUnstagedStatusCode(unstagedStatusCode);
             }
         }
 
@@ -230,61 +203,6 @@ internal static class Program
             HasAheadBehindCounts = hasAheadBehindCounts,
             StatusCounts = statusCounts
         };
-    }
-
-    internal static void AccumulateFileStatus(char value, bool isStaged, StatusCounts counts)
-    {
-        switch (value)
-        {
-            case 'A':
-                if (isStaged)
-                {
-                    counts.StagedAdded++;
-                }
-                else
-                {
-                    counts.UnstagedAdded++;
-                }
-
-                break;
-            case 'M':
-                if (isStaged)
-                {
-                    counts.StagedModified++;
-                }
-                else
-                {
-                    counts.UnstagedModified++;
-                }
-
-                break;
-            case 'D':
-                if (isStaged)
-                {
-                    counts.StagedDeleted++;
-                }
-                else
-                {
-                    counts.UnstagedDeleted++;
-                }
-
-                break;
-            case 'R':
-            case 'C':
-                if (isStaged)
-                {
-                    counts.StagedRenamed++;
-                }
-                else
-                {
-                    counts.UnstagedRenamed++;
-                }
-
-                break;
-            case 'U':
-                counts.Conflicts++;
-                break;
-        }
     }
 
     internal static string BuildGitStatusDisplay(
