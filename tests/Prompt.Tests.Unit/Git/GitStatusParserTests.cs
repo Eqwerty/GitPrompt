@@ -85,4 +85,36 @@ public sealed class GitStatusParserTests
         statusCounts.Untracked.Should().Be(1);
         statusCounts.Conflicts.Should().Be(1);
     }
+
+    [Fact]
+    public void Parse_WhenTrackedEntriesContainCopyConflictAndUnsupportedCodes_ShouldTrackOnlySupportedCounters()
+    {
+        // Arrange
+        const string statusOutput = """
+                                    # branch.oid abcdef1234567890abcdef1234567890abcdef12
+                                    # branch.head feature
+                                    1 C. copy-staged
+                                    1 .C copy-unstaged
+                                    1 U. conflict-staged
+                                    1 .U conflict-unstaged
+                                    1 .. ignored
+                                    1    ignored-spaces
+                                    """;
+
+        // Act
+        var gitStatusSnapshot = GitStatusParser.Parse(statusOutput);
+
+        // Assert
+        var statusCounts = gitStatusSnapshot.StatusCounts;
+        statusCounts.StagedAdded.Should().Be(0);
+        statusCounts.StagedModified.Should().Be(0);
+        statusCounts.StagedDeleted.Should().Be(0);
+        statusCounts.StagedRenamed.Should().Be(1);
+        statusCounts.UnstagedAdded.Should().Be(0);
+        statusCounts.UnstagedModified.Should().Be(0);
+        statusCounts.UnstagedDeleted.Should().Be(0);
+        statusCounts.UnstagedRenamed.Should().Be(1);
+        statusCounts.Untracked.Should().Be(0);
+        statusCounts.Conflicts.Should().Be(2);
+    }
 }
