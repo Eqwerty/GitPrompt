@@ -6,7 +6,11 @@ This repository publishes a single prompt binary and auto-publishes GitHub Relea
 
 The workflow in `.github/workflows/release.yml` runs when either is true:
 
-- You push to `master`
+- You push to `master` and at least one release-relevant path changed:
+  - `src/**`
+  - `tests/**`
+  - `Prompt.slnx`
+  - `.github/workflows/release.yml`
 - You trigger it manually with `workflow_dispatch`
 
 When it runs, it:
@@ -39,6 +43,7 @@ Install:
 Notes:
 
 - Installer supports Linux, macOS, and Windows Git Bash on amd64.
+- Installer options are intentionally minimal: `-h` / `--help` only.
 - On Linux and macOS, rerunning the installer replaces the binary atomically, so self-updates from your shell prompt work without `Text file busy` errors.
 
 ## Update
@@ -69,7 +74,7 @@ What it does:
   - Linux/macOS: `$HOME/.local/bin/gitprompt`
   - Windows Git Bash: `$HOME/prompt/gitprompt.exe`
 
-By default the script keeps `dotnet` output quiet and shows a single progress bar while the current step runs, then prints each completed step with a dimmed duration plus a total overall duration at the end. If you want to stream the underlying `dotnet` output, use verbose mode:
+By default the script keeps `dotnet` output quiet and shows a single-line spinner while each step runs, then prints each completed step with a dimmed duration plus a total overall duration at the end. If you want to stream the underlying `dotnet` output, use verbose mode:
 
     sh ./dev-install-local.sh --verbose
 
@@ -79,7 +84,7 @@ Optional (faster inner loop, still restores/builds but skips only the test execu
 
 Short flags also work:
 
-    sh ./dev-install-local.sh -st -v
+    sh ./dev-install-local.sh -s -v
 
 ## Bash Prompt Setup
 
