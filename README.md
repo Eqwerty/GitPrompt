@@ -61,15 +61,25 @@ Run:
 
 What it does:
 
-- Runs `dotnet test` (Release)
+- Restores solution packages
+- Builds the solution in Release
+- Runs tests in Release
 - Publishes a local Release binary for your OS
 - Installs it to the same default location as `install.sh`
   - Linux/macOS: `$HOME/.local/bin/gitprompt`
   - Windows Git Bash: `$HOME/prompt/gitprompt.exe`
 
-Optional (faster inner loop):
+By default the script keeps `dotnet` output quiet and shows a single progress bar while the current step runs, then prints each completed step with a dimmed duration plus a total overall duration at the end. If you want to stream the underlying `dotnet` output, use verbose mode:
 
-    SKIP_TESTS=1 sh ./dev-install-local.sh
+    sh ./dev-install-local.sh --verbose
+
+Optional (faster inner loop, still restores/builds but skips only the test execution and marks that step as skipped):
+
+    sh ./dev-install-local.sh --skip-tests
+
+Short flags also work:
+
+    sh ./dev-install-local.sh -st -v
 
 ## Bash Prompt Setup
 
