@@ -1,4 +1,4 @@
-namespace Prompt;
+namespace Prompt.Platform;
 
 internal abstract class PlatformProvider
 {

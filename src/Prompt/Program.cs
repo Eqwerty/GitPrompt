@@ -1,4 +1,7 @@
 ﻿using System.Text;
+using Prompt.Git;
+using Prompt.Platform;
+using Prompt.Prompting;
 using static Prompt.Constants.PromptColors;
 
 namespace Prompt;
@@ -10,10 +13,10 @@ internal static class Program
         Console.OutputEncoding = Encoding.UTF8;
 
         var platformProvider = PlatformProvider.System;
-        
+
         var contextSegment = ContextSegmentBuilder.Build(platformProvider);
         var gitStatusSegment = await GitStatusSegmentBuilder.BuildAsync();
-        var promptSymbol = GetPromptSymbol(platformProvider);
+        var promptSymbol = PromptSymbolBuilder.Build(platformProvider);
 
         var promptLine = string.IsNullOrEmpty(gitStatusSegment)
             ? contextSegment
@@ -21,16 +24,5 @@ internal static class Program
 
         Console.Write($"{promptLine}\n{ColorPromptSymbol}{promptSymbol} {ColorReset}");
         return 0;
-    }
-
-    internal static string GetPromptSymbol(PlatformProvider platformProvider)
-    {
-        if (platformProvider.IsWindows())
-        {
-            return ">";
-        }
-
-        var isCurrentUnixRootUser = string.Equals(platformProvider.User, "root", StringComparison.Ordinal);
-        return isCurrentUnixRootUser ? "#" : "$";
     }
 }

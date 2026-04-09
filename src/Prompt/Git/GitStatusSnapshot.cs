@@ -1,4 +1,4 @@
-namespace Prompt;
+namespace Prompt.Git;
 
 internal sealed class GitStatusSnapshot
 {

@@ -4,7 +4,7 @@ using static Prompt.Constants.BranchLabelTokens;
 using static Prompt.Constants.PromptColors;
 using static Prompt.Constants.PromptIcons;
 
-namespace Prompt;
+namespace Prompt.Git;
 
 internal static class GitStatusSegmentBuilder
 {
@@ -642,4 +642,3 @@ internal static class GitStatusSegmentBuilder
         }
     }
 }
-

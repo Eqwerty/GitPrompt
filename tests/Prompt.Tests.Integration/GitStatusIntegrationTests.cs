@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using FluentAssertions;
+using Prompt.Git;
 
 namespace Prompt.Tests.Integration;
 
@@ -334,7 +335,7 @@ public sealed class GitStatusIntegrationTests
     private static async Task<string> RunGitAsync(string workingDirectoryPath, string arguments)
     {
         var commandResult = await RunGitAllowFailureAsync(workingDirectoryPath, arguments);
-        if (commandResult.ExitCode is not  0)
+        if (commandResult.ExitCode is not 0)
         {
             throw new InvalidOperationException($"git {arguments} failed in {workingDirectoryPath}: {commandResult.StandardError}");
         }

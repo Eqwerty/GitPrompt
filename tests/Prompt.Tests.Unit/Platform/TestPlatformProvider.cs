@@ -1,4 +1,6 @@
-namespace Prompt.Tests.Unit;
+using Prompt.Platform;
+
+namespace Prompt.Tests.Unit.Platform;
 
 internal sealed class TestPlatformProvider(
     bool isWindows = false,

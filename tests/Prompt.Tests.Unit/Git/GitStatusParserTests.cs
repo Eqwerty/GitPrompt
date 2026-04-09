@@ -1,6 +1,7 @@
 using FluentAssertions;
+using Prompt.Git;
 
-namespace Prompt.Tests.Unit;
+namespace Prompt.Tests.Unit.Git;
 
 public sealed class GitStatusParserTests
 {

@@ -1,6 +1,7 @@
+using Prompt.Platform;
 using static Prompt.Constants.PromptColors;
 
-namespace Prompt;
+namespace Prompt.Prompting;
 
 internal static class ContextSegmentBuilder
 {
