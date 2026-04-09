@@ -4,25 +4,18 @@ using Prompt.Platform;
 using Prompt.Prompting;
 using static Prompt.Constants.PromptColors;
 
-namespace Prompt;
+Console.OutputEncoding = Encoding.UTF8;
 
-internal static class Program
-{
-    private static async Task<int> Main()
-    {
-        Console.OutputEncoding = Encoding.UTF8;
+var platformProvider = PlatformProvider.System;
 
-        var platformProvider = PlatformProvider.System;
+var contextSegment = ContextSegmentBuilder.Build(platformProvider);
+var gitStatusSegment = await GitStatusSegmentBuilder.BuildAsync();
+var promptSymbol = PromptSymbolBuilder.Build(platformProvider);
 
-        var contextSegment = ContextSegmentBuilder.Build(platformProvider);
-        var gitStatusSegment = await GitStatusSegmentBuilder.BuildAsync();
-        var promptSymbol = PromptSymbolBuilder.Build(platformProvider);
+var promptLine = string.IsNullOrEmpty(gitStatusSegment)
+    ? contextSegment
+    : $"{contextSegment} {gitStatusSegment}";
 
-        var promptLine = string.IsNullOrEmpty(gitStatusSegment)
-            ? contextSegment
-            : $"{contextSegment} {gitStatusSegment}";
+Console.Write($"{promptLine}\n{ColorPromptSymbol}{promptSymbol}{ColorReset} ");
 
-        Console.Write($"{promptLine}\n{ColorPromptSymbol}{promptSymbol} {ColorReset}");
-        return 0;
-    }
-}
+return 0;
