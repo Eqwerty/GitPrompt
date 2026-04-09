@@ -41,6 +41,9 @@ ScaffoldingReadMe.txt
 *~
 CodeCoverage/
 
+# BenchmarkDotNet
+BenchmarkDotNet.Artifacts/
+
 # MSBuild Binary and Structured Log
 *.binlog
 

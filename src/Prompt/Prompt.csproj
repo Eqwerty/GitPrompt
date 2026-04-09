@@ -11,8 +11,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <InternalsVisibleTo Include="Prompt.Tests.Unit" />
-        <InternalsVisibleTo Include="Prompt.Tests.Integration" />
+        <InternalsVisibleTo Include="Prompt.Tests.Unit"/>
+        <InternalsVisibleTo Include="Prompt.Tests.Integration"/>
+        <InternalsVisibleTo Include="Prompt.Benchmarks"/>
     </ItemGroup>
 
 </Project>

@@ -86,6 +86,27 @@ Short flags also work:
 
     sh ./dev-install-local.sh -s -v
 
+## Performance Checks (Optional)
+
+If you want to watch for performance regressions while refactoring, run the benchmark suite. All benchmarks run by default:
+
+Local run:
+
+    dotnet run -c Release --project benchmarks/Prompt.Benchmarks/Prompt.Benchmarks.csproj
+
+This runs all benchmarks (parser, display rendering, context building) and writes results to:
+
+- `benchmarks/Prompt.Benchmarks/BenchmarkDotNet.Artifacts/`
+
+Optional: to run only a specific benchmark class, use `--filter`:
+
+    dotnet run -c Release --project benchmarks/Prompt.Benchmarks/Prompt.Benchmarks.csproj -- --filter GitStatusParserBenchmarks
+
+CI run:
+
+- Trigger `.github/workflows/perf.yml` manually with `workflow_dispatch`.
+- The workflow uploads benchmark reports as a `benchmark-results` artifact.
+
 ## Bash Prompt Setup
 
 After install, set `PS1` and you are done.
