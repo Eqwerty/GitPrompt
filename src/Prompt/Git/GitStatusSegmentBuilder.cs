@@ -8,7 +8,7 @@ namespace Prompt.Git;
 
 internal static class GitStatusSegmentBuilder
 {
-    private readonly record struct CountStyle(int Value, string Color, string Icon);
+    private readonly record struct CountStyle(int Value, string Color, char Icon);
 
     internal static async Task<string> BuildAsync()
     {
