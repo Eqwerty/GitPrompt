@@ -41,6 +41,50 @@ public sealed class GitStatusSegmentBuilderTests
         gitStatusDisplay.Should().Contain("!1");
     }
 
+    [Fact]
+    public async Task BuildDisplay_WhenAllIndicatorsExist_ShouldRenderIndicatorsInExpectedOrder()
+    {
+        // Arrange
+        using var gitDirectory = new TemporaryDirectory();
+        var stashLogDirectoryPath = Path.Combine(gitDirectory.DirectoryPath, "logs", "refs");
+        Directory.CreateDirectory(stashLogDirectoryPath);
+        await File.WriteAllTextAsync(Path.Combine(stashLogDirectoryPath, "stash"), "entry-1\nentry-2\n");
+        await File.WriteAllTextAsync(Path.Combine(gitDirectory.DirectoryPath, "MERGE_HEAD"), "merge\n");
+
+        var statusCounts = new StatusCounts(
+            StagedAdded: 1,
+            StagedModified: 2,
+            StagedDeleted: 4,
+            StagedRenamed: 3,
+            UnstagedAdded: 5,
+            UnstagedModified: 6,
+            UnstagedDeleted: 8,
+            UnstagedRenamed: 7,
+            Untracked: 9,
+            Conflicts: 10);
+
+        // Act
+        var gitStatusDisplay = GitStatusSegmentBuilder.BuildDisplay("(main)", commitsAhead: 12, commitsBehind: 13, statusCounts, gitDirectory.DirectoryPath);
+
+        // Assert
+        AssertInOrder(
+            gitStatusDisplay,
+            "(main|MERGE)",
+            "↑12",
+            "↓13",
+            "+1",
+            "~2",
+            "→3",
+            "-4",
+            "+5",
+            "~6",
+            "→7",
+            "-8",
+            "?9",
+            "!10",
+            "@2");
+    }
+
     [Theory]
     [InlineData("MERGE_HEAD", "MERGE")]
     [InlineData("CHERRY_PICK_HEAD", "CHERRY-PICK")]
@@ -404,6 +448,17 @@ public sealed class GitStatusSegmentBuilderTests
 
                 Directory.Delete(DirectoryPath, recursive: true);
             }
+        }
+    }
+
+    private static void AssertInOrder(string value, params string[] tokens)
+    {
+        var currentIndex = -1;
+        foreach (var token in tokens)
+        {
+            var tokenIndex = value.IndexOf(token, StringComparison.Ordinal);
+            tokenIndex.Should().BeGreaterThan(currentIndex, $"expected '{token}' to appear after previous indicators");
+            currentIndex = tokenIndex;
         }
     }
 }

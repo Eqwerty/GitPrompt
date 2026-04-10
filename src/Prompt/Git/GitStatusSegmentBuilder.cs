@@ -121,15 +121,15 @@ internal static class GitStatusSegmentBuilder
             statusBuilder.Append(' ').Append(ColorUntracked).Append(IconUntracked).Append(statusCounts.Untracked).Append(ColorReset);
         }
 
+        if (statusCounts.Conflicts > 0)
+        {
+            statusBuilder.Append(' ').Append(ColorState).Append(IconConflicts).Append(statusCounts.Conflicts).Append(ColorReset);
+        }
+
         var stashEntryCount = ReadStashEntryCount(gitDirectoryPath);
         if (stashEntryCount > 0)
         {
             statusBuilder.Append(' ').Append(ColorStash).Append(IconStash).Append(stashEntryCount).Append(ColorReset);
-        }
-
-        if (statusCounts.Conflicts > 0)
-        {
-            statusBuilder.Append(' ').Append(ColorState).Append(IconConflicts).Append(statusCounts.Conflicts).Append(ColorReset);
         }
 
         return statusBuilder.ToString();

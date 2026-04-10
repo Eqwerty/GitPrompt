@@ -75,8 +75,8 @@ Render order:
 4. Staged counts (`+ ~ → -`, non-zero only)
 5. Unstaged counts (`+ ~ → -`, non-zero only)
 6. Untracked (`?N`)
-7. Stash (`@N`)
-8. Conflicts (`!N`)
+7. Conflicts (`!N`)
+8. Stash (`@N`)
 
 ### Branch Labels
 
@@ -105,8 +105,8 @@ Supported markers: `REBASE`, `MERGE`, `CHERRY-PICK`, `REVERT`, `BISECT`.
 - `→` renamed/copied
 - `-` deleted
 - `?` untracked
-- `@` stash entries
 - `!` conflicts
+- `@` stash entries
 
 Staged and unstaged share the same file-state icons (`+ ~ → -`) and are distinguished by color:
 
@@ -116,7 +116,7 @@ Staged and unstaged share the same file-state icons (`+ ~ → -`) and are distin
 Example:
 
 ```text
-(main) ↑2 ↓1 +1 ~2 +3 -1 ?4 @1 !1
+(main) ↑2 ↓1 +1 ~2 +3 -1 ?4 !1 @1
 ```
 
 In that example, `+1 ~2` is staged, and `+3 -1` is unstaged.
