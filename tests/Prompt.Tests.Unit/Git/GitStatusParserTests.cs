@@ -5,6 +5,21 @@ namespace Prompt.Tests.Unit.Git;
 
 public sealed class GitStatusParserTests
 {
+    public enum CounterKind
+    {
+        None,
+        StagedAdded,
+        StagedModified,
+        StagedDeleted,
+        StagedRenamed,
+        UnstagedAdded,
+        UnstagedModified,
+        UnstagedDeleted,
+        UnstagedRenamed,
+        Untracked,
+        Conflicts
+    }
+
     [Fact]
     public void Parse_WhenStatusContainsAheadBehindAndCounters_ShouldParseSnapshotValues()
     {
@@ -38,15 +53,16 @@ public sealed class GitStatusParserTests
         gitStatusSnapshot.CommitsBehind.Should().Be(2);
         gitStatusSnapshot.StashEntryCount.Should().Be(4);
 
-        var statusCounts = gitStatusSnapshot.StatusCounts;
-        statusCounts.StagedAdded.Should().Be(1);
-        statusCounts.UnstagedModified.Should().Be(1);
-        statusCounts.StagedRenamed.Should().Be(1);
-        statusCounts.UnstagedRenamed.Should().Be(1);
-        statusCounts.StagedDeleted.Should().Be(1);
-        statusCounts.UnstagedDeleted.Should().Be(1);
-        statusCounts.Untracked.Should().Be(1);
-        statusCounts.Conflicts.Should().Be(1);
+        gitStatusSnapshot.StatusCounts.Should().Be(new StatusCounts(StagedAdded: 1,
+            StagedModified: 0,
+            StagedDeleted: 1,
+            StagedRenamed: 1,
+            UnstagedAdded: 0,
+            UnstagedModified: 1,
+            UnstagedDeleted: 1,
+            UnstagedRenamed: 1,
+            Untracked: 1,
+            Conflicts: 1));
     }
 
     [Fact]
@@ -76,17 +92,16 @@ public sealed class GitStatusParserTests
         gitStatusSnapshot.CommitsBehind.Should().Be(0);
         gitStatusSnapshot.StashEntryCount.Should().Be(0);
 
-        var statusCounts = gitStatusSnapshot.StatusCounts;
-        statusCounts.StagedAdded.Should().Be(1);
-        statusCounts.StagedModified.Should().Be(1);
-        statusCounts.StagedDeleted.Should().Be(0);
-        statusCounts.StagedRenamed.Should().Be(1);
-        statusCounts.UnstagedAdded.Should().Be(1);
-        statusCounts.UnstagedModified.Should().Be(1);
-        statusCounts.UnstagedDeleted.Should().Be(2);
-        statusCounts.UnstagedRenamed.Should().Be(1);
-        statusCounts.Untracked.Should().Be(1);
-        statusCounts.Conflicts.Should().Be(1);
+        gitStatusSnapshot.StatusCounts.Should().Be(new StatusCounts(StagedAdded: 1,
+            StagedModified: 1,
+            StagedDeleted: 0,
+            StagedRenamed: 1,
+            UnstagedAdded: 1,
+            UnstagedModified: 1,
+            UnstagedDeleted: 2,
+            UnstagedRenamed: 1,
+            Untracked: 1,
+            Conflicts: 1));
     }
 
     [Fact]
@@ -108,16 +123,256 @@ public sealed class GitStatusParserTests
         var gitStatusSnapshot = GitStatusParser.Parse(statusOutput);
 
         // Assert
-        var statusCounts = gitStatusSnapshot.StatusCounts;
-        statusCounts.StagedAdded.Should().Be(0);
-        statusCounts.StagedModified.Should().Be(0);
-        statusCounts.StagedDeleted.Should().Be(0);
-        statusCounts.StagedRenamed.Should().Be(1);
-        statusCounts.UnstagedAdded.Should().Be(0);
-        statusCounts.UnstagedModified.Should().Be(0);
-        statusCounts.UnstagedDeleted.Should().Be(0);
-        statusCounts.UnstagedRenamed.Should().Be(1);
-        statusCounts.Untracked.Should().Be(0);
-        statusCounts.Conflicts.Should().Be(2);
+        gitStatusSnapshot.StatusCounts.Should().Be(new StatusCounts(StagedAdded: 0,
+            StagedModified: 0,
+            StagedDeleted: 0,
+            StagedRenamed: 1,
+            UnstagedAdded: 0,
+            UnstagedModified: 0,
+            UnstagedDeleted: 0,
+            UnstagedRenamed: 1,
+            Untracked: 0,
+            Conflicts: 2));
     }
+
+    [Theory]
+    [MemberData(nameof(TrackedStatusCodeCases))]
+    public void Parse_WhenTrackedEntryContainsStatusPair_ShouldMapEveryCounterCorrectly(string statusPair, CounterKind expectedCounter, int expectedValue)
+    {
+        // Arrange
+        var statusOutput = $"1 {statusPair} file.txt";
+        var expectedCounts = CreateExpectedCounts(expectedCounter, expectedValue);
+
+        // Act
+        var gitStatusSnapshot = GitStatusParser.Parse(statusOutput);
+
+        // Assert
+        gitStatusSnapshot.StatusCounts.Should().Be(expectedCounts);
+    }
+
+    [Theory]
+    [InlineData("A.", CounterKind.StagedAdded)]
+    [InlineData(".A", CounterKind.UnstagedAdded)]
+    [InlineData("M.", CounterKind.StagedModified)]
+    [InlineData(".M", CounterKind.UnstagedModified)]
+    [InlineData("D.", CounterKind.StagedDeleted)]
+    [InlineData(".D", CounterKind.UnstagedDeleted)]
+    [InlineData("R.", CounterKind.StagedRenamed)]
+    [InlineData(".R", CounterKind.UnstagedRenamed)]
+    [InlineData("C.", CounterKind.StagedRenamed)]
+    [InlineData(".C", CounterKind.UnstagedRenamed)]
+    [InlineData("U.", CounterKind.Conflicts)]
+    [InlineData(".U", CounterKind.Conflicts)]
+    public void Parse_WhenMultipleEntriesShareTheSameStatusCode_ShouldAccumulateCounter(string statusPair, CounterKind expectedCounter)
+    {
+        // Arrange
+        var statusOutput = string.Join('\n',
+            $"1 {statusPair} file-a",
+            $"1 {statusPair} file-b",
+            $"1 {statusPair} file-c");
+
+        var expectedCounts = CreateExpectedCounts(expectedCounter, value: 3);
+
+        // Act
+        var gitStatusSnapshot = GitStatusParser.Parse(statusOutput);
+
+        // Assert
+        gitStatusSnapshot.StatusCounts.Should().Be(expectedCounts);
+    }
+
+    [Fact]
+    public void Parse_WhenInputContainsUnsupportedOrShortTrackedRecords_ShouldIgnoreThem()
+    {
+        // Arrange
+        const string statusOutput = """
+                                    1
+                                    1 A
+                                    1 A
+                                    3 AM unsupported-record-type
+                                    ! ignored-by-git
+                                    """;
+
+        // Act
+        var gitStatusSnapshot = GitStatusParser.Parse(statusOutput);
+
+        // Assert
+        gitStatusSnapshot.StatusCounts.Should().Be(ZeroCounts);
+    }
+
+    [Fact]
+    public void Parse_WhenMetadataContainsAheadBehindWithoutUpstream_ShouldSetUpstreamAndAheadBehindFlags()
+    {
+        // Arrange
+        const string statusOutput = "# branch.ab +4 -1";
+
+        // Act
+        var gitStatusSnapshot = GitStatusParser.Parse(statusOutput);
+
+        // Assert
+        gitStatusSnapshot.HasUpstream.Should().BeTrue();
+        gitStatusSnapshot.HasAheadBehindCounts.Should().BeTrue();
+        gitStatusSnapshot.CommitsAhead.Should().Be(4);
+        gitStatusSnapshot.CommitsBehind.Should().Be(1);
+        gitStatusSnapshot.UpstreamReference.Should().BeEmpty();
+        gitStatusSnapshot.StashEntryCount.Should().Be(0);
+        gitStatusSnapshot.BranchHeadName.Should().BeEmpty();
+        gitStatusSnapshot.HeadObjectId.Should().BeEmpty();
+        gitStatusSnapshot.StatusCounts.Should().Be(ZeroCounts);
+    }
+
+    [Fact]
+    public void Parse_WhenMetadataContainsMalformedAheadBehindAndStash_ShouldKeepDefaultNumericValues()
+    {
+        // Arrange
+        const string statusOutput = "# branch.ab +x -y\n# stash not-a-number";
+
+        // Act
+        var gitStatusSnapshot = GitStatusParser.Parse(statusOutput);
+
+        // Assert
+        gitStatusSnapshot.HasUpstream.Should().BeTrue();
+        gitStatusSnapshot.HasAheadBehindCounts.Should().BeTrue();
+        gitStatusSnapshot.CommitsAhead.Should().Be(0);
+        gitStatusSnapshot.CommitsBehind.Should().Be(0);
+        gitStatusSnapshot.StashEntryCount.Should().Be(0);
+        gitStatusSnapshot.StatusCounts.Should().Be(ZeroCounts);
+    }
+
+    [Fact]
+    public void Parse_WhenMetadataContainsOnlyUpstream_ShouldSetUpstreamWithoutAheadBehind()
+    {
+        // Arrange
+        const string statusOutput = "# branch.upstream origin/main";
+
+        // Act
+        var gitStatusSnapshot = GitStatusParser.Parse(statusOutput);
+
+        // Assert
+        gitStatusSnapshot.UpstreamReference.Should().Be("origin/main");
+        gitStatusSnapshot.HasUpstream.Should().BeTrue();
+        gitStatusSnapshot.HasAheadBehindCounts.Should().BeFalse();
+        gitStatusSnapshot.CommitsAhead.Should().Be(0);
+        gitStatusSnapshot.CommitsBehind.Should().Be(0);
+        gitStatusSnapshot.StashEntryCount.Should().Be(0);
+        gitStatusSnapshot.StatusCounts.Should().Be(ZeroCounts);
+    }
+
+    [Fact]
+    public void Parse_WhenBranchHeaderLinesAreDuplicated_ShouldOverwriteWithLastSeenValue()
+    {
+        // Arrange
+        const string statusOutput = """
+                                    # branch.head old
+                                    # branch.head new
+                                    # branch.oid oldoid
+                                    # branch.oid newoid
+                                    # branch.upstream origin/old
+                                    # branch.upstream origin/new
+                                    # branch.ab +1 -2
+                                    # branch.ab +7 -3
+                                    # stash 1
+                                    # stash 9
+                                    """;
+
+        // Act
+        var gitStatusSnapshot = GitStatusParser.Parse(statusOutput);
+
+        // Assert
+        gitStatusSnapshot.BranchHeadName.Should().Be("new");
+        gitStatusSnapshot.HeadObjectId.Should().Be("newoid");
+        gitStatusSnapshot.UpstreamReference.Should().Be("origin/new");
+        gitStatusSnapshot.HasUpstream.Should().BeTrue();
+        gitStatusSnapshot.HasAheadBehindCounts.Should().BeTrue();
+        gitStatusSnapshot.CommitsAhead.Should().Be(7);
+        gitStatusSnapshot.CommitsBehind.Should().Be(3);
+        gitStatusSnapshot.StashEntryCount.Should().Be(9);
+        gitStatusSnapshot.StatusCounts.Should().Be(ZeroCounts);
+    }
+
+    [Theory]
+    [InlineData("\n")]
+    [InlineData("\r\n")]
+    [InlineData("\r")]
+    public void Parse_WhenInputUsesDifferentLineTerminators_ShouldReadAllRecords(string lineTerminator)
+    {
+        // Arrange
+        var statusOutput = string.Join(lineTerminator,
+            "# branch.head feature/line-endings",
+            "1 A. file-a",
+            "1 .M file-b",
+            "? untracked.txt",
+            "u UU conflict.txt");
+
+        // Act
+        var gitStatusSnapshot = GitStatusParser.Parse(statusOutput);
+
+        // Assert
+        gitStatusSnapshot.BranchHeadName.Should().Be("feature/line-endings");
+        gitStatusSnapshot.StatusCounts.Should().Be(new StatusCounts(StagedAdded: 1,
+            StagedModified: 0,
+            StagedDeleted: 0,
+            StagedRenamed: 0,
+            UnstagedAdded: 0,
+            UnstagedModified: 1,
+            UnstagedDeleted: 0,
+            UnstagedRenamed: 0,
+            Untracked: 1,
+            Conflicts: 1));
+    }
+
+    public static TheoryData<string, CounterKind, int> TrackedStatusCodeCases
+    {
+        get
+        {
+            return new TheoryData<string, CounterKind, int>
+            {
+                { "A.", CounterKind.StagedAdded, 1 },
+                { ".A", CounterKind.UnstagedAdded, 1 },
+                { "M.", CounterKind.StagedModified, 1 },
+                { ".M", CounterKind.UnstagedModified, 1 },
+                { "D.", CounterKind.StagedDeleted, 1 },
+                { ".D", CounterKind.UnstagedDeleted, 1 },
+                { "R.", CounterKind.StagedRenamed, 1 },
+                { ".R", CounterKind.UnstagedRenamed, 1 },
+                { "C.", CounterKind.StagedRenamed, 1 },
+                { ".C", CounterKind.UnstagedRenamed, 1 },
+                { "U.", CounterKind.Conflicts, 1 },
+                { ".U", CounterKind.Conflicts, 1 },
+                { "UU", CounterKind.Conflicts, 2 },
+                { "..", CounterKind.None, 0 },
+                { "X.", CounterKind.None, 0 },
+                { ".X", CounterKind.None, 0 }
+            };
+        }
+    }
+
+    private static StatusCounts CreateExpectedCounts(CounterKind counter, int value)
+    {
+        return counter switch
+        {
+            CounterKind.None => ZeroCounts,
+            CounterKind.StagedAdded => ZeroCounts with { StagedAdded = value },
+            CounterKind.StagedModified => ZeroCounts with { StagedModified = value },
+            CounterKind.StagedDeleted => ZeroCounts with { StagedDeleted = value },
+            CounterKind.StagedRenamed => ZeroCounts with { StagedRenamed = value },
+            CounterKind.UnstagedAdded => ZeroCounts with { UnstagedAdded = value },
+            CounterKind.UnstagedModified => ZeroCounts with { UnstagedModified = value },
+            CounterKind.UnstagedDeleted => ZeroCounts with { UnstagedDeleted = value },
+            CounterKind.UnstagedRenamed => ZeroCounts with { UnstagedRenamed = value },
+            CounterKind.Untracked => ZeroCounts with { Untracked = value },
+            CounterKind.Conflicts => ZeroCounts with { Conflicts = value },
+            _ => throw new ArgumentOutOfRangeException(nameof(counter), counter, message: null)
+        };
+    }
+
+    private static readonly StatusCounts ZeroCounts = new(StagedAdded: 0,
+        StagedModified: 0,
+        StagedDeleted: 0,
+        StagedRenamed: 0,
+        UnstagedAdded: 0,
+        UnstagedModified: 0,
+        UnstagedDeleted: 0,
+        UnstagedRenamed: 0,
+        Untracked: 0,
+        Conflicts: 0);
 }
