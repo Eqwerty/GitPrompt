@@ -53,11 +53,10 @@ public sealed class GitStatusParserTests
         gitStatusSnapshot.CommitsBehind.Should().Be(2);
         gitStatusSnapshot.StashEntryCount.Should().Be(4);
 
-        gitStatusSnapshot.StatusCounts.Should().Be(new StatusCounts(StagedAdded: 1,
-            StagedModified: 0,
+        gitStatusSnapshot.StatusCounts.Should().Be(new StatusCounts(
+            StagedAdded: 1,
             StagedDeleted: 1,
             StagedRenamed: 1,
-            UnstagedAdded: 0,
             UnstagedModified: 1,
             UnstagedDeleted: 1,
             UnstagedRenamed: 1,
@@ -92,9 +91,9 @@ public sealed class GitStatusParserTests
         gitStatusSnapshot.CommitsBehind.Should().Be(0);
         gitStatusSnapshot.StashEntryCount.Should().Be(0);
 
-        gitStatusSnapshot.StatusCounts.Should().Be(new StatusCounts(StagedAdded: 1,
+        gitStatusSnapshot.StatusCounts.Should().Be(new StatusCounts(
+            StagedAdded: 1,
             StagedModified: 1,
-            StagedDeleted: 0,
             StagedRenamed: 1,
             UnstagedAdded: 1,
             UnstagedModified: 1,
@@ -123,15 +122,9 @@ public sealed class GitStatusParserTests
         var gitStatusSnapshot = GitStatusParser.Parse(statusOutput);
 
         // Assert
-        gitStatusSnapshot.StatusCounts.Should().Be(new StatusCounts(StagedAdded: 0,
-            StagedModified: 0,
-            StagedDeleted: 0,
+        gitStatusSnapshot.StatusCounts.Should().Be(new StatusCounts(
             StagedRenamed: 1,
-            UnstagedAdded: 0,
-            UnstagedModified: 0,
-            UnstagedDeleted: 0,
             UnstagedRenamed: 1,
-            Untracked: 0,
             Conflicts: 2));
     }
 
@@ -196,7 +189,7 @@ public sealed class GitStatusParserTests
         var gitStatusSnapshot = GitStatusParser.Parse(statusOutput);
 
         // Assert
-        gitStatusSnapshot.StatusCounts.Should().Be(ZeroCounts);
+        gitStatusSnapshot.StatusCounts.Should().Be(new StatusCounts());
     }
 
     [Fact]
@@ -217,7 +210,7 @@ public sealed class GitStatusParserTests
         gitStatusSnapshot.StashEntryCount.Should().Be(0);
         gitStatusSnapshot.BranchHeadName.Should().BeEmpty();
         gitStatusSnapshot.HeadObjectId.Should().BeEmpty();
-        gitStatusSnapshot.StatusCounts.Should().Be(ZeroCounts);
+        gitStatusSnapshot.StatusCounts.Should().Be(new StatusCounts());
     }
 
     [Fact]
@@ -235,7 +228,7 @@ public sealed class GitStatusParserTests
         gitStatusSnapshot.CommitsAhead.Should().Be(0);
         gitStatusSnapshot.CommitsBehind.Should().Be(0);
         gitStatusSnapshot.StashEntryCount.Should().Be(0);
-        gitStatusSnapshot.StatusCounts.Should().Be(ZeroCounts);
+        gitStatusSnapshot.StatusCounts.Should().Be(new StatusCounts());
     }
 
     [Fact]
@@ -254,7 +247,7 @@ public sealed class GitStatusParserTests
         gitStatusSnapshot.CommitsAhead.Should().Be(0);
         gitStatusSnapshot.CommitsBehind.Should().Be(0);
         gitStatusSnapshot.StashEntryCount.Should().Be(0);
-        gitStatusSnapshot.StatusCounts.Should().Be(ZeroCounts);
+        gitStatusSnapshot.StatusCounts.Should().Be(new StatusCounts());
     }
 
     [Fact]
@@ -286,7 +279,7 @@ public sealed class GitStatusParserTests
         gitStatusSnapshot.CommitsAhead.Should().Be(7);
         gitStatusSnapshot.CommitsBehind.Should().Be(3);
         gitStatusSnapshot.StashEntryCount.Should().Be(9);
-        gitStatusSnapshot.StatusCounts.Should().Be(ZeroCounts);
+        gitStatusSnapshot.StatusCounts.Should().Be(new StatusCounts());
     }
 
     [Theory]
@@ -308,14 +301,9 @@ public sealed class GitStatusParserTests
 
         // Assert
         gitStatusSnapshot.BranchHeadName.Should().Be("feature/line-endings");
-        gitStatusSnapshot.StatusCounts.Should().Be(new StatusCounts(StagedAdded: 1,
-            StagedModified: 0,
-            StagedDeleted: 0,
-            StagedRenamed: 0,
-            UnstagedAdded: 0,
+        gitStatusSnapshot.StatusCounts.Should().Be(new StatusCounts(
+            StagedAdded: 1,
             UnstagedModified: 1,
-            UnstagedDeleted: 0,
-            UnstagedRenamed: 0,
             Untracked: 1,
             Conflicts: 1));
     }
@@ -350,29 +338,18 @@ public sealed class GitStatusParserTests
     {
         return counter switch
         {
-            CounterKind.None => ZeroCounts,
-            CounterKind.StagedAdded => ZeroCounts with { StagedAdded = value },
-            CounterKind.StagedModified => ZeroCounts with { StagedModified = value },
-            CounterKind.StagedDeleted => ZeroCounts with { StagedDeleted = value },
-            CounterKind.StagedRenamed => ZeroCounts with { StagedRenamed = value },
-            CounterKind.UnstagedAdded => ZeroCounts with { UnstagedAdded = value },
-            CounterKind.UnstagedModified => ZeroCounts with { UnstagedModified = value },
-            CounterKind.UnstagedDeleted => ZeroCounts with { UnstagedDeleted = value },
-            CounterKind.UnstagedRenamed => ZeroCounts with { UnstagedRenamed = value },
-            CounterKind.Untracked => ZeroCounts with { Untracked = value },
-            CounterKind.Conflicts => ZeroCounts with { Conflicts = value },
+            CounterKind.None => new StatusCounts(),
+            CounterKind.StagedAdded => new StatusCounts(StagedAdded: value),
+            CounterKind.StagedModified => new StatusCounts(StagedModified: value),
+            CounterKind.StagedDeleted => new StatusCounts(StagedDeleted: value),
+            CounterKind.StagedRenamed => new StatusCounts(StagedRenamed: value),
+            CounterKind.UnstagedAdded => new StatusCounts(UnstagedAdded: value),
+            CounterKind.UnstagedModified => new StatusCounts(UnstagedModified: value),
+            CounterKind.UnstagedDeleted => new StatusCounts(UnstagedDeleted: value),
+            CounterKind.UnstagedRenamed => new StatusCounts(UnstagedRenamed: value),
+            CounterKind.Untracked => new StatusCounts(Untracked: value),
+            CounterKind.Conflicts => new StatusCounts(Conflicts: value),
             _ => throw new ArgumentOutOfRangeException(nameof(counter), counter, message: null)
         };
     }
-
-    private static readonly StatusCounts ZeroCounts = new(StagedAdded: 0,
-        StagedModified: 0,
-        StagedDeleted: 0,
-        StagedRenamed: 0,
-        UnstagedAdded: 0,
-        UnstagedModified: 0,
-        UnstagedDeleted: 0,
-        UnstagedRenamed: 0,
-        Untracked: 0,
-        Conflicts: 0);
 }

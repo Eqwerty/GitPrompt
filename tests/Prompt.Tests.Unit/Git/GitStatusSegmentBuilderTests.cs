@@ -16,20 +16,19 @@ public sealed class GitStatusSegmentBuilderTests
         await File.WriteAllTextAsync(Path.Combine(gitDirectory.DirectoryPath, "MERGE_HEAD"), "merge\n");
 
         var statusCounts = new StatusCounts(
-            StagedAdded: 0,
-            StagedModified: 0,
-            StagedDeleted: 0,
             StagedRenamed: 1,
-            UnstagedAdded: 0,
             UnstagedModified: 1,
-            UnstagedDeleted: 0,
-            UnstagedRenamed: 0,
             Untracked: 1,
             Conflicts: 1);
 
         // Act
         var gitStatusDisplay =
-            GitStatusSegmentBuilder.BuildDisplay(TrackedBranchLabel("main"), commitsAhead: 4, commitsBehind: 2, stashEntryCount: 2, statusCounts, gitDirectory.DirectoryPath);
+            GitStatusSegmentBuilder.BuildDisplay(TrackedBranchLabel("main"),
+                commitsAhead: 4,
+                commitsBehind: 2,
+                stashEntryCount: 2,
+                statusCounts,
+                gitDirectory.DirectoryPath);
 
         // Assert
         gitStatusDisplay.Should().Contain(BranchLabelWithOperation(TrackedBranchLabel("main"), "MERGE"));
@@ -99,17 +98,7 @@ public sealed class GitStatusSegmentBuilderTests
         using var gitDirectory = new TemporaryDirectory();
         await File.WriteAllTextAsync(Path.Combine(gitDirectory.DirectoryPath, operationMarkerFileName), "head\n");
 
-        var statusCounts = new StatusCounts(
-            StagedAdded: 0,
-            StagedModified: 0,
-            StagedDeleted: 0,
-            StagedRenamed: 0,
-            UnstagedAdded: 0,
-            UnstagedModified: 0,
-            UnstagedDeleted: 0,
-            UnstagedRenamed: 0,
-            Untracked: 0,
-            Conflicts: 0);
+        var statusCounts = new StatusCounts();
 
         // Act
         var gitStatusDisplay = GitStatusSegmentBuilder.BuildDisplay(NoUpstreamBranchLabel("feature"),
@@ -318,21 +307,16 @@ public sealed class GitStatusSegmentBuilderTests
         // Arrange
         using var gitDirectory = new TemporaryDirectory();
 
-        var statusCounts = new StatusCounts(
-            StagedAdded: 0,
-            StagedModified: 0,
-            StagedDeleted: 0,
-            StagedRenamed: 0,
-            UnstagedAdded: 0,
-            UnstagedModified: 0,
-            UnstagedDeleted: 0,
-            UnstagedRenamed: 0,
-            Untracked: 0,
-            Conflicts: 0);
+        var statusCounts = new StatusCounts();
 
         // Act
         var gitStatusDisplay =
-            GitStatusSegmentBuilder.BuildDisplay(TrackedBranchLabel("main"), commitsAhead: 0, commitsBehind: 0, stashEntryCount: 0, statusCounts, gitDirectory.DirectoryPath);
+            GitStatusSegmentBuilder.BuildDisplay(TrackedBranchLabel("main"),
+                commitsAhead: 0,
+                commitsBehind: 0,
+                stashEntryCount: 0,
+                statusCounts,
+                gitDirectory.DirectoryPath);
 
         // Assert
         gitStatusDisplay.Should().StartWith(Colored(ColorBranch, TrackedBranchLabel("main")));
@@ -344,17 +328,7 @@ public sealed class GitStatusSegmentBuilderTests
         // Arrange
         using var gitDirectory = new TemporaryDirectory();
 
-        var statusCounts = new StatusCounts(
-            StagedAdded: 0,
-            StagedModified: 0,
-            StagedDeleted: 0,
-            StagedRenamed: 0,
-            UnstagedAdded: 0,
-            UnstagedModified: 0,
-            UnstagedDeleted: 0,
-            UnstagedRenamed: 0,
-            Untracked: 0,
-            Conflicts: 0);
+        var statusCounts = new StatusCounts();
 
         // Act
         var gitStatusDisplay = GitStatusSegmentBuilder.BuildDisplay(NoUpstreamBranchLabel("feature"),
@@ -374,21 +348,16 @@ public sealed class GitStatusSegmentBuilderTests
         // Arrange
         using var gitDirectory = new TemporaryDirectory();
 
-        var statusCounts = new StatusCounts(
-            StagedAdded: 0,
-            StagedModified: 0,
-            StagedDeleted: 0,
-            StagedRenamed: 0,
-            UnstagedAdded: 0,
-            UnstagedModified: 0,
-            UnstagedDeleted: 0,
-            UnstagedRenamed: 0,
-            Untracked: 0,
-            Conflicts: 0);
+        var statusCounts = new StatusCounts();
 
         // Act
         var gitStatusDisplay =
-            GitStatusSegmentBuilder.BuildDisplay(TrackedBranchLabel("main"), commitsAhead: 2, commitsBehind: 3, stashEntryCount: 0, statusCounts, gitDirectory.DirectoryPath);
+            GitStatusSegmentBuilder.BuildDisplay(TrackedBranchLabel("main"),
+                commitsAhead: 2,
+                commitsBehind: 3,
+                stashEntryCount: 0,
+                statusCounts,
+                gitDirectory.DirectoryPath);
 
         // Assert
         gitStatusDisplay.Should().Contain($" {Colored(ColorAhead, Indicator(PromptIcons.IconAhead, 2))}");
@@ -403,18 +372,18 @@ public sealed class GitStatusSegmentBuilderTests
 
         var statusCounts = new StatusCounts(
             StagedAdded: 1,
-            StagedModified: 0,
-            StagedDeleted: 0,
             StagedRenamed: 1,
-            UnstagedAdded: 0,
             UnstagedModified: 1,
-            UnstagedDeleted: 0,
-            UnstagedRenamed: 0,
             Untracked: 1,
             Conflicts: 1);
 
         // Act
-        var gitStatusDisplay = GitStatusSegmentBuilder.BuildDisplay(TrackedBranchLabel("main"), commitsAhead: 1, commitsBehind: 1, stashEntryCount: 0, statusCounts, gitDirectory.DirectoryPath);
+        var gitStatusDisplay = GitStatusSegmentBuilder.BuildDisplay(TrackedBranchLabel("main"),
+            commitsAhead: 1,
+            commitsBehind: 1,
+            stashEntryCount: 0,
+            statusCounts,
+            gitDirectory.DirectoryPath);
 
         // Assert
         gitStatusDisplay.Should().Contain(Colored(ColorBranch, TrackedBranchLabel("main")));
