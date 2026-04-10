@@ -109,7 +109,7 @@ public sealed class ContextSegmentBuilderTests
         var segment = ContextSegmentBuilder.Build(platformProvider);
 
         // Assert
-        segment.Should().EndWith($" {ColorPath}~{ColorReset}");
+        segment.Should().Be($"{ColorUser}me{ColorReset} {ColorHost}machine{ColorReset} {ColorPath}~{ColorReset}");
     }
 
     [Fact]
@@ -119,6 +119,7 @@ public sealed class ContextSegmentBuilderTests
         using var home = new TemporaryDirectory();
         var projectPath = Path.Combine(home.DirectoryPath, "src", "project");
         Directory.CreateDirectory(projectPath);
+        
         var platformProvider = new TestPlatformProvider(
             user: "me",
             host: "machine",
@@ -130,7 +131,7 @@ public sealed class ContextSegmentBuilderTests
         var segment = ContextSegmentBuilder.Build(platformProvider);
 
         // Assert
-        segment.Should().EndWith($" {ColorPath}~/src/project{ColorReset}");
+        segment.Should().Be($"{ColorUser}me{ColorReset} {ColorHost}machine{ColorReset} {ColorPath}~/src/project{ColorReset}");
     }
 
     [Fact]
@@ -147,7 +148,7 @@ public sealed class ContextSegmentBuilderTests
         var segment = ContextSegmentBuilder.Build(platformProvider);
 
         // Assert
-        segment.Should().EndWith($" {ColorPath}folder/nested{ColorReset}");
+        segment.Should().Be($"{ColorUser}me{ColorReset} {ColorHost}machine{ColorReset} {ColorPath}folder/nested{ColorReset}");
     }
 
     private sealed class TemporaryDirectory : IDisposable

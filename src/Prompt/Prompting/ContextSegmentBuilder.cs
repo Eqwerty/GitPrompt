@@ -17,12 +17,14 @@ internal static class ContextSegmentBuilder
     private static string ResolveUser(PlatformProvider platformProvider)
     {
         var user = platformProvider.User;
+
         if (!string.IsNullOrEmpty(user))
         {
             return user;
         }
 
         var windowsUserName = platformProvider.WindowsUserName;
+
         if (!string.IsNullOrEmpty(windowsUserName))
         {
             return windowsUserName;
@@ -34,6 +36,7 @@ internal static class ContextSegmentBuilder
     private static string ResolveHost(PlatformProvider platformProvider)
     {
         var host = platformProvider.Host;
+
         if (!string.IsNullOrEmpty(host))
         {
             return host;
