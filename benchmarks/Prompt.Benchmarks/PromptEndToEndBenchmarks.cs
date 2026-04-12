@@ -10,7 +10,6 @@ namespace Prompt.Benchmarks;
 [MemoryDiagnoser]
 public class PromptEndToEndBenchmarks
 {
-    private static readonly SemaphoreSlim CurrentDirectoryLock = new(initialCount: 1, maxCount: 1);
 
     private string _sandboxRootPath = string.Empty;
     private string _outsideRepositoryPath = string.Empty;
@@ -54,37 +53,37 @@ public class PromptEndToEndBenchmarks
     [Benchmark]
     public Task<string> BuildPrompt_NotInGitRepository()
     {
-        return ExecuteInDirectoryAsync(_outsideRepositoryPath);
+        return BuildPromptAsync(_outsideRepositoryPath);
     }
 
     [Benchmark]
     public Task<string> BuildPrompt_NormalRepositoryRoot()
     {
-        return ExecuteInDirectoryAsync(_normalRepositoryPath);
+        return BuildPromptAsync(_normalRepositoryPath);
     }
 
     [Benchmark]
     public Task<string> BuildPrompt_NestedSubdirectory()
     {
-        return ExecuteInDirectoryAsync(_nestedRepositoryPath);
+        return BuildPromptAsync(_nestedRepositoryPath);
     }
 
     [Benchmark]
     public Task<string> BuildPrompt_Worktree()
     {
-        return ExecuteInDirectoryAsync(_worktreePath);
+        return BuildPromptAsync(_worktreePath);
     }
 
     [Benchmark]
     public Task<string> BuildPrompt_DetachedHeadWithSingleMatchingRemoteReference()
     {
-        return ExecuteInDirectoryAsync(_detachedHeadPath);
+        return BuildPromptAsync(_detachedHeadPath);
     }
 
     [Benchmark]
     public Task<string> BuildPrompt_NoUpstreamBranchPath()
     {
-        return ExecuteInDirectoryAsync(_noUpstreamPath);
+        return BuildPromptAsync(_noUpstreamPath);
     }
 
     private async Task<string> CreateWorktreeScenarioAsync()
@@ -175,30 +174,12 @@ public class PromptEndToEndBenchmarks
         return repositoryPath;
     }
 
-    private static async Task<string> ExecuteInDirectoryAsync(string directoryPath)
-    {
-        await CurrentDirectoryLock.WaitAsync();
-        var previousDirectoryPath = Directory.GetCurrentDirectory();
-
-        try
-        {
-            Directory.SetCurrentDirectory(directoryPath);
-            
-            return await BuildPromptAsync();
-        }
-        finally
-        {
-            Directory.SetCurrentDirectory(previousDirectoryPath);
-            CurrentDirectoryLock.Release();
-        }
-    }
-
-    private static async Task<string> BuildPromptAsync()
+    private static async Task<string> BuildPromptAsync(string workingDirectoryPath)
     {
         var platformProvider = PlatformProvider.System;
 
         var contextSegment = ContextSegmentBuilder.Build(platformProvider);
-        var gitStatusSegment = await GitStatusSegmentBuilder.BuildAsync();
+        var gitStatusSegment = await GitStatusSegmentBuilder.BuildAsync(workingDirectoryPath);
         var promptSymbol = PromptSymbolBuilder.Build(platformProvider);
 
         var promptLine = string.IsNullOrEmpty(gitStatusSegment)

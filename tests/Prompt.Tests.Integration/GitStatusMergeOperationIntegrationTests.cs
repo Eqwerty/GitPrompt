@@ -3,7 +3,6 @@ using Prompt.Git;
 
 namespace Prompt.Tests.Integration;
 
-[Collection(GitIntegrationTestCollections.Serial)]
 public sealed class GitStatusMergeOperationIntegrationTests
 {
     [Fact]
@@ -30,7 +29,7 @@ public sealed class GitStatusMergeOperationIntegrationTests
 
         // Act
         var mergeCommandResult = await TestHelpers.RunGitAllowFailureAsync(repositoryPath, "merge feature");
-        var gitStatusSegment = await TestHelpers.ExecuteInDirectoryAsync(repositoryPath, GitStatusSegmentBuilder.BuildAsync);
+        var gitStatusSegment = await GitStatusSegmentBuilder.BuildAsync(repositoryPath);
 
         // Assert
         mergeCommandResult.ExitCode.Should().NotBe(0);
@@ -62,7 +61,7 @@ public sealed class GitStatusMergeOperationIntegrationTests
 
         // Act
         var cherryPickCommandResult = await TestHelpers.RunGitAllowFailureAsync(repositoryPath, $"cherry-pick {sourceCommitObjectId}");
-        var gitStatusSegment = await TestHelpers.ExecuteInDirectoryAsync(repositoryPath, GitStatusSegmentBuilder.BuildAsync);
+        var gitStatusSegment = await GitStatusSegmentBuilder.BuildAsync(repositoryPath);
 
         // Assert
         cherryPickCommandResult.ExitCode.Should().NotBe(0);
@@ -95,7 +94,7 @@ public sealed class GitStatusMergeOperationIntegrationTests
 
         // Act
         var mergeCommandResult = await TestHelpers.RunGitAllowFailureAsync(repositoryPath, "merge other");
-        var gitStatusSegment = await TestHelpers.ExecuteInDirectoryAsync(repositoryPath, GitStatusSegmentBuilder.BuildAsync);
+        var gitStatusSegment = await GitStatusSegmentBuilder.BuildAsync(repositoryPath);
 
         // Assert
         mergeCommandResult.ExitCode.Should().NotBe(0);
@@ -127,7 +126,7 @@ public sealed class GitStatusMergeOperationIntegrationTests
 
         // Act
         var cherryPickCommandResult = await TestHelpers.RunGitAllowFailureAsync(repositoryPath, $"cherry-pick {sourceCommitObjectId}");
-        var gitStatusSegment = await TestHelpers.ExecuteInDirectoryAsync(repositoryPath, GitStatusSegmentBuilder.BuildAsync);
+        var gitStatusSegment = await GitStatusSegmentBuilder.BuildAsync(repositoryPath);
 
         // Assert
         cherryPickCommandResult.ExitCode.Should().NotBe(0);
@@ -160,7 +159,7 @@ public sealed class GitStatusMergeOperationIntegrationTests
 
         // Act
         var rebaseCommandResult = await TestHelpers.RunGitAllowFailureAsync(repositoryPath, "rebase main");
-        var gitStatusSegment = await TestHelpers.ExecuteInDirectoryAsync(repositoryPath, GitStatusSegmentBuilder.BuildAsync);
+        var gitStatusSegment = await GitStatusSegmentBuilder.BuildAsync(repositoryPath);
 
         // Assert
         rebaseCommandResult.ExitCode.Should().NotBe(0);

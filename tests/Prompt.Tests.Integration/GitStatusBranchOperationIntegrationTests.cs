@@ -4,7 +4,6 @@ using Prompt.Git;
 
 namespace Prompt.Tests.Integration;
 
-[Collection(GitIntegrationTestCollections.Serial)]
 public sealed class GitStatusBranchOperationIntegrationTests
 {
     [Fact]
@@ -39,7 +38,7 @@ public sealed class GitStatusBranchOperationIntegrationTests
         await TestHelpers.RunGitAsync(localRepositoryPath, "fetch origin");
 
         // Act
-        var gitStatusSegment = await TestHelpers.ExecuteInDirectoryAsync(localRepositoryPath, GitStatusSegmentBuilder.BuildAsync);
+        var gitStatusSegment = await GitStatusSegmentBuilder.BuildAsync(localRepositoryPath);
 
         // Assert
         gitStatusSegment.Should().Contain(TestHelpers.TrackedBranchLabel("main"));
@@ -67,7 +66,7 @@ public sealed class GitStatusBranchOperationIntegrationTests
         await TestHelpers.RunGitAsync(repositoryPath, "commit -m \"feature commit\"");
 
         // Act
-        var gitStatusSegment = await TestHelpers.ExecuteInDirectoryAsync(repositoryPath, GitStatusSegmentBuilder.BuildAsync);
+        var gitStatusSegment = await GitStatusSegmentBuilder.BuildAsync(repositoryPath);
 
         // Assert
         gitStatusSegment.Should().Contain(TestHelpers.NoUpstreamBranchLabel("feature"));
@@ -96,7 +95,7 @@ public sealed class GitStatusBranchOperationIntegrationTests
         await TestHelpers.RunGitAsync(repositoryPath, $"checkout --detach {commitAObjectId}");
 
         // Act
-        var gitStatusSegment = await TestHelpers.ExecuteInDirectoryAsync(repositoryPath, GitStatusSegmentBuilder.BuildAsync);
+        var gitStatusSegment = await GitStatusSegmentBuilder.BuildAsync(repositoryPath);
 
         // Assert
         gitStatusSegment.Should().Contain($"({commitAObjectId[..7]}...)");
@@ -125,7 +124,7 @@ public sealed class GitStatusBranchOperationIntegrationTests
         await TestHelpers.RunGitAsync(localRepositoryPath, $"checkout --detach {commitObjectId}");
 
         // Act
-        var gitStatusSegment = await TestHelpers.ExecuteInDirectoryAsync(localRepositoryPath, GitStatusSegmentBuilder.BuildAsync);
+        var gitStatusSegment = await GitStatusSegmentBuilder.BuildAsync(localRepositoryPath);
 
         // Assert
         gitStatusSegment.Should().Contain($"(origin/main {commitObjectId[..7]}...)");

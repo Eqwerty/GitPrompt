@@ -17,20 +17,6 @@ internal static class TestHelpers
 
         public void Dispose()
         {
-            // Ensure current directory is not the one being deleted
-            var currentDir = Directory.GetCurrentDirectory();
-            if (currentDir.StartsWith(DirectoryPath, StringComparison.OrdinalIgnoreCase))
-            {
-                try
-                {
-                    Directory.SetCurrentDirectory(Path.GetTempPath());
-                }
-                catch
-                {
-                    // Ignore errors setting directory
-                }
-            }
-
             if (Directory.Exists(DirectoryPath))
             {
                 try
@@ -46,28 +32,6 @@ internal static class TestHelpers
                 {
                     // Silently ignore cleanup errors - the OS will eventually clean up temp directories
                 }
-            }
-        }
-    }
-
-    internal static async Task<string> ExecuteInDirectoryAsync(string directoryPath, Func<Task<string>> operation)
-    {
-        var previousDirectoryPath = Directory.GetCurrentDirectory();
-        try
-        {
-            Directory.SetCurrentDirectory(directoryPath);
-            return await operation();
-        }
-        finally
-        {
-            try
-            {
-                Directory.SetCurrentDirectory(previousDirectoryPath);
-            }
-            catch (DirectoryNotFoundException)
-            {
-                // If the previous directory was deleted, set to a known valid directory
-                Directory.SetCurrentDirectory(Path.GetTempPath());
             }
         }
     }

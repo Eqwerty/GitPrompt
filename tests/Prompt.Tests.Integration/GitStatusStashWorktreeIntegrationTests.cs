@@ -4,7 +4,6 @@ using Prompt.Git;
 
 namespace Prompt.Tests.Integration;
 
-[Collection(GitIntegrationTestCollections.Serial)]
 public sealed class GitStatusStashWorktreeIntegrationTests
 {
     [Fact]
@@ -25,7 +24,7 @@ public sealed class GitStatusStashWorktreeIntegrationTests
         await TestHelpers.RunGitAsync(repositoryPath, "stash push -m \"wip\"");
 
         // Act
-        var gitStatusSegment = await TestHelpers.ExecuteInDirectoryAsync(repositoryPath, GitStatusSegmentBuilder.BuildAsync);
+        var gitStatusSegment = await GitStatusSegmentBuilder.BuildAsync(repositoryPath);
 
         // Assert
         gitStatusSegment.Should().Contain(TestHelpers.Indicator(PromptIcons.IconStash, 1));
@@ -53,7 +52,7 @@ public sealed class GitStatusStashWorktreeIntegrationTests
         await TestHelpers.RunGitAsync(worktreePath, "commit -m \"feature commit\"");
 
         // Act
-        var gitStatusSegment = await TestHelpers.ExecuteInDirectoryAsync(worktreePath, GitStatusSegmentBuilder.BuildAsync);
+        var gitStatusSegment = await GitStatusSegmentBuilder.BuildAsync(worktreePath);
 
         // Assert
         gitStatusSegment.Should().Contain(TestHelpers.NoUpstreamBranchLabel("feature"));

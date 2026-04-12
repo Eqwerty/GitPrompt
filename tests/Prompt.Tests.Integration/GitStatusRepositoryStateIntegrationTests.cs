@@ -3,7 +3,6 @@ using Prompt.Git;
 
 namespace Prompt.Tests.Integration;
 
-[Collection(GitIntegrationTestCollections.Serial)]
 public sealed class GitStatusRepositoryStateIntegrationTests
 {
     [Fact]
@@ -13,7 +12,7 @@ public sealed class GitStatusRepositoryStateIntegrationTests
         using var sandbox = new TestHelpers.TemporaryDirectory();
 
         // Act
-        var gitStatusSegment = await TestHelpers.ExecuteInDirectoryAsync(sandbox.DirectoryPath, GitStatusSegmentBuilder.BuildAsync);
+        var gitStatusSegment = await GitStatusSegmentBuilder.BuildAsync(sandbox.DirectoryPath);
 
         // Assert
         gitStatusSegment.Should().BeEmpty();
@@ -37,7 +36,7 @@ public sealed class GitStatusRepositoryStateIntegrationTests
         Directory.CreateDirectory(nestedDirectoryPath);
 
         // Act
-        var gitStatusSegment = await TestHelpers.ExecuteInDirectoryAsync(nestedDirectoryPath, GitStatusSegmentBuilder.BuildAsync);
+        var gitStatusSegment = await GitStatusSegmentBuilder.BuildAsync(nestedDirectoryPath);
 
         // Assert
         gitStatusSegment.Should().Contain(TestHelpers.TrackedBranchLabel("main"));

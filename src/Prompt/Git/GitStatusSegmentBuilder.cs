@@ -4,9 +4,10 @@ namespace Prompt.Git;
 
 internal static class GitStatusSegmentBuilder
 {
-    internal static async Task<string> BuildAsync()
+
+    internal static async Task<string> BuildAsync(string workingDirectoryPath)
     {
-        var repositoryContext = GitRepositoryLocator.FindRepositoryContext();
+        var repositoryContext = GitRepositoryLocator.FindRepositoryContext(workingDirectoryPath);
         if (repositoryContext is null)
         {
             return string.Empty;
@@ -15,7 +16,7 @@ internal static class GitStatusSegmentBuilder
         var repositoryRootPath = repositoryContext.Value.WorkingTreePath;
         var gitDirectoryPath = repositoryContext.Value.GitDirectoryPath;
 
-        var statusOutput = await RunGitStatusCommandAsync();
+        var statusOutput = await RunGitStatusCommandAsync(repositoryRootPath);
         if (statusOutput is null)
         {
             return string.Empty;
@@ -77,12 +78,12 @@ internal static class GitStatusSegmentBuilder
         return GitStatusDisplayFormatter.BuildDisplay(branchLabel, commitsAhead, commitsBehind, stashEntryCount, statusCounts, gitDirectoryPath);
     }
 
-    private static Task<string?> RunGitStatusCommandAsync()
+    private static Task<string?> RunGitStatusCommandAsync(string workingDirectoryPath)
     {
         return RunProcessForOutputAsync(
             fileName: "git",
             arguments: "status --porcelain=2 --branch --ahead-behind --show-stash",
-            workingDirectory: null,
+            workingDirectory: workingDirectoryPath,
             requireSuccess: true);
     }
 

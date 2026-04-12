@@ -6,9 +6,19 @@ internal static class GitRepositoryLocator
 
     internal static RepositoryContext? FindRepositoryContext()
     {
+        return FindRepositoryContext(Directory.GetCurrentDirectory());
+    }
+
+    internal static RepositoryContext? FindRepositoryContext(string startDirectoryPath)
+    {
         try
         {
-            var current = Directory.GetCurrentDirectory();
+            if (string.IsNullOrWhiteSpace(startDirectoryPath) || !Directory.Exists(startDirectoryPath))
+            {
+                return null;
+            }
+
+            var current = startDirectoryPath;
 
             while (true)
             {
