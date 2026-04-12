@@ -8,27 +8,14 @@ public class GitStatusDisplayBenchmarks
 {
     private string _gitDirectoryPath = string.Empty;
 
-    private StatusCounts _cleanCounts = new(
-        StagedAdded: 0,
-        StagedModified: 0,
-        StagedDeleted: 0,
-        StagedRenamed: 0,
-        UnstagedAdded: 0,
-        UnstagedModified: 0,
-        UnstagedDeleted: 0,
-        UnstagedRenamed: 0,
-        Untracked: 0,
-        Conflicts: 0);
+    private StatusCounts _cleanCounts = new();
 
     private StatusCounts _busyCounts = new(
         StagedAdded: 1,
         StagedModified: 2,
-        StagedDeleted: 0,
         StagedRenamed: 1,
-        UnstagedAdded: 0,
         UnstagedModified: 2,
         UnstagedDeleted: 1,
-        UnstagedRenamed: 0,
         Untracked: 3,
         Conflicts: 1);
 
@@ -38,27 +25,14 @@ public class GitStatusDisplayBenchmarks
         _gitDirectoryPath = Path.Combine(Path.GetTempPath(), "Prompt.Benchmarks", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(_gitDirectoryPath);
 
-        _cleanCounts = new StatusCounts(
-            StagedAdded: 0,
-            StagedModified: 0,
-            StagedDeleted: 0,
-            StagedRenamed: 0,
-            UnstagedAdded: 0,
-            UnstagedModified: 0,
-            UnstagedDeleted: 0,
-            UnstagedRenamed: 0,
-            Untracked: 0,
-            Conflicts: 0);
+        _cleanCounts = new StatusCounts();
 
         _busyCounts = new StatusCounts(
             StagedAdded: 1,
             StagedModified: 2,
-            StagedDeleted: 0,
             StagedRenamed: 1,
-            UnstagedAdded: 0,
             UnstagedModified: 2,
             UnstagedDeleted: 1,
-            UnstagedRenamed: 0,
             Untracked: 3,
             Conflicts: 1);
     }
