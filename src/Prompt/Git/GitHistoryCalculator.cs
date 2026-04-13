@@ -2,6 +2,8 @@ namespace Prompt.Git;
 
 internal static class GitHistoryCalculator
 {
+    private static readonly string[] CandidateBaseReferences = ["origin/main", "origin/master", "main", "master"];
+
     internal static async Task<int> ComputeLocalAheadCommitCountAsync(string repositoryRootPath)
     {
         var baseReference = await ResolveBaseReferenceAsync(repositoryRootPath);
@@ -48,7 +50,7 @@ internal static class GitHistoryCalculator
 
         var countParts = leftRightCountsOutput.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-        if (countParts.Length < 2)
+        if (countParts.Length is not 2)
         {
             return (Ahead: 0, Behind: 0);
         }
@@ -69,42 +71,40 @@ internal static class GitHistoryCalculator
             return baseReference;
         }
 
-        var showRefOutput = await RunGitCommandInRepositoryAsync(repositoryRootPath, "show-ref");
-        if (!string.IsNullOrEmpty(showRefOutput))
+        var upstreamReference = await RunGitCommandInRepositoryAsync(repositoryRootPath, "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}");
+        if (!string.IsNullOrEmpty(upstreamReference))
         {
-            var availableReferences = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var line in Utilities.EnumerateLines(showRefOutput))
-            {
-                var separatorIndex = line.IndexOf(' ');
-                if (separatorIndex < 0 || separatorIndex + 1 >= line.Length)
-                {
-                    continue;
-                }
+            return "@{u}";
+        }
 
-                availableReferences.Add(line[(separatorIndex + 1)..]);
-            }
-
-            foreach (var candidateReference in new[] { "origin/main", "origin/master", "main", "master" })
+        foreach (var candidateReference in CandidateBaseReferences)
+        {
+            if (candidateReference.StartsWith("origin/", StringComparison.Ordinal))
             {
-                if (availableReferences.Contains($"refs/remotes/{candidateReference}"))
+                var remoteReferencePath = $"refs/remotes/{candidateReference}";
+                if (await ReferenceExistsAsync(repositoryRootPath, remoteReferencePath))
                 {
                     return candidateReference;
                 }
 
-                var localCandidateReference = candidateReference.StartsWith("origin/", StringComparison.Ordinal)
-                    ? candidateReference["origin/".Length..]
-                    : candidateReference;
+                continue;
+            }
 
-                if (availableReferences.Contains($"refs/heads/{localCandidateReference}"))
-                {
-                    return localCandidateReference;
-                }
+            var localReferencePath = $"refs/heads/{candidateReference}";
+            if (await ReferenceExistsAsync(repositoryRootPath, localReferencePath))
+            {
+                return candidateReference;
             }
         }
 
-        var upstreamReference = await RunGitCommandInRepositoryAsync(repositoryRootPath, "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}");
+        return string.Empty;
+    }
 
-        return string.IsNullOrEmpty(upstreamReference) ? string.Empty : "@{u}";
+    private static async Task<bool> ReferenceExistsAsync(string repositoryRootPath, string referencePath)
+    {
+        var referenceOutput = await RunGitCommandInRepositoryAsync(repositoryRootPath, "show-ref", "--verify", referencePath);
+
+        return !string.IsNullOrEmpty(referenceOutput);
     }
 
     private static async Task<string?> RunGitCommandInRepositoryAsync(string repositoryRootPath, params string[] args)

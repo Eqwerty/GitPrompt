@@ -129,4 +129,43 @@ public sealed class GitStatusBranchOperationIntegrationTests
         // Assert
         gitStatusSegment.Should().Contain($"(origin/main {commitObjectId[..7]}...)");
     }
+
+    [Fact]
+    public async Task ComputeLocalAheadCommitCount_WhenOriginHeadIsMissingButUpstreamExists_ShouldUseUpstreamFallback()
+    {
+        // Arrange
+        using var sandbox = new TestHelpers.TemporaryDirectory();
+        var remoteRepositoryPath = Path.Combine(sandbox.DirectoryPath, "remote.git");
+        var sourceRepositoryPath = Path.Combine(sandbox.DirectoryPath, "source");
+        var localRepositoryPath = Path.Combine(sandbox.DirectoryPath, "local");
+
+        await TestHelpers.RunGitAsync(sandbox.DirectoryPath, $"init --bare --initial-branch=main {TestHelpers.Quote(remoteRepositoryPath)}");
+        await TestHelpers.RunGitAsync(sandbox.DirectoryPath, $"clone {TestHelpers.Quote(remoteRepositoryPath)} {TestHelpers.Quote(sourceRepositoryPath)}");
+        await TestHelpers.ConfigureGitIdentityAsync(sourceRepositoryPath);
+
+        await File.WriteAllTextAsync(Path.Combine(sourceRepositoryPath, "base.txt"), "base\n");
+        await TestHelpers.RunGitAsync(sourceRepositoryPath, "add base.txt");
+        await TestHelpers.RunGitAsync(sourceRepositoryPath, "commit -m \"base\"");
+        await TestHelpers.RunGitAsync(sourceRepositoryPath, "push -u origin main");
+
+        await TestHelpers.RunGitAsync(sandbox.DirectoryPath, $"clone {TestHelpers.Quote(remoteRepositoryPath)} {TestHelpers.Quote(localRepositoryPath)}");
+        await TestHelpers.ConfigureGitIdentityAsync(localRepositoryPath);
+
+        await File.WriteAllTextAsync(Path.Combine(localRepositoryPath, "local-ahead.txt"), "ahead\n");
+        await TestHelpers.RunGitAsync(localRepositoryPath, "add local-ahead.txt");
+        await TestHelpers.RunGitAsync(localRepositoryPath, "commit -m \"local ahead\"");
+
+        var upstreamReference = (await TestHelpers.RunGitAsync(localRepositoryPath, "rev-parse --abbrev-ref --symbolic-full-name @{u}")).Trim();
+        upstreamReference.Should().Be("origin/main");
+
+        await TestHelpers.RunGitAsync(localRepositoryPath, "symbolic-ref -d refs/remotes/origin/HEAD");
+        var originHeadResult = await TestHelpers.RunGitAllowFailureAsync(localRepositoryPath, "symbolic-ref --quiet --short refs/remotes/origin/HEAD");
+        originHeadResult.ExitCode.Should().NotBe(0);
+
+        // Act
+        var localAheadCount = await GitHistoryCalculator.ComputeLocalAheadCommitCountAsync(localRepositoryPath);
+
+        // Assert
+        localAheadCount.Should().Be(1);
+    }
 }
