@@ -28,14 +28,16 @@ internal static class Utilities
         return "\"" + argument.Replace("\\", @"\\", StringComparison.Ordinal).Replace("\"", "\\\"", StringComparison.Ordinal) + "\"";
     }
 
-    internal static string ShortenCommitHash(string objectId)
+    internal static string ShortenCommitHash(string commitHash)
     {
-        if (string.IsNullOrEmpty(objectId))
+        if (string.IsNullOrEmpty(commitHash))
         {
             return string.Empty;
         }
 
-        return objectId.Length >= 7 ? objectId[..7] : objectId;
+        const int shortCommitHashLength = 7;
+
+        return commitHash.Length >= shortCommitHashLength ? commitHash[..shortCommitHashLength] : commitHash;
     }
 
     internal static async Task<string?> RunProcessForOutputAsync(string fileName, string arguments, string? workingDirectory, bool requireSuccess)
