@@ -30,8 +30,14 @@ internal abstract class PlatformProvider
         {
             get
             {
-                try { return Directory.GetCurrentDirectory(); }  
-                catch { return string.Empty; }
+                try
+                {
+                    return Directory.GetCurrentDirectory();
+                }
+                catch
+                {
+                    return Environment.GetEnvironmentVariable("PWD") ?? string.Empty;
+                }
             }
         }
 

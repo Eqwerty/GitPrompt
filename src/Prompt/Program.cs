@@ -7,7 +7,7 @@ using static Prompt.Constants.PromptColors;
 Console.OutputEncoding = Encoding.UTF8;
 
 var platformProvider = PlatformProvider.System;
-var workingDirectoryPath = Directory.GetCurrentDirectory();
+var workingDirectoryPath = platformProvider.WorkingDirectoryPath ?? string.Empty;
 
 var contextSegment = ContextSegmentBuilder.Build(platformProvider);
 var gitStatusSegment = await GitStatusSegmentBuilder.BuildAsync(workingDirectoryPath);
