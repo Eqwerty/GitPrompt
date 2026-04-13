@@ -58,7 +58,7 @@ internal static class GitStatusDisplayFormatter
 
         if (gitStatusCounts.Conflicts > 0)
         {
-            statusBuilder.Append(' ').Append(ColorState).Append(IconConflicts).Append(gitStatusCounts.Conflicts).Append(ColorReset);
+            statusBuilder.Append(' ').Append(ColorConflict).Append(IconConflicts).Append(gitStatusCounts.Conflicts).Append(ColorReset);
         }
 
         if (stashEntryCount > 0)

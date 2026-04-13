@@ -4,6 +4,7 @@ namespace Prompt.Tests.Unit.Prompting;
 
 internal sealed class TestPlatformProvider(
     bool isWindows = false,
+    bool isWorkingDirectoryFromFallback = false,
     string? user = null,
     string? windowsUserName = null,
     string? host = null,
@@ -20,7 +21,7 @@ internal sealed class TestPlatformProvider(
 
     internal override string? Host { get; } = host;
 
-    internal override string? WorkingDirectoryPath { get; } = workingDirectoryPath;
+    internal override WorkingDirectoryContext WorkingDirectory { get; } = new(workingDirectoryPath ?? string.Empty, isWorkingDirectoryFromFallback);
 
     internal override string? HomeDirectoryPath { get; } = homeDirectoryPath;
 }

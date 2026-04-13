@@ -2,6 +2,8 @@ namespace Prompt.Platform;
 
 internal abstract class PlatformProvider
 {
+    internal readonly record struct WorkingDirectoryContext(string Path, bool IsFromFallback);
+
     internal static readonly PlatformProvider System = new SystemPlatformProvider();
 
     internal abstract bool IsWindows();
@@ -12,7 +14,7 @@ internal abstract class PlatformProvider
 
     internal abstract string? Host { get; }
 
-    internal abstract string? WorkingDirectoryPath { get; }
+    internal abstract WorkingDirectoryContext WorkingDirectory { get; }
 
     internal abstract string? HomeDirectoryPath { get; }
 
@@ -26,17 +28,17 @@ internal abstract class PlatformProvider
 
         internal override string Host => Environment.MachineName;
 
-        internal override string WorkingDirectoryPath
+        internal override WorkingDirectoryContext WorkingDirectory
         {
             get
             {
                 try
                 {
-                    return Directory.GetCurrentDirectory();
+                    return new WorkingDirectoryContext(Directory.GetCurrentDirectory(), IsFromFallback: false);
                 }
                 catch
                 {
-                    return Environment.GetEnvironmentVariable("PWD") ?? string.Empty;
+                    return new WorkingDirectoryContext(Environment.GetEnvironmentVariable("PWD") ?? string.Empty, IsFromFallback: true);
                 }
             }
         }

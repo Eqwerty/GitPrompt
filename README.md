@@ -60,6 +60,7 @@ If you are outside a Git repo, the git-status segment is omitted.
 - `<host>`: machine name (fallback `?`)
 - `<path>`: current working directory
 - Home path is shortened to `~`
+- If the working directory no longer exists but a shell fallback path is available, `<path>` is rendered in red and suffixed with `[missing]`
 
 ### Git Status Segment
 

@@ -9,9 +9,10 @@ internal static class ContextSegmentBuilder
     {
         var resolvedUser = ResolveUser(platformProvider);
         var resolvedHost = ResolveHost(platformProvider);
-        var resolvedPath = ResolveWorkingDirectoryPath(platformProvider);
+        var (resolvedPath, isMissingPath) = ResolveWorkingDirectoryPath(platformProvider);
+        var pathColor = isMissingPath ? ColorMissingPath : ColorPath;
 
-        return $"{ColorUser}{resolvedUser}{ColorReset} {ColorHost}{resolvedHost}{ColorReset} {ColorPath}{resolvedPath}{ColorReset}";
+        return $"{ColorUser}{resolvedUser}{ColorReset} {ColorHost}{resolvedHost}{ColorReset} {pathColor}{resolvedPath}{ColorReset}";
     }
 
     private static string ResolveUser(PlatformProvider platformProvider)
@@ -45,14 +46,17 @@ internal static class ContextSegmentBuilder
         return "?";
     }
 
-    private static string ResolveWorkingDirectoryPath(PlatformProvider platformProvider)
+    private static (string DisplayPath, bool IsMissingPath) ResolveWorkingDirectoryPath(PlatformProvider platformProvider)
     {
-        var workingDirectoryPath = platformProvider.WorkingDirectoryPath;
+        var workingDirectoryPath = platformProvider.WorkingDirectory.Path;
+        var isFallbackPath = platformProvider.WorkingDirectory.IsFromFallback;
 
         if (string.IsNullOrEmpty(workingDirectoryPath))
         {
-            return "?";
+            return (DisplayPath: "?", IsMissingPath: false);
         }
+
+        var isMissingPath = isFallbackPath && !Directory.Exists(workingDirectoryPath);
 
         try
         {
@@ -82,6 +86,12 @@ internal static class ContextSegmentBuilder
             // Keep the raw path if normalization fails.
         }
 
-        return workingDirectoryPath.Replace('\\', '/');
+        var displayPath = workingDirectoryPath.Replace('\\', '/');
+        if (isMissingPath)
+        {
+            displayPath += " [missing]";
+        }
+
+        return (displayPath, isMissingPath);
     }
 }

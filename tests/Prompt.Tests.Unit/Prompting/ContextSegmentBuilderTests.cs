@@ -118,7 +118,7 @@ public sealed class ContextSegmentBuilderTests
         using var home = new TemporaryDirectory();
         var projectPath = Path.Combine(home.DirectoryPath, "src", "project");
         Directory.CreateDirectory(projectPath);
-        
+
         var platformProvider = new TestPlatformProvider(
             user: "me",
             host: "machine",
@@ -148,6 +148,45 @@ public sealed class ContextSegmentBuilderTests
 
         // Assert
         segment.Should().Be($"{ColorUser}me{ColorReset} {ColorHost}machine{ColorReset} {ColorPath}folder/nested{ColorReset}");
+    }
+
+    [Fact]
+    public void Build_WhenWorkingDirectoryComesFromFallbackAndIsMissing_ShouldRenderMissingMarkerWithWarningColor()
+    {
+        // Arrange
+        var missingPath = Path.Combine(Path.GetTempPath(), "Prompt.Tests.Unit", Guid.NewGuid().ToString("N"));
+        var platformProvider = new TestPlatformProvider(
+            user: "me",
+            host: "machine",
+            workingDirectoryPath: missingPath,
+            isWorkingDirectoryFromFallback: true,
+            isWindows: OperatingSystem.IsWindows());
+
+        // Act
+        var segment = ContextSegmentBuilder.Build(platformProvider);
+
+        // Assert
+        segment.Should()
+            .Be($"{ColorUser}me{ColorReset} {ColorHost}machine{ColorReset} {ColorMissingPath}{missingPath.Replace('\\', '/')} [missing]{ColorReset}");
+    }
+
+    [Fact]
+    public void Build_WhenWorkingDirectoryComesFromFallbackAndExists_ShouldNotRenderMissingMarker()
+    {
+        // Arrange
+        using var temp = new TemporaryDirectory();
+        var platformProvider = new TestPlatformProvider(
+            user: "me",
+            host: "machine",
+            workingDirectoryPath: temp.DirectoryPath,
+            isWorkingDirectoryFromFallback: true,
+            isWindows: OperatingSystem.IsWindows());
+
+        // Act
+        var segment = ContextSegmentBuilder.Build(platformProvider);
+
+        // Assert
+        segment.Should().Be($"{ColorUser}me{ColorReset} {ColorHost}machine{ColorReset} {ColorPath}{temp.DirectoryPath.Replace('\\', '/')}{ColorReset}");
     }
 
     private sealed class TemporaryDirectory : IDisposable

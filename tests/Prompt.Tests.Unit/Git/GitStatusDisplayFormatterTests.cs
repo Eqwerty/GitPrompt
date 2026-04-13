@@ -200,6 +200,6 @@ public sealed class GitStatusDisplayFormatterTests
         gitStatusDisplay.Should().Contain($" {Colored(ColorStaged, Indicator(PromptIcons.IconAdded, 1))}");
         gitStatusDisplay.Should().Contain($" {Colored(ColorUnstaged, Indicator(PromptIcons.IconModified, 1))}");
         gitStatusDisplay.Should().Contain($" {Colored(ColorUntracked, Indicator(PromptIcons.IconUntracked, 1))}");
-        gitStatusDisplay.Should().Contain($" {Colored(ColorState, Indicator(PromptIcons.IconConflicts, 1))}");
+        gitStatusDisplay.Should().Contain($" {Colored(ColorConflict, Indicator(PromptIcons.IconConflicts, 1))}");
     }
 }

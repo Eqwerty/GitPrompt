@@ -58,3 +58,4 @@ nunit-*.xml
 
 # Rider / JetBrains
 .idea/
+*.DotSettings.user
