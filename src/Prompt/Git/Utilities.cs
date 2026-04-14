@@ -40,7 +40,25 @@ internal static class Utilities
         return commitHash.Length >= shortCommitHashLength ? commitHash[..shortCommitHashLength] : commitHash;
     }
 
-    internal static async Task<string?> RunProcessForOutputAsync(string fileName, string arguments, string? workingDirectory, bool requireSuccess)
+    internal static async Task<string?> RunGitCommandAsync(string repositoryRootPath, params string[] args)
+    {
+        if (string.IsNullOrEmpty(repositoryRootPath))
+        {
+            return null;
+        }
+
+        var joinedArguments = string.Join(' ', args.Select(EscapeCommandLineArgument));
+        var output = await RunProcessForOutputAsync(
+            fileName: "git",
+            arguments: joinedArguments,
+            workingDirectory: repositoryRootPath,
+            requireSuccess: true
+        );
+
+        return output?.Trim();
+    }
+
+    private static async Task<string?> RunProcessForOutputAsync(string fileName, string arguments, string? workingDirectory, bool requireSuccess)
     {
         try
         {

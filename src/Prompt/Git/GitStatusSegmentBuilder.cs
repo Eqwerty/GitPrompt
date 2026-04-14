@@ -1,10 +1,9 @@
-using System.Diagnostics;
+using static Prompt.Git.Utilities;
 
 namespace Prompt.Git;
 
 internal static class GitStatusSegmentBuilder
 {
-
     internal static async Task<string> BuildAsync(string workingDirectoryPath)
     {
         var repositoryContext = GitRepositoryLocator.FindRepositoryContext(workingDirectoryPath);
@@ -16,7 +15,14 @@ internal static class GitStatusSegmentBuilder
         var repositoryRootPath = repositoryContext.Value.WorkingTreePath;
         var gitDirectoryPath = repositoryContext.Value.GitDirectoryPath;
 
-        var statusOutput = await RunGitStatusCommandAsync(repositoryRootPath);
+        var statusOutput = await RunGitCommandAsync(
+            repositoryRootPath,
+            "status",
+            "--porcelain=2",
+            "--branch",
+            "--ahead-behind",
+            "--show-stash");
+
         if (statusOutput is null)
         {
             return string.Empty;
@@ -43,7 +49,7 @@ internal static class GitStatusSegmentBuilder
                 return GitStatusDisplayFormatter.BuildDisplay(rebaseBranchLabel, commitsAhead, commitsBehind, stashEntryCount, statusCounts, gitDirectoryPath);
             }
 
-            var shortObjectId = Utilities.ShortenCommitHash(headObjectId);
+            var shortObjectId = ShortenCommitHash(headObjectId);
             if (string.IsNullOrEmpty(shortObjectId))
             {
                 return string.Empty;
@@ -76,49 +82,5 @@ internal static class GitStatusSegmentBuilder
         var branchLabel = GitStatusDisplayFormatter.BuildBranchLabel(branchHeadName, hasUpstream);
 
         return GitStatusDisplayFormatter.BuildDisplay(branchLabel, commitsAhead, commitsBehind, stashEntryCount, statusCounts, gitDirectoryPath);
-    }
-
-    private static Task<string?> RunGitStatusCommandAsync(string workingDirectoryPath)
-    {
-        return RunProcessForOutputAsync(
-            fileName: "git",
-            arguments: "status --porcelain=2 --branch --ahead-behind --show-stash",
-            workingDirectory: workingDirectoryPath,
-            requireSuccess: true);
-    }
-
-    private static async Task<string?> RunProcessForOutputAsync(string fileName, string arguments, string? workingDirectory, bool requireSuccess)
-    {
-        try
-        {
-            using var process = new Process();
-            process.StartInfo = new ProcessStartInfo
-            {
-                FileName = fileName,
-                Arguments = arguments,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                WorkingDirectory = workingDirectory ?? string.Empty
-            };
-
-            process.Start();
-
-            var stdoutTask = process.StandardOutput.ReadToEndAsync();
-            var stderrTask = process.StandardError.ReadToEndAsync();
-            await Task.WhenAll(stdoutTask, stderrTask, process.WaitForExitAsync());
-
-            if (requireSuccess && process.ExitCode is not 0)
-            {
-                return null;
-            }
-
-            return process.ExitCode is 0 ? stdoutTask.Result : string.Empty;
-        }
-        catch
-        {
-            return null;
-        }
     }
 }
