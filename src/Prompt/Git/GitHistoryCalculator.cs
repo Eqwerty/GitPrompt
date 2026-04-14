@@ -10,7 +10,7 @@ internal static class GitHistoryCalculator
 
         if (string.IsNullOrEmpty(baseReference))
         {
-            return 0;
+            return await ComputeLocalAheadCommitCountWithFallbacksAsync(repositoryRootPath);
         }
 
         var forkPointCommit = await RunGitCommandInRepositoryAsync(repositoryRootPath, "merge-base", "--fork-point", baseReference, "HEAD") ?? string.Empty;
@@ -26,6 +26,57 @@ internal static class GitHistoryCalculator
         var commitCountOutput = await RunGitCommandInRepositoryAsync(repositoryRootPath, "rev-list", "--count", commitRangeSpec);
 
         return int.TryParse(commitCountOutput, out var commitCount) ? commitCount : 0;
+    }
+
+    private static async Task<int> ComputeLocalAheadCommitCountWithFallbacksAsync(string repositoryRootPath)
+    {
+        var remoteHeadRef = await RunGitCommandInRepositoryAsync(repositoryRootPath, "symbolic-ref", "refs/remotes/origin/HEAD");
+
+        if (!string.IsNullOrEmpty(remoteHeadRef))
+        {
+            var baseReference = ExtractBranchNameFromRef(remoteHeadRef);
+            if (!string.IsNullOrEmpty(baseReference))
+            {
+                var commitCount = await TryGetAheadCountAgainstReferenceAsync(repositoryRootPath, baseReference);
+                if (commitCount.HasValue)
+                {
+                    return commitCount.Value;
+                }
+            }
+        }
+
+        foreach (var candidateReference in CandidateBaseReferences)
+        {
+            var commitCount = await TryGetAheadCountAgainstReferenceAsync(repositoryRootPath, candidateReference);
+            if (commitCount.HasValue)
+            {
+                return commitCount.Value;
+            }
+        }
+
+        return 0;
+    }
+
+    private static async Task<int?> TryGetAheadCountAgainstReferenceAsync(string repositoryRootPath, string baseReference)
+    {
+        var commitCountOutput = await RunGitCommandInRepositoryAsync(repositoryRootPath, "rev-list", "--count", $"{baseReference}..HEAD");
+
+        return int.TryParse(commitCountOutput, out var commitCount) ? commitCount : null;
+    }
+
+    private static string ExtractBranchNameFromRef(string refPath)
+    {
+        var normalizedRef = refPath.Contains("->")
+            ? refPath.Split("->")[1].Trim()
+            : refPath;
+
+        const string prefix = "refs/remotes/";
+        if (normalizedRef.StartsWith(prefix, StringComparison.Ordinal))
+        {
+            return normalizedRef[prefix.Length..];
+        }
+
+        return string.Empty;
     }
 
     internal static async Task<(int Ahead, int Behind)> ComputeAheadBehindAgainstUpstreamAsync(string repositoryRootPath, string upstreamReference)
