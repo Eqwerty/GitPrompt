@@ -337,6 +337,36 @@ install_binary() {
   mv -f "$STAGED_BINARY_PATH" "$FINAL_BINARY_PATH"
 }
 
+publish_binary() {
+  if dotnet publish "$REPOSITORY_ROOT/src/Prompt/Prompt.csproj" \
+      --configuration Release \
+      --runtime "$RUNTIME_IDENTIFIER" \
+      --nologo \
+      --no-restore \
+      -p:DebugType=None \
+      -p:DebugSymbols=false \
+      -o "$PUBLISH_DIRECTORY"; then
+    printf 'aot' > "$AOT_STATUS_FILE"
+    return 0
+  fi
+
+  rm -rf "$PUBLISH_DIRECTORY"
+  mkdir -p "$PUBLISH_DIRECTORY"
+  printf 'non-aot' > "$AOT_STATUS_FILE"
+
+  dotnet publish "$REPOSITORY_ROOT/src/Prompt/Prompt.csproj" \
+    --configuration Release \
+    --runtime "$RUNTIME_IDENTIFIER" \
+    --nologo \
+    --no-restore \
+    -p:PublishAot=false \
+    -p:PublishSingleFile=true \
+    -p:SelfContained=false \
+    -p:DebugType=None \
+    -p:DebugSymbols=false \
+    -o "$PUBLISH_DIRECTORY"
+}
+
 parse_arguments "$@"
 
 BINARY_BASENAME="${BIN_BASENAME:-gitprompt}"
@@ -392,6 +422,7 @@ TEMPORARY_DIRECTORY="$(mktemp -d)"
 trap 'rm -rf "$TEMPORARY_DIRECTORY"' EXIT INT TERM
 PUBLISH_DIRECTORY="$TEMPORARY_DIRECTORY/publish"
 LOG_DIRECTORY="$TEMPORARY_DIRECTORY/logs"
+AOT_STATUS_FILE="$TEMPORARY_DIRECTORY/aot_status"
 mkdir -p "$PUBLISH_DIRECTORY" "$LOG_DIRECTORY"
 
 print_status "$COLOR_DIM" "INFO" "Target runtime: $RUNTIME_IDENTIFIER"
@@ -417,18 +448,14 @@ else
   print_step_warning "3" "Running tests (Release)" "0"
 fi
 
-run_step "4" "Publishing local single-file binary ($RUNTIME_IDENTIFIER)" "$LOG_DIRECTORY/publish.log" \
-  dotnet publish "$REPOSITORY_ROOT/src/Prompt/Prompt.csproj" \
-    --configuration Release \
-    --runtime "$RUNTIME_IDENTIFIER" \
-    --nologo \
-    --no-restore \
-    -p:PublishAot=false \
-    -p:PublishSingleFile=true \
-    -p:SelfContained=false \
-    -p:DebugType=None \
-    -p:DebugSymbols=false \
-    -o "$PUBLISH_DIRECTORY"
+run_step "4" "Publishing binary ($RUNTIME_IDENTIFIER, AOT if available)" "$LOG_DIRECTORY/publish.log" \
+  publish_binary
+
+if [ "$(cat "$AOT_STATUS_FILE" 2>/dev/null)" = "aot" ]; then
+  print_status "$COLOR_DIM" "INFO" "Binary type: native AOT"
+else
+  print_status "$COLOR_DIM" "INFO" "Binary type: single-file (AOT native toolchain not found)"
+fi
 
 SOURCE_BINARY_PATH="$PUBLISH_DIRECTORY/$PUBLISHED_BINARY_NAME"
 if [ ! -f "$SOURCE_BINARY_PATH" ]; then

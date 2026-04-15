@@ -147,3 +147,17 @@ Useful flags:
 sh ./dev-install-local.sh --verbose
 sh ./dev-install-local.sh --skip-tests
 ```
+
+### Native AOT prerequisites
+
+The dev script attempts native AOT compilation (same as the release build) and automatically falls
+back to a non-AOT single-file binary if the required toolchain is not present. To enable AOT
+locally, install the appropriate toolchain for your OS:
+
+| OS | Requirement |
+|---|---|
+| **Windows** | [Visual Studio 2022](https://visualstudio.microsoft.com/) with the **"Desktop development with C++"** workload |
+| **Linux** | `clang` and `zlib1g-dev` — e.g. `sudo apt install clang zlib1g-dev` on Debian/Ubuntu |
+| **macOS** | Xcode Command Line Tools — run `xcode-select --install` |
+
+If these are absent the script falls back silently; no extra steps required.
