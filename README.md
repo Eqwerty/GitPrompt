@@ -24,21 +24,32 @@ Default install location:
 
 Update is the same command.
 
+## Uninstall
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/Eqwerty/Prompt/master/uninstall.sh | sh
+```
+
+This removes the binary and its install directory. Your shell config (e.g. `~/.bashrc`) is not
+modified — remove the `PS1` block manually after uninstalling.
+
 ## Bash Setup
 
-After install, set `PS1`:
+Add to your shell config:
 
 Linux/macOS:
 
 ```sh
-PS1='$($HOME/.local/bin/gitprompt)'
+PS1='$([ -x "$HOME/.local/bin/gitprompt" ] && "$HOME/.local/bin/gitprompt" || printf "\w \$ ")'
 ```
 
 Windows Git Bash:
 
 ```sh
-PS1='$(~/prompt/gitprompt.exe)'
+PS1='$([ -x "$HOME/prompt/gitprompt.exe" ] && "$HOME/prompt/gitprompt.exe" || printf "\w > ")'
 ```
+
+The `&&`/`||` guard runs on every prompt render — if `gitprompt` is removed, the prompt falls back to the current directory and prompt symbol (e.g. `~/repos$ `). Bash expands `\w` and `\$` before the command substitution runs.
 
 ## Prompt Format Reference
 

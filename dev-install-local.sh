@@ -451,8 +451,10 @@ OVERALL_DURATION=$((SCRIPT_FINISHED_AT - SCRIPT_STARTED_AT))
 printf '\n'
 print_status "$COLOR_GREEN" "DONE" "Installed local build to: $FINAL_BINARY_PATH $(format_duration_segment "$(format_duration "$OVERALL_DURATION")")"
 if [ "$TARGET_OS" = "windows" ]; then
-  print_status "$COLOR_DIM" "INFO" "PS1 example: PS1='\$(~/prompt/gitprompt.exe)'"
+  print_status "$COLOR_DIM" "INFO" "Add to your shell config:"
+  print_status "$COLOR_DIM" "INFO" "  PS1='\$([ -x \"$HOME/prompt/gitprompt.exe\" ] && \"$HOME/prompt/gitprompt.exe\" || printf \"\\w > \")'"
 else
-  print_status "$COLOR_DIM" "INFO" "PS1 example: PS1='\$($HOME/.local/bin/gitprompt)'"
+  print_status "$COLOR_DIM" "INFO" "Add to your shell config:"
+  print_status "$COLOR_DIM" "INFO" "  PS1='\$([ -x \"$HOME/.local/bin/gitprompt\" ] && \"$HOME/.local/bin/gitprompt\" || printf \"\\w \\$ \")'"
 fi
 

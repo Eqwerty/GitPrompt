@@ -1,11 +1,11 @@
 #!/usr/bin/env sh
 set -eu
 
-# Install prompt from the latest GitHub release.
+# Uninstall prompt binary.
 # Usage:
-#   ./install.sh
+#   ./uninstall.sh
 
-TOTAL_STEPS=3
+TOTAL_STEPS=2
 SCRIPT_STARTED_AT="$(date +%s)"
 LOADER_INDEX=0
 
@@ -51,7 +51,7 @@ print_status() {
 }
 
 print_banner() {
-  printf '%s%sPrompt installer%s\n' "$COLOR_BOLD" "$COLOR_BLUE" "$COLOR_RESET"
+  printf '%s%sPrompt uninstaller%s\n' "$COLOR_BOLD" "$COLOR_BLUE" "$COLOR_RESET"
 }
 
 format_step_label() {
@@ -224,78 +224,84 @@ run_step() {
   fi
 }
 
-download_release_asset() {
-  download_completed=0
+scan_shell_configs() {
+  for config_file in \
+    "$HOME/.bashrc" \
+    "$HOME/.bash_aliases" \
+    "$HOME/.bash_profile" \
+    "$HOME/.bash_login" \
+    "$HOME/.profile" \
+    "$HOME/.zshenv" \
+    "$HOME/.zshrc" \
+    "$HOME/.zprofile"; do
+    if [ ! -f "$config_file" ]; then
+      continue
+    fi
 
-  if command -v curl >/dev/null 2>&1; then
-    if [ "$TARGET_OS" = "windows" ]; then
-      if curl --ssl-no-revoke -fsSL "$RELEASE_ASSET_URL" -o "$RELEASE_ASSET_PATH"; then
-        download_completed=1
+    matches="$(grep -n "gitprompt" "$config_file" 2>/dev/null || true)"
+    if [ -z "$matches" ]; then
+      continue
+    fi
+
+    # Symlinked config files cannot be safely rewritten — all matches go to warnings.
+    if [ -L "$config_file" ]; then
+      printf '%s\n' "$matches" | while IFS= read -r line; do
+        printf '%s:%s\n' "$config_file" "$line" >> "$WARN_MATCHES_FILE"
+      done
+      continue
+    fi
+
+    printf '%s\n' "$matches" | while IFS= read -r line; do
+      line_content="${line#*:}"
+      trimmed="$(printf '%s' "$line_content" | tr -d '\r' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+      if [ "$trimmed" = "$EXPECTED_PS1" ]; then
+        printf '%s\n' "$config_file" >> "$EXACT_MATCHES_FILE"
+      else
+        printf '%s:%s\n' "$config_file" "$line" >> "$WARN_MATCHES_FILE"
       fi
-    else
-      if curl -fsSL "$RELEASE_ASSET_URL" -o "$RELEASE_ASSET_PATH"; then
-        download_completed=1
-      fi
-    fi
-  fi
-
-  if [ "$download_completed" -eq 0 ] && command -v wget >/dev/null 2>&1; then
-    if wget -qO "$RELEASE_ASSET_PATH" "$RELEASE_ASSET_URL"; then
-      download_completed=1
-    fi
-  fi
-
-  if [ "$download_completed" -eq 0 ] && [ "$TARGET_OS" = "windows" ] && command -v powershell.exe >/dev/null 2>&1; then
-    if powershell.exe -NoProfile -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri '$RELEASE_ASSET_URL' -OutFile '$RELEASE_ASSET_PATH'" >/dev/null; then
-      download_completed=1
-    fi
-  fi
-
-  if [ "$download_completed" -eq 0 ]; then
-    printf '%s\n' "Failed to download release asset." >&2
-    printf '%s\n' "If this repository has only prereleases, latest/download will not work." >&2
-    printf '%s\n' "Push a new commit to publish a non-prerelease release." >&2
-    return 1
-  fi
+    done
+  done
 }
 
-extract_release_asset() {
-  if [ "$TARGET_OS" = "windows" ]; then
-    if command -v unzip >/dev/null 2>&1; then
-      unzip -q "$RELEASE_ASSET_PATH" -d "$TEMPORARY_DIRECTORY"
-    elif command -v powershell.exe >/dev/null 2>&1; then
-      powershell.exe -NoProfile -Command "Expand-Archive -Path '$RELEASE_ASSET_PATH' -DestinationPath '$TEMPORARY_DIRECTORY' -Force" >/dev/null
-    else
-      printf '%s\n' "Need unzip or powershell.exe to extract zip files." >&2
-      return 1
+clean_shell_configs() {
+  sort -u "$EXACT_MATCHES_FILE" | while IFS= read -r config_file; do
+    if [ ! -f "$config_file" ]; then
+      continue
     fi
+    backup_path="${config_file}.bak"
+    if [ ! -f "$backup_path" ]; then
+      cp "$config_file" "$backup_path"
+    fi
+    tmp_file="$(mktemp)"
+    expected="$EXPECTED_PS1" awk '
+      {
+        line = $0
+        gsub(/\r/, "", line)
+        sub(/^[[:space:]]*/, "", line)
+        sub(/[[:space:]]*$/, "", line)
+        if (line != ENVIRON["expected"]) print $0
+      }
+    ' "$config_file" > "$tmp_file"
+    mv "$tmp_file" "$config_file"
+    print_status "$COLOR_GREEN" "INFO" "Removed PS1 line from: $config_file (backup: ${config_file}.bak)"
+  done
+}
+
+remove_binary() {
+  if [ -f "$FINAL_BINARY_PATH" ]; then
+    rm -f "$FINAL_BINARY_PATH"
   else
-    tar -xzf "$RELEASE_ASSET_PATH" -C "$TEMPORARY_DIRECTORY"
+    printf 'Binary not found at %s — already removed.\n' "$FINAL_BINARY_PATH"
   fi
-}
 
-install_binary() {
-  mkdir -p "$INSTALL_DIR"
-  cp "$EXTRACTED_BINARY_PATH" "$STAGED_BINARY_PATH"
-  chmod +x "$STAGED_BINARY_PATH" 2>/dev/null || true
-
+  # Only remove the install directory on Windows, where ~/prompt is a dedicated folder.
+  # On Linux/macOS ~/.local/bin is a shared directory and must not be removed.
   if [ "$TARGET_OS" = "windows" ]; then
-    if mv -f "$STAGED_BINARY_PATH" "$FINAL_BINARY_PATH" 2>/dev/null; then
-      return 0
-    fi
-
-    rm -f "$STAGED_BINARY_PATH"
-    printf '%s\n' "Failed to replace $FINAL_BINARY_PATH." >&2
-    printf '%s\n' "On Windows, a running .exe may be locked. Close shells using gitprompt and run the installer again." >&2
-    return 1
+    rmdir "$INSTALL_DIR" 2>/dev/null || true
   fi
-
-  mv -f "$STAGED_BINARY_PATH" "$FINAL_BINARY_PATH"
 }
 
-BINARY_BASENAME="gitprompt"
 OPERATING_SYSTEM="$(uname -s | tr '[:upper:]' '[:lower:]')"
-CPU_ARCHITECTURE="$(uname -m)"
 
 case "$OPERATING_SYSTEM" in
   linux) TARGET_OS="linux" ;;
@@ -306,67 +312,54 @@ case "$OPERATING_SYSTEM" in
     ;;
 esac
 
-case "$CPU_ARCHITECTURE" in
-  x86_64|amd64) TARGET_ARCHITECTURE="amd64" ;;
-  *)
-    print_error_and_exit "Unsupported architecture: $CPU_ARCHITECTURE. Supported: amd64 only."
-    ;;
-esac
-
 if [ "$TARGET_OS" = "windows" ]; then
   INSTALL_DIR="$HOME/prompt"
+  INSTALLED_BINARY_NAME="gitprompt.exe"
 else
   INSTALL_DIR="$HOME/.local/bin"
+  INSTALLED_BINARY_NAME="gitprompt"
 fi
+
+FINAL_BINARY_PATH="$INSTALL_DIR/$INSTALLED_BINARY_NAME"
 
 if [ "$TARGET_OS" = "windows" ]; then
-  RELEASE_ASSET_NAME="prompt_${TARGET_OS}_${TARGET_ARCHITECTURE}.zip"
-  EXTRACTED_BINARY_NAME="prompt.exe"
-  INSTALLED_BINARY_NAME="${BINARY_BASENAME}.exe"
+  EXPECTED_PS1="PS1='\$([ -x \"$FINAL_BINARY_PATH\" ] && \"$FINAL_BINARY_PATH\" || printf \"\\w > \")'"
 else
-  RELEASE_ASSET_NAME="prompt_${TARGET_OS}_${TARGET_ARCHITECTURE}.tar.gz"
-  EXTRACTED_BINARY_NAME="prompt"
-  INSTALLED_BINARY_NAME="${BINARY_BASENAME}"
+  EXPECTED_PS1="PS1='\$([ -x \"$FINAL_BINARY_PATH\" ] && \"$FINAL_BINARY_PATH\" || printf \"\\w \\\$ \")'"
 fi
-
-RELEASE_ASSET_URL="https://github.com/Eqwerty/Prompt/releases/download/latest/${RELEASE_ASSET_NAME}"
 
 TEMPORARY_DIRECTORY="$(mktemp -d)"
 trap 'rm -rf "$TEMPORARY_DIRECTORY"' EXIT INT TERM
 LOG_DIRECTORY="$TEMPORARY_DIRECTORY/logs"
+EXACT_MATCHES_FILE="$TEMPORARY_DIRECTORY/exact_matches"
+WARN_MATCHES_FILE="$TEMPORARY_DIRECTORY/warn_matches"
 mkdir -p "$LOG_DIRECTORY"
-
-RELEASE_ASSET_PATH="$TEMPORARY_DIRECTORY/$RELEASE_ASSET_NAME"
-EXTRACTED_BINARY_PATH="$TEMPORARY_DIRECTORY/$EXTRACTED_BINARY_NAME"
-FINAL_BINARY_PATH="$INSTALL_DIR/$INSTALLED_BINARY_NAME"
-STAGED_BINARY_PATH="$INSTALL_DIR/.${INSTALLED_BINARY_NAME}.new.$$"
+touch "$EXACT_MATCHES_FILE" "$WARN_MATCHES_FILE"
 
 print_banner
-print_status "$COLOR_DIM" "INFO" "Target: ${TARGET_OS}-${TARGET_ARCHITECTURE}"
-print_status "$COLOR_DIM" "INFO" "Asset: $RELEASE_ASSET_NAME"
-print_status "$COLOR_DIM" "INFO" "Install path: $FINAL_BINARY_PATH"
+print_status "$COLOR_DIM" "INFO" "Binary: $FINAL_BINARY_PATH"
 
 printf '\n'
 
-run_step "1" "Downloading release asset" "$LOG_DIRECTORY/download.log" \
-  download_release_asset
+run_step "1" "Scanning shell configs for gitprompt references" "$LOG_DIRECTORY/scan.log" \
+  scan_shell_configs
 
-run_step "2" "Extracting release archive" "$LOG_DIRECTORY/extract.log" \
-  extract_release_asset
+if [ -s "$EXACT_MATCHES_FILE" ]; then
+  clean_shell_configs
+fi
 
-run_step "3" "Installing to $FINAL_BINARY_PATH" "$LOG_DIRECTORY/install.log" \
-  install_binary
+if [ -s "$WARN_MATCHES_FILE" ]; then
+  print_status "$COLOR_YELLOW" "WARN" "Found gitprompt references — remove these lines from your shell config:"
+  while IFS= read -r match; do
+    printf '  %s\n' "$match"
+  done < "$WARN_MATCHES_FILE"
+fi
+
+run_step "2" "Removing $FINAL_BINARY_PATH" "$LOG_DIRECTORY/remove.log" \
+  remove_binary
 
 SCRIPT_FINISHED_AT="$(current_timestamp)"
 OVERALL_DURATION=$((SCRIPT_FINISHED_AT - SCRIPT_STARTED_AT))
 
 printf '\n'
-print_status "$COLOR_GREEN" "DONE" "Installed to $FINAL_BINARY_PATH $(format_duration_segment "$(format_duration "$OVERALL_DURATION")")"
-if [ "$TARGET_OS" = "windows" ]; then
-  print_status "$COLOR_DIM" "INFO" "Add to your shell config:"
-  print_status "$COLOR_DIM" "INFO" "  PS1='\$([ -x \"$HOME/prompt/gitprompt.exe\" ] && \"$HOME/prompt/gitprompt.exe\" || printf \"\\w > \")'"
-else
-  print_status "$COLOR_DIM" "INFO" "Add to your shell config:"
-  print_status "$COLOR_DIM" "INFO" "  PS1='\$([ -x \"$HOME/.local/bin/gitprompt\" ] && \"$HOME/.local/bin/gitprompt\" || printf \"\\w \\$ \")'"
-fi
-
+print_status "$COLOR_GREEN" "DONE" "Uninstalled $(format_duration_segment "$(format_duration "$OVERALL_DURATION")")"
