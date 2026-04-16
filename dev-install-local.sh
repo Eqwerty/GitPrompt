@@ -384,7 +384,14 @@ configure_shell() {
   SHELL_CONFIG="$HOME/.bashrc"
 
   if [ "$TARGET_OS" = "windows" ]; then
-    cat > "$GITPROMPT_RC_PATH" <<EOF
+    gitpromptrc_curl_ssl_opt="--ssl-no-revoke "
+    gitpromptrc_fallback_ps1='\w > '
+  else
+    gitpromptrc_curl_ssl_opt=""
+    gitpromptrc_fallback_ps1='\w \$ '
+  fi
+
+  cat > "$GITPROMPT_RC_PATH" <<EOF
 # gitPrompt
 _GITPROMPT_BIN="$FINAL_BINARY_PATH"
 
@@ -406,7 +413,7 @@ _gitprompt_update_ps1() {
   if output="\$("\$_GITPROMPT_BIN" 2>/dev/null)" && [ -n "\$output" ]; then
     PS1="\$output"
   else
-    PS1='\w > '
+    PS1='${gitpromptrc_fallback_ps1}'
   fi
   __gitprompt_running=0
 }
@@ -416,48 +423,10 @@ if [ -x "\$_GITPROMPT_BIN" ]; then
   PROMPT_COMMAND="_gitprompt_update_ps1\${PROMPT_COMMAND:+; \$PROMPT_COMMAND}"
 fi
 
-alias updategitprompt='curl -fsSL --ssl-no-revoke https://raw.githubusercontent.com/Eqwerty/GitPrompt/master/install.sh | sh -s -- --yes && source ~/.bashrc'
-alias uninstallgitprompt='curl -fsSL --ssl-no-revoke https://raw.githubusercontent.com/Eqwerty/GitPrompt/master/uninstall.sh | sh && trap - DEBUG && PROMPT_COMMAND="" && PS1='"'"'\w > '"'"' && source ~/.bashrc'
+alias updategitprompt='curl -fsSL ${gitpromptrc_curl_ssl_opt}https://raw.githubusercontent.com/Eqwerty/GitPrompt/master/install.sh | sh -s -- --yes && source ~/.bashrc'
+alias uninstallgitprompt='curl -fsSL ${gitpromptrc_curl_ssl_opt}https://raw.githubusercontent.com/Eqwerty/GitPrompt/master/uninstall.sh | sh && trap - DEBUG && PROMPT_COMMAND="" && PS1='"'"'${gitpromptrc_fallback_ps1}'"'"' && source ~/.bashrc'
 alias gitpromptconfig='vim "$INSTALL_DIR/config.json"'
 EOF
-  else
-    cat > "$GITPROMPT_RC_PATH" <<EOF
-# gitPrompt
-_GITPROMPT_BIN="$FINAL_BINARY_PATH"
-
-__gitprompt_preexec_flag=0
-__gitprompt_running=0
-
-__gitprompt_debug_trap() {
-  if [ "\$__gitprompt_running" -eq 0 ] && [ "\$BASH_COMMAND" != "_gitprompt_update_ps1" ]; then
-    __gitprompt_preexec_flag=1
-  fi
-}
-
-_gitprompt_update_ps1() {
-  __gitprompt_running=1
-  if [ "\$__gitprompt_preexec_flag" -eq 1 ]; then
-    __gitprompt_preexec_flag=0
-    "\$_GITPROMPT_BIN" --invalidate-status-cache >/dev/null 2>&1 || true
-  fi
-  if output="\$("\$_GITPROMPT_BIN" 2>/dev/null)" && [ -n "\$output" ]; then
-    PS1="\$output"
-  else
-    PS1='\w \$ '
-  fi
-  __gitprompt_running=0
-}
-
-if [ -x "\$_GITPROMPT_BIN" ]; then
-  trap '__gitprompt_debug_trap' DEBUG
-  PROMPT_COMMAND="_gitprompt_update_ps1\${PROMPT_COMMAND:+; \$PROMPT_COMMAND}"
-fi
-
-alias updategitprompt='curl -fsSL https://raw.githubusercontent.com/Eqwerty/GitPrompt/master/install.sh | sh -s -- --yes && source ~/.bashrc'
-alias uninstallgitprompt='curl -fsSL https://raw.githubusercontent.com/Eqwerty/GitPrompt/master/uninstall.sh | sh && trap - DEBUG && PROMPT_COMMAND="" && PS1='"'"'\w \$ '"'"' && source ~/.bashrc'
-alias gitpromptconfig='vim "$INSTALL_DIR/config.json"'
-EOF
-  fi
 
   EXPECTED_SOURCE_LINE="[ -f \"$GITPROMPT_RC_PATH\" ] && . \"$GITPROMPT_RC_PATH\"  # gitPrompt"
 
@@ -528,8 +497,7 @@ esac
 case "$CPU_ARCHITECTURE" in
   x86_64|amd64) TARGET_ARCHITECTURE="amd64" ;;
   *)
-    print_status "$COLOR_RED" "ERROR" "Unsupported architecture: $CPU_ARCHITECTURE"
-    print_error_and_exit "This script currently supports amd64 only."
+    print_error_and_exit "Unsupported architecture: $CPU_ARCHITECTURE. This script currently supports amd64 only."
     ;;
 esac
 
