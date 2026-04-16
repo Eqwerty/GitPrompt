@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Prompt.Git;
 using static Prompt.Constants.BranchLabelTokens;
 
 namespace Prompt.Tests.Integration;
@@ -93,21 +94,20 @@ internal static class TestHelpers
 
     internal sealed class GitStatusCacheOverride : IDisposable
     {
-        private readonly string? _originalCacheDir;
         private readonly string? _originalTtl;
+        private readonly IDisposable _cacheDirectoryOverride;
 
         public GitStatusCacheOverride(string cacheDirectoryPath, int ttlMilliseconds = 60_000)
         {
-            _originalCacheDir = Environment.GetEnvironmentVariable("PROMPT_GIT_STATUS_CACHE_DIR");
             _originalTtl = Environment.GetEnvironmentVariable("PROMPT_GIT_STATUS_CACHE_TTL_MS");
-            Environment.SetEnvironmentVariable("PROMPT_GIT_STATUS_CACHE_DIR", cacheDirectoryPath);
             Environment.SetEnvironmentVariable("PROMPT_GIT_STATUS_CACHE_TTL_MS", ttlMilliseconds.ToString());
+            _cacheDirectoryOverride = GitStatusSharedCache.OverrideCacheDirectoryForTesting(cacheDirectoryPath);
         }
 
         public void Dispose()
         {
-            Environment.SetEnvironmentVariable("PROMPT_GIT_STATUS_CACHE_DIR", _originalCacheDir);
             Environment.SetEnvironmentVariable("PROMPT_GIT_STATUS_CACHE_TTL_MS", _originalTtl);
+            _cacheDirectoryOverride.Dispose();
         }
     }
 }

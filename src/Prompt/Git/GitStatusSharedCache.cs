@@ -5,14 +5,15 @@ namespace Prompt.Git;
 
 internal static class GitStatusSharedCache
 {
-    private const string CacheDirectoryEnvironmentVariable = "PROMPT_GIT_STATUS_CACHE_DIR";
     private const string CacheTtlMillisecondsEnvironmentVariable = "PROMPT_GIT_STATUS_CACHE_TTL_MS";
+    private const string CacheDirectoryName = "git-status-cache-v1";
     private const string InvalidationTokenFileName = "status-invalidation.token";
 
     private static readonly TimeSpan DefaultCacheTtl = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan StaleCacheEntryThreshold = TimeSpan.FromDays(7);
     private static readonly TimeSpan CleanupInterval = TimeSpan.FromMinutes(5);
     private static TimeProvider _timeProvider = TimeProvider.System;
+    private static string? _cacheDirectoryOverride;
     private static long _nextCleanupUtcTicks;
 
     internal static bool TryGet(string repositoryRootPath, string gitDirectoryPath, out string segment)
@@ -217,6 +218,13 @@ internal static class GitStatusSharedCache
         return new TimeProviderOverride(() => _timeProvider = previousTimeProvider);
     }
 
+    internal static IDisposable OverrideCacheDirectoryForTesting(string cacheDirectoryPath)
+    {
+        _cacheDirectoryOverride = cacheDirectoryPath;
+
+        return new TimeProviderOverride(() => _cacheDirectoryOverride = null);
+    }
+
     internal static void ResetCleanupScheduleForTesting()
     {
         Interlocked.Exchange(ref _nextCleanupUtcTicks, 0);
@@ -239,10 +247,7 @@ internal static class GitStatusSharedCache
 
     private static string GetCacheDirectoryPath()
     {
-        var configuredPath = Environment.GetEnvironmentVariable(CacheDirectoryEnvironmentVariable);
-        return string.IsNullOrWhiteSpace(configuredPath)
-            ? Path.Combine(Path.GetTempPath(), "Prompt", "git-status-cache-v1")
-            : configuredPath;
+        return _cacheDirectoryOverride ?? Path.Combine(AppContext.BaseDirectory, CacheDirectoryName);
     }
 
     private static string GetCacheFilePath(string normalizedRepositoryRootPath)

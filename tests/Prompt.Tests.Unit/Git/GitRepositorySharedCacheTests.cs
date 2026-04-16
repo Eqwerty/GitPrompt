@@ -197,22 +197,20 @@ public sealed class GitRepositorySharedCacheTests
 
     private sealed class RepositoryCacheEnvironmentOverride : IDisposable
     {
-        private readonly string? _originalCacheDirectory;
         private readonly string? _originalTtlValue;
+        private readonly IDisposable _cacheDirectoryOverride;
 
         public RepositoryCacheEnvironmentOverride(string cacheDirectoryPath, int ttlSeconds)
         {
-            _originalCacheDirectory = Environment.GetEnvironmentVariable("PROMPT_REPOSITORY_CACHE_DIR");
             _originalTtlValue = Environment.GetEnvironmentVariable("PROMPT_REPOSITORY_CACHE_TTL_SECONDS");
-
-            Environment.SetEnvironmentVariable("PROMPT_REPOSITORY_CACHE_DIR", cacheDirectoryPath);
             Environment.SetEnvironmentVariable("PROMPT_REPOSITORY_CACHE_TTL_SECONDS", ttlSeconds.ToString());
+            _cacheDirectoryOverride = GitRepositorySharedCache.OverrideCacheDirectoryForTesting(cacheDirectoryPath);
         }
 
         public void Dispose()
         {
-            Environment.SetEnvironmentVariable("PROMPT_REPOSITORY_CACHE_DIR", _originalCacheDirectory);
             Environment.SetEnvironmentVariable("PROMPT_REPOSITORY_CACHE_TTL_SECONDS", _originalTtlValue);
+            _cacheDirectoryOverride.Dispose();
         }
     }
 }

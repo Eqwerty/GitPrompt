@@ -301,22 +301,20 @@ public sealed class GitStatusSharedCacheTests
 
     private sealed class GitStatusCacheEnvironmentOverride : IDisposable
     {
-        private readonly string? _originalCacheDirectory;
         private readonly string? _originalTtl;
+        private readonly IDisposable _cacheDirectoryOverride;
 
         public GitStatusCacheEnvironmentOverride(string cacheDirectoryPath, int ttlMilliseconds)
         {
-            _originalCacheDirectory = Environment.GetEnvironmentVariable("PROMPT_GIT_STATUS_CACHE_DIR");
             _originalTtl = Environment.GetEnvironmentVariable("PROMPT_GIT_STATUS_CACHE_TTL_MS");
-
-            Environment.SetEnvironmentVariable("PROMPT_GIT_STATUS_CACHE_DIR", cacheDirectoryPath);
             Environment.SetEnvironmentVariable("PROMPT_GIT_STATUS_CACHE_TTL_MS", ttlMilliseconds.ToString());
+            _cacheDirectoryOverride = GitStatusSharedCache.OverrideCacheDirectoryForTesting(cacheDirectoryPath);
         }
 
         public void Dispose()
         {
-            Environment.SetEnvironmentVariable("PROMPT_GIT_STATUS_CACHE_DIR", _originalCacheDirectory);
             Environment.SetEnvironmentVariable("PROMPT_GIT_STATUS_CACHE_TTL_MS", _originalTtl);
+            _cacheDirectoryOverride.Dispose();
         }
     }
 }

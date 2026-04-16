@@ -300,11 +300,8 @@ remove_binary() {
     rm -f "$PROMPT_RC_PATH"
   fi
 
-  # Only remove the install directory on Windows, where ~/prompt is a dedicated folder.
-  # On Linux/macOS ~/.local/bin is a shared directory and must not be removed.
-  if [ "$TARGET_OS" = "windows" ]; then
-    rmdir "$INSTALL_DIR" 2>/dev/null || true
-  fi
+  # ~/.prompt is a dedicated folder on all platforms — safe to remove when empty.
+  rmdir "$INSTALL_DIR" 2>/dev/null || true
 }
 
 OPERATING_SYSTEM="$(uname -s | tr '[:upper:]' '[:lower:]')"
@@ -319,10 +316,10 @@ case "$OPERATING_SYSTEM" in
 esac
 
 if [ "$TARGET_OS" = "windows" ]; then
-  INSTALL_DIR="$HOME/prompt"
+  INSTALL_DIR="$HOME/.prompt"
   INSTALLED_BINARY_NAME="prompt.exe"
 else
-  INSTALL_DIR="$HOME/.local/bin"
+  INSTALL_DIR="$HOME/.prompt"
   INSTALLED_BINARY_NAME="prompt"
 fi
 

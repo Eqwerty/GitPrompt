@@ -19,8 +19,8 @@ curl -fsSL https://raw.githubusercontent.com/Eqwerty/Prompt/master/install.sh | 
 
 Default install location:
 
-- Linux/macOS: `$HOME/.local/bin/prompt`
-- Windows Git Bash: `$HOME/prompt/prompt.exe`
+- Linux/macOS: `$HOME/.prompt/prompt`
+- Windows Git Bash: `$HOME/.prompt/prompt.exe`
 
 Update is the same command.
 
@@ -38,8 +38,8 @@ Legacy manual `PS1` lines written before the automated setup was introduced are 
 Shell configuration is automated by the installer. After `install.sh` runs, it writes a `.promptrc`
 file co-located with the binary and adds a source line to `~/.bashrc`:
 
-- Linux/macOS: `$HOME/.local/bin/.promptrc`
-- Windows Git Bash: `$HOME/prompt/.promptrc`
+- Linux/macOS: `$HOME/.prompt/.promptrc`
+- Windows Git Bash: `$HOME/.prompt/.promptrc`
 
 The `.promptrc` sets `PS1` and provides two convenience aliases:
 - `updateprompt` — re-runs the installer and reloads `~/.bashrc`
@@ -50,13 +50,13 @@ If you skip automatic setup or need to configure manually, add one of the follow
 Linux/macOS:
 
 ```sh
-PS1='$([ -x "$HOME/.local/bin/prompt" ] && "$HOME/.local/bin/prompt" || printf "\w \$ ")'
+PS1='$([ -x "$HOME/.prompt/prompt" ] && "$HOME/.prompt/prompt" || printf "\w \$ ")'
 ```
 
 Windows Git Bash:
 
 ```sh
-PS1='$([ -x "$HOME/prompt/prompt.exe" ] && "$HOME/prompt/prompt.exe" || printf "\w > ")'
+PS1='$([ -x "$HOME/.prompt/prompt.exe" ] && "$HOME/.prompt/prompt.exe" || printf "\w > ")'
 ```
 
 The `&&`/`||` guard runs on every prompt render — if `prompt` is removed, the prompt falls back to the current directory and prompt symbol (e.g. `~/repos$ `). Bash expands `\w` and `\$` before the command substitution runs.

@@ -443,11 +443,7 @@ case "$CPU_ARCHITECTURE" in
     ;;
 esac
 
-if [ "$TARGET_OS" = "windows" ]; then
-  INSTALL_DIR="$HOME/prompt"
-else
-  INSTALL_DIR="$HOME/.local/bin"
-fi
+INSTALL_DIR="$HOME/.prompt"
 
 if [ "$TARGET_OS" = "windows" ]; then
   RELEASE_ASSET_NAME="prompt_${TARGET_OS}_${TARGET_ARCHITECTURE}.zip"

@@ -5,12 +5,13 @@ namespace Prompt.Git;
 
 internal static class GitRepositorySharedCache
 {
-    private const string CacheDirectoryEnvironmentVariable = "PROMPT_REPOSITORY_CACHE_DIR";
+    private const string CacheDirectoryName = "repository-cache-v1";
     private const string CacheTtlSecondsEnvironmentVariable = "PROMPT_REPOSITORY_CACHE_TTL_SECONDS";
     private static readonly TimeSpan DefaultCacheTtl = TimeSpan.FromSeconds(60);
     private static readonly TimeSpan StaleCacheEntryThreshold = TimeSpan.FromDays(7);
     private static readonly TimeSpan CleanupInterval = TimeSpan.FromMinutes(5);
     private static TimeProvider _timeProvider = TimeProvider.System;
+    private static string? _cacheDirectoryOverride;
     private static long _nextCleanupUtcTicks;
 
     internal static bool TryGet(string startDirectoryPath, out GitRepositoryLocator.RepositoryContext repositoryContext)
@@ -94,6 +95,7 @@ internal static class GitRepositorySharedCache
     private static void WriteAtomically(string targetFilePath, string[] lines)
     {
         var tempFilePath = targetFilePath + "." + Path.GetRandomFileName() + ".tmp";
+
         try
         {
             File.WriteAllLines(tempFilePath, lines);
@@ -104,7 +106,10 @@ internal static class GitRepositorySharedCache
         {
             if (tempFilePath is not null)
             {
-                try { File.Delete(tempFilePath); }
+                try
+                {
+                    File.Delete(tempFilePath);
+                }
                 catch (Exception)
                 {
                     /* best-effort temp file cleanup */
@@ -162,11 +167,19 @@ internal static class GitRepositorySharedCache
         Interlocked.Exchange(ref _nextCleanupUtcTicks, 0);
     }
 
-    internal static IDisposable OverrideTimeProviderForTesting(TimeProvider timeProvider)    {
+    internal static IDisposable OverrideTimeProviderForTesting(TimeProvider timeProvider)
+    {
         var previousTimeProvider = _timeProvider;
         _timeProvider = timeProvider;
 
         return new TimeProviderOverride(() => _timeProvider = previousTimeProvider);
+    }
+
+    internal static IDisposable OverrideCacheDirectoryForTesting(string cacheDirectoryPath)
+    {
+        _cacheDirectoryOverride = cacheDirectoryPath;
+
+        return new TimeProviderOverride(() => _cacheDirectoryOverride = null);
     }
 
     private static TimeSpan GetCacheTtl()
@@ -188,11 +201,7 @@ internal static class GitRepositorySharedCache
 
     private static string GetCacheDirectoryPath()
     {
-        var configuredPath = Environment.GetEnvironmentVariable(CacheDirectoryEnvironmentVariable);
-
-        return string.IsNullOrWhiteSpace(configuredPath)
-            ? Path.Combine(Path.GetTempPath(), "Prompt", "repository-cache-v1")
-            : configuredPath;
+        return _cacheDirectoryOverride ?? Path.Combine(AppContext.BaseDirectory, CacheDirectoryName);
     }
 
     private static string GetCacheFilePath(string normalizedStartDirectoryPath)

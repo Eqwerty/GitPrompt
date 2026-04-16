@@ -508,11 +508,7 @@ case "$CPU_ARCHITECTURE" in
 esac
 
 if [ -z "${INSTALL_DIR:-}" ]; then
-  if [ "$TARGET_OS" = "windows" ]; then
-    INSTALL_DIR="$HOME/prompt"
-  else
-    INSTALL_DIR="$HOME/.local/bin"
-  fi
+  INSTALL_DIR="$HOME/.prompt"
 fi
 
 if [ "$TARGET_OS" = "windows" ]; then
