@@ -2,7 +2,7 @@
 
 A fast cross-platform shell prompt binary for Git repositories.
 
-`gitprompt` prints a two-line prompt:
+`prompt` prints a two-line prompt:
 
 1. `user host path [git-status]`
 2. prompt symbol (`$`, `#`, or `>`)
@@ -19,8 +19,8 @@ curl -fsSL https://raw.githubusercontent.com/Eqwerty/Prompt/master/install.sh | 
 
 Default install location:
 
-- Linux/macOS: `$HOME/.local/bin/gitprompt`
-- Windows Git Bash: `$HOME/prompt/gitprompt.exe`
+- Linux/macOS: `$HOME/.local/bin/prompt`
+- Windows Git Bash: `$HOME/prompt/prompt.exe`
 
 Update is the same command.
 
@@ -50,16 +50,16 @@ If you skip automatic setup or need to configure manually, add one of the follow
 Linux/macOS:
 
 ```sh
-PS1='$([ -x "$HOME/.local/bin/gitprompt" ] && "$HOME/.local/bin/gitprompt" || printf "\w \$ ")'
+PS1='$([ -x "$HOME/.local/bin/prompt" ] && "$HOME/.local/bin/prompt" || printf "\w \$ ")'
 ```
 
 Windows Git Bash:
 
 ```sh
-PS1='$([ -x "$HOME/prompt/gitprompt.exe" ] && "$HOME/prompt/gitprompt.exe" || printf "\w > ")'
+PS1='$([ -x "$HOME/prompt/prompt.exe" ] && "$HOME/prompt/prompt.exe" || printf "\w > ")'
 ```
 
-The `&&`/`||` guard runs on every prompt render — if `gitprompt` is removed, the prompt falls back to the current directory and prompt symbol (e.g. `~/repos$ `). Bash expands `\w` and `\$` before the command substitution runs.
+The `&&`/`||` guard runs on every prompt render — if `prompt` is removed, the prompt falls back to the current directory and prompt symbol (e.g. `~/repos$ `). Bash expands `\w` and `\$` before the command substitution runs.
 
 ## Prompt Format Reference
 

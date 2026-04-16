@@ -261,35 +261,35 @@ configure_shell() {
 
   if [ "$TARGET_OS" = "windows" ]; then
     cat > "$PROMPT_RC_PATH" <<EOF
-# gitprompt
-_GITPROMPT_BIN="$FINAL_BINARY_PATH"
+# prompt
+_PROMPT_BIN="$FINAL_BINARY_PATH"
 
-__gitprompt_preexec_flag=0
-__gitprompt_running=0
+__prompt_preexec_flag=0
+__prompt_running=0
 
-__gitprompt_debug_trap() {
-  if [ "\$__gitprompt_running" -eq 0 ] && [ "\$BASH_COMMAND" != "_gitprompt_update_ps1" ]; then
-    __gitprompt_preexec_flag=1
+__prompt_debug_trap() {
+  if [ "\$__prompt_running" -eq 0 ] && [ "\$BASH_COMMAND" != "_prompt_update_ps1" ]; then
+    __prompt_preexec_flag=1
   fi
 }
 
-_gitprompt_update_ps1() {
-  __gitprompt_running=1
-  if [ "\$__gitprompt_preexec_flag" -eq 1 ]; then
-    __gitprompt_preexec_flag=0
-    "\$_GITPROMPT_BIN" --invalidate-status-cache >/dev/null 2>&1 || true
+_prompt_update_ps1() {
+  __prompt_running=1
+  if [ "\$__prompt_preexec_flag" -eq 1 ]; then
+    __prompt_preexec_flag=0
+    "\$_PROMPT_BIN" --invalidate-status-cache >/dev/null 2>&1 || true
   fi
-  if output="\$("\$_GITPROMPT_BIN" 2>/dev/null)" && [ -n "\$output" ]; then
+  if output="\$("\$_PROMPT_BIN" 2>/dev/null)" && [ -n "\$output" ]; then
     PS1="\$output"
   else
     PS1='\w > '
   fi
-  __gitprompt_running=0
+  __prompt_running=0
 }
 
-if [ -x "\$_GITPROMPT_BIN" ]; then
-  trap '__gitprompt_debug_trap' DEBUG
-  PROMPT_COMMAND="_gitprompt_update_ps1\${PROMPT_COMMAND:+; \$PROMPT_COMMAND}"
+if [ -x "\$_PROMPT_BIN" ]; then
+  trap '__prompt_debug_trap' DEBUG
+  PROMPT_COMMAND="_prompt_update_ps1\${PROMPT_COMMAND:+; \$PROMPT_COMMAND}"
 fi
 
 alias updateprompt='curl -fsSL --ssl-no-revoke https://raw.githubusercontent.com/Eqwerty/Prompt/master/install.sh | sh -s -- --yes && source ~/.bashrc'
@@ -297,35 +297,35 @@ alias uninstallprompt='curl -fsSL --ssl-no-revoke https://raw.githubusercontent.
 EOF
   else
     cat > "$PROMPT_RC_PATH" <<EOF
-# gitprompt
-_GITPROMPT_BIN="$FINAL_BINARY_PATH"
+# prompt
+_PROMPT_BIN="$FINAL_BINARY_PATH"
 
-__gitprompt_preexec_flag=0
-__gitprompt_running=0
+__prompt_preexec_flag=0
+__prompt_running=0
 
-__gitprompt_debug_trap() {
-  if [ "\$__gitprompt_running" -eq 0 ] && [ "\$BASH_COMMAND" != "_gitprompt_update_ps1" ]; then
-    __gitprompt_preexec_flag=1
+__prompt_debug_trap() {
+  if [ "\$__prompt_running" -eq 0 ] && [ "\$BASH_COMMAND" != "_prompt_update_ps1" ]; then
+    __prompt_preexec_flag=1
   fi
 }
 
-_gitprompt_update_ps1() {
-  __gitprompt_running=1
-  if [ "\$__gitprompt_preexec_flag" -eq 1 ]; then
-    __gitprompt_preexec_flag=0
-    "\$_GITPROMPT_BIN" --invalidate-status-cache >/dev/null 2>&1 || true
+_prompt_update_ps1() {
+  __prompt_running=1
+  if [ "\$__prompt_preexec_flag" -eq 1 ]; then
+    __prompt_preexec_flag=0
+    "\$_PROMPT_BIN" --invalidate-status-cache >/dev/null 2>&1 || true
   fi
-  if output="\$("\$_GITPROMPT_BIN" 2>/dev/null)" && [ -n "\$output" ]; then
+  if output="\$("\$_PROMPT_BIN" 2>/dev/null)" && [ -n "\$output" ]; then
     PS1="\$output"
   else
     PS1='\w \$ '
   fi
-  __gitprompt_running=0
+  __prompt_running=0
 }
 
-if [ -x "\$_GITPROMPT_BIN" ]; then
-  trap '__gitprompt_debug_trap' DEBUG
-  PROMPT_COMMAND="_gitprompt_update_ps1\${PROMPT_COMMAND:+; \$PROMPT_COMMAND}"
+if [ -x "\$_PROMPT_BIN" ]; then
+  trap '__prompt_debug_trap' DEBUG
+  PROMPT_COMMAND="_prompt_update_ps1\${PROMPT_COMMAND:+; \$PROMPT_COMMAND}"
 fi
 
 alias updateprompt='curl -fsSL https://raw.githubusercontent.com/Eqwerty/Prompt/master/install.sh | sh -s -- --yes && source ~/.bashrc'
@@ -333,13 +333,13 @@ alias uninstallprompt='curl -fsSL https://raw.githubusercontent.com/Eqwerty/Prom
 EOF
   fi
 
-  EXPECTED_SOURCE_LINE="[ -f \"$PROMPT_RC_PATH\" ] && . \"$PROMPT_RC_PATH\"  # gitprompt"
+  EXPECTED_SOURCE_LINE="[ -f \"$PROMPT_RC_PATH\" ] && . \"$PROMPT_RC_PATH\"  # prompt"
 
   if [ ! -f "$SHELL_CONFIG" ]; then
     touch "$SHELL_CONFIG"
   fi
 
-  if grep -qF "# gitprompt" "$SHELL_CONFIG" 2>/dev/null; then
+  if grep -qF "# prompt" "$SHELL_CONFIG" 2>/dev/null; then
     return 0
   fi
 
@@ -414,14 +414,14 @@ install_binary() {
 
     rm -f "$STAGED_BINARY_PATH"
     printf '%s\n' "Failed to replace $FINAL_BINARY_PATH." >&2
-    printf '%s\n' "On Windows, a running .exe may be locked. Close shells using gitprompt and run the installer again." >&2
+    printf '%s\n' "On Windows, a running .exe may be locked. Close shells using prompt and run the installer again." >&2
     return 1
   fi
 
   mv -f "$STAGED_BINARY_PATH" "$FINAL_BINARY_PATH"
 }
 
-BINARY_BASENAME="gitprompt"
+BINARY_BASENAME="prompt"
 OPERATING_SYSTEM="$(uname -s | tr '[:upper:]' '[:lower:]')"
 CPU_ARCHITECTURE="$(uname -m)"
 

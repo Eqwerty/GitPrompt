@@ -238,7 +238,7 @@ scan_shell_configs() {
       continue
     fi
 
-    matches="$(grep -n "gitprompt" "$config_file" 2>/dev/null || true)"
+    matches="$(grep -n "prompt" "$config_file" 2>/dev/null || true)"
     if [ -z "$matches" ]; then
       continue
     fi
@@ -283,7 +283,7 @@ clean_shell_configs() {
       }
     ' "$config_file" > "$tmp_file"
     mv "$tmp_file" "$config_file"
-    print_status "$COLOR_GREEN" "INFO" "Removed gitprompt line from: $config_file (backup: ${config_file}.bak)"
+    print_status "$COLOR_GREEN" "INFO" "Removed prompt line from: $config_file (backup: ${config_file}.bak)"
   done
 }
 
@@ -320,10 +320,10 @@ esac
 
 if [ "$TARGET_OS" = "windows" ]; then
   INSTALL_DIR="$HOME/prompt"
-  INSTALLED_BINARY_NAME="gitprompt.exe"
+  INSTALLED_BINARY_NAME="prompt.exe"
 else
   INSTALL_DIR="$HOME/.local/bin"
-  INSTALLED_BINARY_NAME="gitprompt"
+  INSTALLED_BINARY_NAME="prompt"
 fi
 
 FINAL_BINARY_PATH="$INSTALL_DIR/$INSTALLED_BINARY_NAME"
@@ -337,7 +337,7 @@ else
 fi
 
 # New source line (written by the automated installer)
-EXPECTED_SOURCE_LINE="[ -f \"$PROMPT_RC_PATH\" ] && . \"$PROMPT_RC_PATH\"  # gitprompt"
+EXPECTED_SOURCE_LINE="[ -f \"$PROMPT_RC_PATH\" ] && . \"$PROMPT_RC_PATH\"  # prompt"
 
 TEMPORARY_DIRECTORY="$(mktemp -d)"
 trap 'rm -rf "$TEMPORARY_DIRECTORY"' EXIT INT TERM
@@ -352,7 +352,7 @@ print_status "$COLOR_DIM" "INFO" "Binary: $FINAL_BINARY_PATH"
 
 printf '\n'
 
-run_step "1" "Scanning shell configs for gitprompt references" "$LOG_DIRECTORY/scan.log" \
+run_step "1" "Scanning shell configs for prompt references" "$LOG_DIRECTORY/scan.log" \
   scan_shell_configs
 
 if [ -s "$EXACT_MATCHES_FILE" ]; then
@@ -360,7 +360,7 @@ if [ -s "$EXACT_MATCHES_FILE" ]; then
 fi
 
 if [ -s "$WARN_MATCHES_FILE" ]; then
-  print_status "$COLOR_YELLOW" "WARN" "Found gitprompt references — remove these lines from your shell config:"
+  print_status "$COLOR_YELLOW" "WARN" "Found prompt references — remove these lines from your shell config:"
   while IFS= read -r match; do
     printf '  %s\n' "$match"
   done < "$WARN_MATCHES_FILE"
