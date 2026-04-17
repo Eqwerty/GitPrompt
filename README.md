@@ -30,20 +30,19 @@ Update is the same command.
 curl -fsSL https://raw.githubusercontent.com/Eqwerty/GitPrompt/master/uninstall.sh | sh
 ```
 
-This removes the binary, the generated `.gitPromptrc` shell config, and the source line from `~/.bashrc`.
-Legacy manual `PS1` lines written before the automated setup was introduced are also removed.
+This removes the binary and the generated `.gitpromptrc` shell config. If any gitPrompt references are found in your shell config files, the uninstaller will print them so you can remove them manually.
 
 ## Bash Setup
 
-Shell configuration is automated by the installer. After `install.sh` runs, it writes a `.gitPromptrc`
-file co-located with the binary and adds a source line to `~/.bashrc`:
+After `install.sh` runs, it writes a `.gitpromptrc` file co-located with the binary and prints the
+line you need to add to your `~/.bashrc`:
 
-- Linux/macOS: `$HOME/.gitPrompt/.gitPromptrc`
-- Windows Git Bash: `$HOME/.gitPrompt/.gitPromptrc`
+- Linux/macOS: `$HOME/.gitPrompt/.gitpromptrc`
+- Windows Git Bash: `$HOME/.gitPrompt/.gitpromptrc`
 
-The `.gitPromptrc` sets `PS1` and provides two convenience aliases:
-- `updategitprompt` — re-runs the installer and reloads `~/.bashrc`
-- `uninstallgitprompt` — runs the uninstaller and reloads `~/.bashrc`
+The `.gitpromptrc` sets `PS1` and provides two convenience aliases:
+- `updategitprompt` — re-runs the installer and reloads `.gitpromptrc` in the current session
+- `uninstallgitprompt` — runs the uninstaller and resets the prompt in the current session
 
 If you skip automatic setup or need to configure manually, add one of the following to your shell config:
 

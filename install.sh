@@ -4,12 +4,10 @@ set -eu
 # Install prompt from the latest GitHub release.
 # Usage:
 #   ./install.sh
-#   ./install.sh --yes
 
 TOTAL_STEPS=4
 SCRIPT_STARTED_AT="$(date +%s)"
 LOADER_INDEX=0
-YES_MODE=0
 
 IS_TTY=0
 USE_ANSI=0
@@ -231,7 +229,6 @@ print_usage() {
 Usage: sh ./install.sh [options]
 
 Options:
-  -y,  --yes                       Auto-configure shell without prompting
   -h,  --help                      Show this help text
 EOF
 }
@@ -239,9 +236,6 @@ EOF
 parse_arguments() {
   while [ "$#" -gt 0 ]; do
     case "$1" in
-      -y|--yes)
-        YES_MODE=1
-        ;;
       -h|--help)
         print_usage
         exit 0
@@ -256,8 +250,7 @@ parse_arguments() {
 }
 
 configure_shell() {
-  GITPROMPT_RC_PATH="$INSTALL_DIR/.gitPromptrc"
-  SHELL_CONFIG="$HOME/.bashrc"
+  GITPROMPT_RC_PATH="$INSTALL_DIR/.gitpromptrc"
 
   if [ "$TARGET_OS" = "windows" ]; then
     gitpromptrc_curl_ssl_opt="--ssl-no-revoke "
@@ -299,27 +292,10 @@ if [ -x "\$_GITPROMPT_BIN" ]; then
   PROMPT_COMMAND="_gitprompt_update_ps1\${PROMPT_COMMAND:+; \$PROMPT_COMMAND}"
 fi
 
-alias updategitprompt='curl -fsSL ${gitpromptrc_curl_ssl_opt}https://raw.githubusercontent.com/Eqwerty/GitPrompt/master/install.sh | sh -s -- --yes && source ~/.bashrc'
-alias uninstallgitprompt='curl -fsSL ${gitpromptrc_curl_ssl_opt}https://raw.githubusercontent.com/Eqwerty/GitPrompt/master/uninstall.sh | sh && trap - DEBUG && PROMPT_COMMAND="" && PS1='"'"'${gitpromptrc_fallback_ps1}'"'"' && source ~/.bashrc'
+alias updategitprompt='curl -fsSL ${gitpromptrc_curl_ssl_opt}https://raw.githubusercontent.com/Eqwerty/GitPrompt/master/install.sh | sh && source "$INSTALL_DIR/.gitpromptrc"'
+alias uninstallgitprompt='curl -fsSL ${gitpromptrc_curl_ssl_opt}https://raw.githubusercontent.com/Eqwerty/GitPrompt/master/uninstall.sh | sh && trap - DEBUG && PROMPT_COMMAND="" && PS1='"'"'${gitpromptrc_fallback_ps1}'"'"''
 alias gitpromptconfig='vim "$INSTALL_DIR/config.json"'
 EOF
-
-  EXPECTED_SOURCE_LINE="[ -f \"$GITPROMPT_RC_PATH\" ] && . \"$GITPROMPT_RC_PATH\"  # gitPrompt"
-
-  if [ ! -f "$SHELL_CONFIG" ]; then
-    touch "$SHELL_CONFIG"
-  fi
-
-  if grep -qF "$EXPECTED_SOURCE_LINE" "$SHELL_CONFIG" 2>/dev/null; then
-    return 0
-  fi
-
-  shell_config_backup="${SHELL_CONFIG}.bak"
-  if [ ! -f "$shell_config_backup" ]; then
-    cp "$SHELL_CONFIG" "$shell_config_backup"
-  fi
-
-  printf '\n%s\n' "$EXPECTED_SOURCE_LINE" >> "$SHELL_CONFIG"
 }
 
 
@@ -434,6 +410,7 @@ case "$CPU_ARCHITECTURE" in
 esac
 
 INSTALL_DIR="$HOME/.gitPrompt"
+GITPROMPT_RC_PATH="$INSTALL_DIR/.gitpromptrc"
 
 if [ "$TARGET_OS" = "windows" ]; then
   CURL_SSL_OPT="--ssl-no-revoke"
@@ -477,29 +454,11 @@ run_step "3" "Installing to $FINAL_BINARY_PATH" "$LOG_DIRECTORY/install.log" \
 
 write_default_config
 
-CONFIGURE_SHELL=1
-if [ "$YES_MODE" -eq 0 ] && [ -e /dev/tty ]; then
-  printf '\nConfigure shell automatically? (writes %s/.gitPromptrc and sources it from ~/.bashrc) [Y/n] ' "$INSTALL_DIR" >/dev/tty
-  read -r CONFIGURE_ANSWER </dev/tty
-  case "$CONFIGURE_ANSWER" in
-    [nN]*) CONFIGURE_SHELL=0 ;;
-  esac
-fi
-
-if [ "$CONFIGURE_SHELL" -eq 1 ]; then
-  run_step "4" "Configuring shell (~/.bashrc)" "$LOG_DIRECTORY/configure.log" \
-    configure_shell
-  print_status "$COLOR_DIM" "INFO" "Run 'source ~/.bashrc' or open a new terminal to activate the prompt."
-else
-  print_status "$COLOR_YELLOW" "SKIP" "$(format_colored_step_label "4") Configuring shell (skipped)"
-  printf '\n'
-  print_status "$COLOR_DIM" "INFO" "Add to your shell config manually:"
-  if [ "$TARGET_OS" = "windows" ]; then
-    print_status "$COLOR_DIM" "INFO" "  PS1='\$(\"$FINAL_BINARY_PATH\" 2>/dev/null || printf \"\\w > \")'"
-  else
-    print_status "$COLOR_DIM" "INFO" "  PS1='\$(\"$FINAL_BINARY_PATH\" 2>/dev/null || printf \"\\w \\$ \")'"
-  fi
-fi
+run_step "4" "Writing .gitpromptrc" "$LOG_DIRECTORY/configure.log" \
+  configure_shell
+printf '\n'
+print_status "$COLOR_DIM" "INFO" "Add the following line to your ~/.bashrc:"
+print_status "$COLOR_DIM" "INFO" "  [ -f \"$GITPROMPT_RC_PATH\" ] && . \"$GITPROMPT_RC_PATH\"  # gitPrompt"
 
 SCRIPT_FINISHED_AT="$(current_timestamp)"
 OVERALL_DURATION=$((SCRIPT_FINISHED_AT - SCRIPT_STARTED_AT))

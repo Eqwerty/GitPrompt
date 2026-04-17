@@ -238,69 +238,14 @@ scan_shell_configs() {
       continue
     fi
 
-    matches="$(grep -n "gitPrompt" "$config_file" 2>/dev/null || true)"
+    matches="$(grep -in "gitprompt" "$config_file" 2>/dev/null || true)"
     if [ -z "$matches" ]; then
       continue
     fi
 
-    # Symlinked config files cannot be safely rewritten — all matches go to warnings.
-    if [ -L "$config_file" ]; then
-      printf '%s\n' "$matches" | while IFS= read -r line; do
-        printf '%s:%s\n' "$config_file" "$line" >> "$WARN_MATCHES_FILE"
-      done
-      continue
-    fi
-
     printf '%s\n' "$matches" | while IFS= read -r line; do
-      line_content="${line#*:}"
-      trimmed="$(printf '%s' "$line_content" | tr -d '\r' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
-      if [ "$trimmed" = "$EXPECTED_PS1" ] || [ "$trimmed" = "$EXPECTED_SOURCE_LINE" ]; then
-        printf '%s\n' "$config_file" >> "$EXACT_MATCHES_FILE"
-      else
-        printf '%s:%s\n' "$config_file" "$line" >> "$WARN_MATCHES_FILE"
-      fi
+      printf '%s:%s\n' "$config_file" "$line" >> "$MATCHES_FILE"
     done
-  done
-}
-
-clean_shell_configs() {
-  sort -u "$EXACT_MATCHES_FILE" | while IFS= read -r config_file; do
-    if [ ! -f "$config_file" ]; then
-      continue
-    fi
-    backup_path="${config_file}.bak"
-    if [ ! -f "$backup_path" ]; then
-      cp "$config_file" "$backup_path"
-    fi
-    tmp_file="$(mktemp)"
-    expected_ps1="$EXPECTED_PS1" expected_source="$EXPECTED_SOURCE_LINE" awk '
-      {
-        line = $0
-        gsub(/\r/, "", line)
-        trimmed = line
-        sub(/^[[:space:]]*/, "", trimmed)
-        sub(/[[:space:]]*$/, "", trimmed)
-        if (trimmed == ENVIRON["expected_ps1"] || trimmed == ENVIRON["expected_source"]) {
-          pending_blank = 0
-          next
-        }
-        if (pending_blank) {
-          print pending_line
-          pending_blank = 0
-        }
-        if (trimmed == "") {
-          pending_blank = 1
-          pending_line = $0
-        } else {
-          print $0
-        }
-      }
-      END {
-        if (pending_blank) print pending_line
-      }
-    ' "$config_file" > "$tmp_file"
-    mv "$tmp_file" "$config_file"
-    print_status "$COLOR_GREEN" "INFO" "Removed gitPrompt line from: $config_file (backup: ${config_file}.bak)"
   done
 }
 
@@ -312,7 +257,7 @@ remove_binary() {
     printf 'Binary not found at %s — already removed.\n' "$FINAL_BINARY_PATH"
   fi
 
-  # Remove the entire install directory (binary, .gitPromptrc, config.json, cache folders).
+  # Remove the entire install directory (binary, .gitpromptrc, config.json, cache folders).
   rm -rf "$INSTALL_DIR"
 }
 
@@ -336,25 +281,14 @@ else
 fi
 
 FINAL_BINARY_PATH="$INSTALL_DIR/$INSTALLED_BINARY_NAME"
-GITPROMPT_RC_PATH="$INSTALL_DIR/.gitPromptrc"
-
-# Legacy PS1 line (set manually before this automation existed)
-if [ "$TARGET_OS" = "windows" ]; then
-  EXPECTED_PS1="PS1='\$([ -x \"$FINAL_BINARY_PATH\" ] && \"$FINAL_BINARY_PATH\" || printf \"\\w > \")'"
-else
-  EXPECTED_PS1="PS1='\$([ -x \"$FINAL_BINARY_PATH\" ] && \"$FINAL_BINARY_PATH\" || printf \"\\w \\\$ \")'"
-fi
-
-# New source line (written by the automated installer)
-EXPECTED_SOURCE_LINE="[ -f \"$GITPROMPT_RC_PATH\" ] && . \"$GITPROMPT_RC_PATH\"  # gitPrompt"
+GITPROMPT_RC_PATH="$INSTALL_DIR/.gitpromptrc"
 
 TEMPORARY_DIRECTORY="$(mktemp -d)"
 trap 'rm -rf "$TEMPORARY_DIRECTORY"' EXIT INT TERM
 LOG_DIRECTORY="$TEMPORARY_DIRECTORY/logs"
-EXACT_MATCHES_FILE="$TEMPORARY_DIRECTORY/exact_matches"
-WARN_MATCHES_FILE="$TEMPORARY_DIRECTORY/warn_matches"
+MATCHES_FILE="$TEMPORARY_DIRECTORY/matches"
 mkdir -p "$LOG_DIRECTORY"
-touch "$EXACT_MATCHES_FILE" "$WARN_MATCHES_FILE"
+touch "$MATCHES_FILE"
 
 print_banner
 print_status "$COLOR_DIM" "INFO" "Binary: $FINAL_BINARY_PATH"
@@ -364,15 +298,11 @@ printf '\n'
 run_step "1" "Scanning shell configs for gitPrompt references" "$LOG_DIRECTORY/scan.log" \
   scan_shell_configs
 
-if [ -s "$EXACT_MATCHES_FILE" ]; then
-  clean_shell_configs
-fi
-
-if [ -s "$WARN_MATCHES_FILE" ]; then
-  print_status "$COLOR_YELLOW" "WARN" "Found gitPrompt references — remove these lines from your shell config:"
+if [ -s "$MATCHES_FILE" ]; then
+  print_status "$COLOR_YELLOW" "WARN" "Found gitPrompt references — remove these lines from your shell config manually:"
   while IFS= read -r match; do
     printf '  %s\n' "$match"
-  done < "$WARN_MATCHES_FILE"
+  done < "$MATCHES_FILE"
 fi
 
 GITPROMPT_RC_EXISTED=0

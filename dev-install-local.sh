@@ -9,18 +9,14 @@ set -eu
 # Usage:
 #   ./dev-install-local.sh
 # Optional:
-#   ./dev-install-local.sh --skip-tests --verbose --yes
-#   ./dev-install-local.sh -svy
-#   INSTALL_DIR=/custom/path ./dev-install-local.sh
-#   BIN_BASENAME=myprompt ./dev-install-local.sh
-#   INSTALL_NAME=myprompt.exe ./dev-install-local.sh
+#   ./dev-install-local.sh --skip-tests --verbose
+#   ./dev-install-local.sh -sv
 
 SCRIPT_DIRECTORY="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 REPOSITORY_ROOT="${SCRIPT_DIRECTORY}"
 
 SKIP_TESTS=0
 VERBOSE_MODE=0
-YES_MODE=0
 TOTAL_STEPS=6
 SCRIPT_STARTED_AT="$(date +%s)"
 LOADER_INDEX=0
@@ -210,22 +206,15 @@ print_usage() {
 Usage: sh ./dev-install-local.sh [options]
 
 Options:
-  -y,  --yes                       Auto-configure shell without prompting
   -s,  --skip-tests                Skip test execution only
   -v,  --verbose                   Show dotnet output while commands run
   -h,  --help                      Show this help text
-
-Environment overrides:
-  INSTALL_DIR=/custom/path
-  BIN_BASENAME=myprompt
-  INSTALL_NAME=myprompt.exe
 EOF
 }
 
 parse_arguments() {
   while [ "$#" -gt 0 ]; do
     case "$1" in
-      --yes)         YES_MODE=1 ;;
       --skip-tests)  SKIP_TESTS=1 ;;
       --verbose)     VERBOSE_MODE=1 ;;
       --help)        print_usage; exit 0 ;;
@@ -240,7 +229,6 @@ parse_arguments() {
           flag="${flags%"${flags#?}"}"
           flags="${flags#?}"
           case "$flag" in
-            y) YES_MODE=1 ;;
             s) SKIP_TESTS=1 ;;
             v) VERBOSE_MODE=1 ;;
             h) print_usage; exit 0 ;;
@@ -380,8 +368,7 @@ install_binary() {
 }
 
 configure_shell() {
-  GITPROMPT_RC_PATH="$INSTALL_DIR/.gitPromptrc"
-  SHELL_CONFIG="$HOME/.bashrc"
+  GITPROMPT_RC_PATH="$INSTALL_DIR/.gitpromptrc"
 
   if [ "$TARGET_OS" = "windows" ]; then
     gitpromptrc_curl_ssl_opt="--ssl-no-revoke "
@@ -423,27 +410,10 @@ if [ -x "\$_GITPROMPT_BIN" ]; then
   PROMPT_COMMAND="_gitprompt_update_ps1\${PROMPT_COMMAND:+; \$PROMPT_COMMAND}"
 fi
 
-alias updategitprompt='curl -fsSL ${gitpromptrc_curl_ssl_opt}https://raw.githubusercontent.com/Eqwerty/GitPrompt/master/install.sh | sh -s -- --yes && source ~/.bashrc'
-alias uninstallgitprompt='curl -fsSL ${gitpromptrc_curl_ssl_opt}https://raw.githubusercontent.com/Eqwerty/GitPrompt/master/uninstall.sh | sh && trap - DEBUG && PROMPT_COMMAND="" && PS1='"'"'${gitpromptrc_fallback_ps1}'"'"' && source ~/.bashrc'
+alias updategitprompt='curl -fsSL ${gitpromptrc_curl_ssl_opt}https://raw.githubusercontent.com/Eqwerty/GitPrompt/master/install.sh | sh && source "$INSTALL_DIR/.gitpromptrc"'
+alias uninstallgitprompt='curl -fsSL ${gitpromptrc_curl_ssl_opt}https://raw.githubusercontent.com/Eqwerty/GitPrompt/master/uninstall.sh | sh && trap - DEBUG && PROMPT_COMMAND="" && PS1='"'"'${gitpromptrc_fallback_ps1}'"'"''
 alias gitpromptconfig='vim "$INSTALL_DIR/config.json"'
 EOF
-
-  EXPECTED_SOURCE_LINE="[ -f \"$GITPROMPT_RC_PATH\" ] && . \"$GITPROMPT_RC_PATH\"  # gitPrompt"
-
-  if [ ! -f "$SHELL_CONFIG" ]; then
-    touch "$SHELL_CONFIG"
-  fi
-
-  if grep -qF "$EXPECTED_SOURCE_LINE" "$SHELL_CONFIG" 2>/dev/null; then
-    return 0
-  fi
-
-  shell_config_backup="${SHELL_CONFIG}.bak"
-  if [ ! -f "$shell_config_backup" ]; then
-    cp "$SHELL_CONFIG" "$shell_config_backup"
-  fi
-
-  printf '\n%s\n' "$EXPECTED_SOURCE_LINE" >> "$SHELL_CONFIG"
 }
 
 
@@ -479,7 +449,7 @@ publish_binary() {
 
 parse_arguments "$@"
 
-BINARY_BASENAME="${BIN_BASENAME:-gitPrompt}"
+BINARY_BASENAME="gitPrompt"
 OPERATING_SYSTEM="$(uname -s | tr '[:upper:]' '[:lower:]')"
 CPU_ARCHITECTURE="$(uname -m)"
 
@@ -501,21 +471,19 @@ case "$CPU_ARCHITECTURE" in
     ;;
 esac
 
-if [ -z "${INSTALL_DIR:-}" ]; then
-  INSTALL_DIR="$HOME/.gitPrompt"
-fi
+INSTALL_DIR="$HOME/.gitPrompt"
 
 if [ "$TARGET_OS" = "windows" ]; then
   RUNTIME_IDENTIFIER="win-x64"
-  INSTALLED_BINARY_NAME="${INSTALL_NAME:-${BINARY_BASENAME}.exe}"
+  INSTALLED_BINARY_NAME="${BINARY_BASENAME}.exe"
   PUBLISHED_BINARY_NAME="GitPrompt.exe"
 elif [ "$TARGET_OS" = "darwin" ]; then
   RUNTIME_IDENTIFIER="osx-x64"
-  INSTALLED_BINARY_NAME="${INSTALL_NAME:-${BINARY_BASENAME}}"
+  INSTALLED_BINARY_NAME="${BINARY_BASENAME}"
   PUBLISHED_BINARY_NAME="GitPrompt"
 else
   RUNTIME_IDENTIFIER="linux-x64"
-  INSTALLED_BINARY_NAME="${INSTALL_NAME:-${BINARY_BASENAME}}"
+  INSTALLED_BINARY_NAME="${BINARY_BASENAME}"
   PUBLISHED_BINARY_NAME="GitPrompt"
 fi
 
@@ -569,6 +537,7 @@ fi
 
 mkdir -p "$INSTALL_DIR"
 FINAL_BINARY_PATH="$INSTALL_DIR/$INSTALLED_BINARY_NAME"
+GITPROMPT_RC_PATH="$INSTALL_DIR/.gitpromptrc"
 STAGED_BINARY_PATH="$INSTALL_DIR/.${INSTALLED_BINARY_NAME}.new.$$"
 
 cp "$SOURCE_BINARY_PATH" "$STAGED_BINARY_PATH"
@@ -579,29 +548,11 @@ run_step "5" "Installing to $FINAL_BINARY_PATH" "$LOG_DIRECTORY/install.log" \
 
 write_default_config
 
-CONFIGURE_SHELL=1
-if [ "$YES_MODE" -eq 0 ] && [ -e /dev/tty ]; then
-  printf '\nConfigure shell automatically? (writes %s/.gitPromptrc and sources it from ~/.bashrc) [Y/n] ' "$INSTALL_DIR" >/dev/tty
-  read -r CONFIGURE_ANSWER </dev/tty
-  case "$CONFIGURE_ANSWER" in
-    [nN]*) CONFIGURE_SHELL=0 ;;
-  esac
-fi
-
-if [ "$CONFIGURE_SHELL" -eq 1 ]; then
-  run_step "6" "Configuring shell (~/.bashrc)" "$LOG_DIRECTORY/configure.log" \
-    configure_shell
-  print_status "$COLOR_DIM" "INFO" "Run 'source ~/.bashrc' or open a new terminal to activate the prompt."
-else
-  print_status "$COLOR_YELLOW" "SKIP" "$(format_colored_step_label "6") Configuring shell (skipped)"
-  printf '\n'
-  print_status "$COLOR_DIM" "INFO" "Add to your shell config manually:"
-  if [ "$TARGET_OS" = "windows" ]; then
-    print_status "$COLOR_DIM" "INFO" "  PS1='\$(\"$FINAL_BINARY_PATH\" 2>/dev/null || printf \"\\w > \")'"
-  else
-    print_status "$COLOR_DIM" "INFO" "  PS1='\$(\"$FINAL_BINARY_PATH\" 2>/dev/null || printf \"\\w \\$ \")'"
-  fi
-fi
+run_step "6" "Writing .gitpromptrc" "$LOG_DIRECTORY/configure.log" \
+  configure_shell
+printf '\n'
+print_status "$COLOR_DIM" "INFO" "Add the following line to your ~/.bashrc:"
+print_status "$COLOR_DIM" "INFO" "  [ -f \"$GITPROMPT_RC_PATH\" ] && . \"$GITPROMPT_RC_PATH\"  # gitPrompt"
 
 SCRIPT_FINISHED_AT="$(current_timestamp)"
 OVERALL_DURATION=$((SCRIPT_FINISHED_AT - SCRIPT_STARTED_AT))
