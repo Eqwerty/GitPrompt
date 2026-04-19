@@ -17,7 +17,15 @@ internal static class UpdateCommand
             var psi = new ProcessStartInfo("sh") { UseShellExecute = false };
             psi.ArgumentList.Add("-c");
             psi.ArgumentList.Add(script);
-            Process.Start(psi)?.WaitForExit();
+            var process = Process.Start(psi);
+
+            // On Windows the running .exe is locked and cannot be replaced while
+            // we are still running. Exit immediately so the install script can
+            // move the staged binary into place once the lock is released.
+            if (OperatingSystem.IsWindows())
+                return;
+
+            process?.WaitForExit();
         }
         catch (Exception ex)
         {

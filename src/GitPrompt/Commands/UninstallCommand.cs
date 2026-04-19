@@ -17,7 +17,15 @@ internal static class UninstallCommand
             var psi = new ProcessStartInfo("sh") { UseShellExecute = false };
             psi.ArgumentList.Add("-c");
             psi.ArgumentList.Add(script);
-            Process.Start(psi)?.WaitForExit();
+            var process = Process.Start(psi);
+
+            // On Windows the running .exe is locked, so we must exit before the
+            // uninstall script tries to delete the binary. The sh process keeps
+            // running after we exit and can then remove the now-unlocked file.
+            if (OperatingSystem.IsWindows())
+                return;
+
+            process?.WaitForExit();
         }
         catch (Exception ex)
         {
