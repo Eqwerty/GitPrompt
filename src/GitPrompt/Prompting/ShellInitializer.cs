@@ -2,26 +2,6 @@ namespace GitPrompt.Prompting;
 
 internal static class ShellInitializer
 {
-    internal static void Initialize(string shell)
-    {
-        if (!string.Equals(shell, "bash", StringComparison.OrdinalIgnoreCase))
-        {
-            Console.Error.WriteLine(
-                string.IsNullOrEmpty(shell)
-                    ? "gitprompt: init requires a shell name"
-                    : $"gitprompt: unsupported shell for 'init': '{shell}'");
-            Console.Error.WriteLine("Supported shells: bash");
-            Console.Error.WriteLine("Usage: eval \"$(gitprompt init bash)\"");
-            Environment.Exit(1);
-            return;
-        }
-
-        var script = GenerateBashInit().ReplaceLineEndings("\n");
-        var bytes = Console.OutputEncoding.GetBytes(script);
-        using var stdout = Console.OpenStandardOutput();
-        stdout.Write(bytes);
-    }
-
     // Returns the Bash integration script. Exposed for testing.
     internal static string GenerateBashInit()
     {

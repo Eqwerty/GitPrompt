@@ -1,6 +1,5 @@
 using GitPrompt.Commands;
 using GitPrompt.Git;
-using GitPrompt.Prompting;
 
 namespace GitPrompt;
 
@@ -29,7 +28,7 @@ internal static class ArgumentProcessor
             if (string.Equals(argument, "init", StringComparison.Ordinal))
             {
                 var shell = i + 1 < arguments.Length ? arguments[i + 1] : string.Empty;
-                ShellInitializer.Initialize(shell);
+                InitCommand.Run(shell);
                 Environment.Exit(0);
             }
 
