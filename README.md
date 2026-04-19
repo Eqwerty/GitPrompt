@@ -30,21 +30,19 @@ Update is the same command.
 curl -fsSL https://raw.githubusercontent.com/Eqwerty/GitPrompt/master/uninstall.sh | sh
 ```
 
-This removes the binary and the generated `.gitpromptrc` shell config. If any gitPrompt references are found in your shell config files, the uninstaller will print them so you can remove them manually.
+This removes the binary, config, and cache files. If any GitPrompt references are found in your shell config files, the uninstaller will print them so you can remove them manually.
 
 ## Bash Setup
 
-After `install.sh` runs, it writes a `.gitpromptrc` file to `~/.gitprompt/` and prints the
-line you need to add to your `~/.bashrc`:
+After `install.sh` runs, add one line to your `~/.bashrc`:
 
-- Linux/macOS: `$HOME/.gitprompt/.gitpromptrc`
-- Windows Git Bash: `$HOME/.gitprompt/.gitpromptrc`
+```sh
+eval "$(gitprompt init bash)"  # gitprompt
+```
 
-The `.gitpromptrc` sets `PS1` and provides two convenience aliases:
-- `updategitprompt` — re-runs the installer and reloads `.gitpromptrc` in the current session
-- `uninstallgitprompt` — runs the uninstaller and resets the prompt in the current session
+This generates and sources the shell integration at startup. The integration sets `PROMPT_COMMAND` and a `DEBUG` trap to update `PS1` on every prompt. If `gitprompt` is not on `PATH`, the integration silently does nothing.
 
-If you skip automatic setup or need to configure manually, add one of the following to your shell config:
+If you prefer to manage `PS1` manually, you can call the binary directly:
 
 Linux/macOS:
 
@@ -57,8 +55,6 @@ Windows Git Bash:
 ```sh
 PS1='$([ -x "$HOME/.local/bin/gitprompt.exe" ] && "$HOME/.local/bin/gitprompt.exe" || printf "\w > ")'
 ```
-
-The `&&`/`||` guard runs on every prompt render — if `gitPrompt` is removed, the prompt falls back to the current directory and prompt symbol (e.g. `~/repos$ `). Bash expands `\w` and `\$` before the command substitution runs.
 
 ## Prompt Format Reference
 

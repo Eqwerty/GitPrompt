@@ -17,7 +17,7 @@ REPOSITORY_ROOT="${SCRIPT_DIRECTORY}"
 
 SKIP_TESTS=0
 VERBOSE_MODE=0
-TOTAL_STEPS=6
+TOTAL_STEPS=5
 SCRIPT_STARTED_AT="$(date +%s)"
 LOADER_INDEX=0
 
@@ -387,56 +387,6 @@ install_binary() {
   mv -f "$STAGED_BINARY_PATH" "$FINAL_BINARY_PATH"
 }
 
-configure_shell() {
-  GITPROMPT_RC_PATH="$INSTALL_DIR/.gitpromptrc"
-
-  if [ "$TARGET_OS" = "windows" ]; then
-    gitpromptrc_curl_ssl_opt="--ssl-no-revoke "
-    gitpromptrc_fallback_ps1='\w > '
-  else
-    gitpromptrc_curl_ssl_opt=""
-    gitpromptrc_fallback_ps1='\w \$ '
-  fi
-
-  mkdir -p "$INSTALL_DIR"
-  cat > "$GITPROMPT_RC_PATH" <<EOF
-# gitprompt
-_GITPROMPT_BIN="$FINAL_BINARY_PATH"
-
-__gitprompt_preexec_flag=0
-__gitprompt_running=0
-
-__gitprompt_debug_trap() {
-  if [ "\$__gitprompt_running" -eq 0 ] && [ "\$BASH_COMMAND" != "_gitprompt_update_ps1" ]; then
-    __gitprompt_preexec_flag=1
-  fi
-}
-
-_gitprompt_update_ps1() {
-  __gitprompt_running=1
-  if [ "\$__gitprompt_preexec_flag" -eq 1 ]; then
-    __gitprompt_preexec_flag=0
-    "\$_GITPROMPT_BIN" --invalidate-status-cache >/dev/null 2>&1 || true
-  fi
-  if output="\$("\$_GITPROMPT_BIN" 2>/dev/null)" && [ -n "\$output" ]; then
-    PS1="\$output"
-  else
-    PS1='${gitpromptrc_fallback_ps1}'
-  fi
-  __gitprompt_running=0
-}
-
-if [ -x "\$_GITPROMPT_BIN" ]; then
-  trap '__gitprompt_debug_trap' DEBUG
-  PROMPT_COMMAND="_gitprompt_update_ps1\${PROMPT_COMMAND:+; \$PROMPT_COMMAND}"
-fi
-
-alias updategitprompt='curl -fsSL ${gitpromptrc_curl_ssl_opt}https://raw.githubusercontent.com/Eqwerty/GitPrompt/master/install.sh | sh && source "$INSTALL_DIR/.gitpromptrc"'
-alias uninstallgitprompt='curl -fsSL ${gitpromptrc_curl_ssl_opt}https://raw.githubusercontent.com/Eqwerty/GitPrompt/master/uninstall.sh | sh && trap - DEBUG && PROMPT_COMMAND="" && PS1='"'"'${gitpromptrc_fallback_ps1}'"'"''
-alias gitpromptconfig='\${EDITOR:-\${VISUAL:-vi}} "$XDG_CONFIG_DIR/config.json"'
-EOF
-}
-
 
 publish_binary() {
   if dotnet publish "$REPOSITORY_ROOT/src/GitPrompt/GitPrompt.csproj" \
@@ -492,7 +442,6 @@ case "$CPU_ARCHITECTURE" in
     ;;
 esac
 
-INSTALL_DIR="$HOME/.gitprompt"           # for .gitpromptrc (temporary — removed in a future step)
 BIN_DIR="$HOME/.local/bin"              # binary goes here; typically already on PATH
 XDG_CONFIG_DIR="$(get_config_dir)"     # config.json (matches C# XdgPaths.GetConfigDirectory())
 
@@ -561,7 +510,6 @@ fi
 
 mkdir -p "$BIN_DIR"
 FINAL_BINARY_PATH="$BIN_DIR/$INSTALLED_BINARY_NAME"
-GITPROMPT_RC_PATH="$INSTALL_DIR/.gitpromptrc"
 STAGED_BINARY_PATH="$BIN_DIR/.${INSTALLED_BINARY_NAME}.new.$$"
 
 cp "$SOURCE_BINARY_PATH" "$STAGED_BINARY_PATH"
@@ -572,11 +520,9 @@ run_step "5" "Installing to $FINAL_BINARY_PATH" "$LOG_DIRECTORY/install.log" \
 
 write_default_config
 
-run_step "6" "Writing .gitpromptrc" "$LOG_DIRECTORY/configure.log" \
-  configure_shell
 printf '\n'
 print_status "$COLOR_DIM" "INFO" "Add the following line to your ~/.bashrc:"
-print_status "$COLOR_DIM" "INFO" "  [ -f \"$GITPROMPT_RC_PATH\" ] && . \"$GITPROMPT_RC_PATH\"  # gitprompt"
+print_status "$COLOR_DIM" "INFO" '  eval "$(gitprompt init bash)"  # gitprompt'
 
 case ":${PATH}:" in
   *":${BIN_DIR}:"*) ;;
