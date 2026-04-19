@@ -56,4 +56,13 @@ public sealed class ShellInitializerTests
         script.Should().NotContain("/Users/");
         script.Should().NotContain("C:\\");
     }
+
+    [Fact]
+    public void GenerateBashInit_ShouldRegisterTabCompletion()
+    {
+        var script = ShellInitializer.GenerateBashInit("\\w \\$ ");
+
+        script.Should().Contain("complete -F _gitprompt_complete gitprompt");
+        script.Should().Contain("init config update uninstall --help");
+    }
 }

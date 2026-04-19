@@ -65,6 +65,16 @@ internal static class ShellInitializer
           PROMPT_COMMAND="_gitprompt_update_ps1${PROMPT_COMMAND:+; $PROMPT_COMMAND}"
         fi
 
+        _gitprompt_complete() {
+          local cur="${COMP_WORDS[COMP_CWORD]}"
+          local prev="${COMP_WORDS[COMP_CWORD-1]}"
+          case "$prev" in
+            gitprompt) COMPREPLY=($(compgen -W "init config update uninstall --help" -- "$cur")) ;;
+            init)      COMPREPLY=($(compgen -W "bash" -- "$cur")) ;;
+          esac
+        }
+        complete -F _gitprompt_complete gitprompt
+
         """;
     }
 }
