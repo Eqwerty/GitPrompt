@@ -521,17 +521,17 @@ run_step "5" "Installing to $FINAL_BINARY_PATH" "$LOG_DIRECTORY/install.log" \
 write_default_config
 
 printf '\n'
-print_status "$COLOR_DIM" "INFO" "Add the following line to your ~/.bashrc:"
-print_status "$COLOR_DIM" "INFO" '  eval "$(gitprompt init bash)"  # gitprompt'
+print_status "$COLOR_DIM" "INFO" "Add the following to your ~/.bashrc:"
 
 case ":${PATH}:" in
   *":${BIN_DIR}:"*) ;;
   *)
-    printf '\n'
-    print_status "$COLOR_YELLOW" "WARN" "$BIN_DIR is not in your PATH. Add to ~/.bashrc:"
-    print_status "$COLOR_YELLOW" "WARN" "  export PATH=\"\$HOME/.local/bin:\$PATH\""
+    print_status "$COLOR_YELLOW" "WARN" "  $BIN_DIR is not in your PATH — add this first:"
+    print_status "$COLOR_YELLOW" "WARN" "    export PATH=\"\$HOME/.local/bin:\$PATH\""
     ;;
 esac
+
+print_status "$COLOR_DIM" "INFO" '  eval "$(gitprompt init bash)"  # gitprompt'
 
 SCRIPT_FINISHED_AT="$(current_timestamp)"
 OVERALL_DURATION=$((SCRIPT_FINISHED_AT - SCRIPT_STARTED_AT))
