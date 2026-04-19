@@ -16,7 +16,10 @@ internal static class ShellInitializer
             return;
         }
 
-        Console.Write(GenerateBashInit());
+        var script = GenerateBashInit().ReplaceLineEndings("\n");
+        var bytes = Console.OutputEncoding.GetBytes(script);
+        using var stdout = Console.OpenStandardOutput();
+        stdout.Write(bytes);
     }
 
     // Returns the Bash integration script. Exposed for testing.
