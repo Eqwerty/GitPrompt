@@ -1,4 +1,5 @@
 using System.Text.Json;
+using GitPrompt.Platform;
 
 namespace GitPrompt.Configuration;
 
@@ -21,7 +22,7 @@ internal static class ConfigReader
     {
         try
         {
-            var configurationPath = Path.Combine(AppContext.BaseDirectory, "config.json");
+            var configurationPath = Path.Combine(XdgPaths.GetConfigDirectory(), "config.json");
             if (!File.Exists(configurationPath))
             {
                 return new Config();

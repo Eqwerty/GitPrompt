@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using GitPrompt.Configuration;
+using GitPrompt.Platform;
 
 namespace GitPrompt.Git;
 
@@ -247,7 +248,7 @@ internal static class GitStatusSharedCache
 
     private static string GetCacheDirectoryPath()
     {
-        return _cacheDirectoryOverride ?? Path.Combine(AppContext.BaseDirectory, CacheDirectoryName);
+        return _cacheDirectoryOverride ?? Path.Combine(XdgPaths.GetCacheDirectory(), CacheDirectoryName);
     }
 
     private static string GetCacheFilePath(string normalizedRepositoryRootPath)
