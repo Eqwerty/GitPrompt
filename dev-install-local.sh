@@ -328,9 +328,29 @@ run_step() {
   fi
 }
 
+get_config_dir() {
+  if [ "$TARGET_OS" = "windows" ]; then
+    if command -v cygpath >/dev/null 2>&1 && [ -n "${APPDATA:-}" ]; then
+      printf '%s/gitprompt' "$(cygpath -u "$APPDATA")"
+    else
+      printf '%s/.config/gitprompt' "$HOME"
+    fi
+  else
+    printf '%s/gitprompt' "${XDG_CONFIG_HOME:-$HOME/.config}"
+  fi
+}
+
 write_default_config() {
-  config_file="$INSTALL_DIR/config.json"
+  config_file="$XDG_CONFIG_DIR/config.json"
+  mkdir -p "$XDG_CONFIG_DIR"
   if [ -f "$config_file" ]; then
+    return 0
+  fi
+
+  # Migrate from old install location if present.
+  old_config="$HOME/.gitprompt/config.json"
+  if [ -f "$old_config" ]; then
+    cp "$old_config" "$config_file"
     return 0
   fi
 
@@ -378,6 +398,7 @@ configure_shell() {
     gitpromptrc_fallback_ps1='\w \$ '
   fi
 
+  mkdir -p "$INSTALL_DIR"
   cat > "$GITPROMPT_RC_PATH" <<EOF
 # gitprompt
 _GITPROMPT_BIN="$FINAL_BINARY_PATH"
@@ -412,7 +433,7 @@ fi
 
 alias updategitprompt='curl -fsSL ${gitpromptrc_curl_ssl_opt}https://raw.githubusercontent.com/Eqwerty/GitPrompt/master/install.sh | sh && source "$INSTALL_DIR/.gitpromptrc"'
 alias uninstallgitprompt='curl -fsSL ${gitpromptrc_curl_ssl_opt}https://raw.githubusercontent.com/Eqwerty/GitPrompt/master/uninstall.sh | sh && trap - DEBUG && PROMPT_COMMAND="" && PS1='"'"'${gitpromptrc_fallback_ps1}'"'"''
-alias gitpromptconfig='vim "$INSTALL_DIR/config.json"'
+alias gitpromptconfig='\${EDITOR:-\${VISUAL:-vi}} "$XDG_CONFIG_DIR/config.json"'
 EOF
 }
 
@@ -471,7 +492,9 @@ case "$CPU_ARCHITECTURE" in
     ;;
 esac
 
-INSTALL_DIR="$HOME/.gitprompt"
+INSTALL_DIR="$HOME/.gitprompt"           # for .gitpromptrc (temporary — removed in a future step)
+BIN_DIR="$HOME/.local/bin"              # binary goes here; typically already on PATH
+XDG_CONFIG_DIR="$(get_config_dir)"     # config.json (matches C# XdgPaths.GetConfigDirectory())
 
 if [ "$TARGET_OS" = "windows" ]; then
   RUNTIME_IDENTIFIER="win-x64"
@@ -499,7 +522,8 @@ AOT_STATUS_FILE="$TEMPORARY_DIRECTORY/aot_status"
 mkdir -p "$PUBLISH_DIRECTORY" "$LOG_DIRECTORY"
 
 print_status "$COLOR_DIM" "INFO" "Target runtime: $RUNTIME_IDENTIFIER"
-print_status "$COLOR_DIM" "INFO" "Install path: $INSTALL_DIR/$INSTALLED_BINARY_NAME"
+print_status "$COLOR_DIM" "INFO" "Binary: $BIN_DIR/$INSTALLED_BINARY_NAME"
+print_status "$COLOR_DIM" "INFO" "Config: $XDG_CONFIG_DIR/config.json"
 if [ "$VERBOSE_MODE" -eq 1 ]; then
   print_status "$COLOR_DIM" "INFO" "Output mode: verbose"
 else
@@ -535,10 +559,10 @@ if [ ! -f "$SOURCE_BINARY_PATH" ]; then
   print_error_and_exit "Published binary not found: $SOURCE_BINARY_PATH"
 fi
 
-mkdir -p "$INSTALL_DIR"
-FINAL_BINARY_PATH="$INSTALL_DIR/$INSTALLED_BINARY_NAME"
+mkdir -p "$BIN_DIR"
+FINAL_BINARY_PATH="$BIN_DIR/$INSTALLED_BINARY_NAME"
 GITPROMPT_RC_PATH="$INSTALL_DIR/.gitpromptrc"
-STAGED_BINARY_PATH="$INSTALL_DIR/.${INSTALLED_BINARY_NAME}.new.$$"
+STAGED_BINARY_PATH="$BIN_DIR/.${INSTALLED_BINARY_NAME}.new.$$"
 
 cp "$SOURCE_BINARY_PATH" "$STAGED_BINARY_PATH"
 chmod +x "$STAGED_BINARY_PATH" 2>/dev/null || true
@@ -553,6 +577,15 @@ run_step "6" "Writing .gitpromptrc" "$LOG_DIRECTORY/configure.log" \
 printf '\n'
 print_status "$COLOR_DIM" "INFO" "Add the following line to your ~/.bashrc:"
 print_status "$COLOR_DIM" "INFO" "  [ -f \"$GITPROMPT_RC_PATH\" ] && . \"$GITPROMPT_RC_PATH\"  # gitprompt"
+
+case ":${PATH}:" in
+  *":${BIN_DIR}:"*) ;;
+  *)
+    printf '\n'
+    print_status "$COLOR_YELLOW" "WARN" "$BIN_DIR is not in your PATH. Add to ~/.bashrc:"
+    print_status "$COLOR_YELLOW" "WARN" "  export PATH=\"\$HOME/.local/bin:\$PATH\""
+    ;;
+esac
 
 SCRIPT_FINISHED_AT="$(current_timestamp)"
 OVERALL_DURATION=$((SCRIPT_FINISHED_AT - SCRIPT_STARTED_AT))

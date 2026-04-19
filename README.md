@@ -19,8 +19,8 @@ curl -fsSL https://raw.githubusercontent.com/Eqwerty/GitPrompt/master/install.sh
 
 Default install location:
 
-- Linux/macOS: `$HOME/.gitPrompt/gitPrompt`
-- Windows Git Bash: `$HOME/.gitPrompt/gitPrompt.exe`
+- Linux/macOS: `$HOME/.local/bin/gitPrompt`
+- Windows Git Bash: `$HOME/.local/bin/gitPrompt.exe`
 
 Update is the same command.
 
@@ -34,11 +34,11 @@ This removes the binary and the generated `.gitpromptrc` shell config. If any gi
 
 ## Bash Setup
 
-After `install.sh` runs, it writes a `.gitpromptrc` file co-located with the binary and prints the
+After `install.sh` runs, it writes a `.gitpromptrc` file to `~/.gitprompt/` and prints the
 line you need to add to your `~/.bashrc`:
 
-- Linux/macOS: `$HOME/.gitPrompt/.gitpromptrc`
-- Windows Git Bash: `$HOME/.gitPrompt/.gitpromptrc`
+- Linux/macOS: `$HOME/.gitprompt/.gitpromptrc`
+- Windows Git Bash: `$HOME/.gitprompt/.gitpromptrc`
 
 The `.gitpromptrc` sets `PS1` and provides two convenience aliases:
 - `updategitprompt` — re-runs the installer and reloads `.gitpromptrc` in the current session
@@ -49,13 +49,13 @@ If you skip automatic setup or need to configure manually, add one of the follow
 Linux/macOS:
 
 ```sh
-PS1='$([ -x "$HOME/.gitPrompt/gitPrompt" ] && "$HOME/.gitPrompt/gitPrompt" || printf "\w \$ ")'
+PS1='$([ -x "$HOME/.local/bin/gitprompt" ] && "$HOME/.local/bin/gitprompt" || printf "\w \$ ")'
 ```
 
 Windows Git Bash:
 
 ```sh
-PS1='$([ -x "$HOME/.gitPrompt/gitPrompt.exe" ] && "$HOME/.gitPrompt/gitPrompt.exe" || printf "\w > ")'
+PS1='$([ -x "$HOME/.local/bin/gitprompt.exe" ] && "$HOME/.local/bin/gitprompt.exe" || printf "\w > ")'
 ```
 
 The `&&`/`||` guard runs on every prompt render — if `gitPrompt` is removed, the prompt falls back to the current directory and prompt symbol (e.g. `~/repos$ `). Bash expands `\w` and `\$` before the command substitution runs.
@@ -144,10 +144,10 @@ In that example, `+1 ~2` is staged, and `+3 -1` is unstaged.
 
 ## Configuration
 
-`gitPrompt` optionally reads a `config.json` file co-located with the binary:
+`gitPrompt` optionally reads a `config.json` file from the platform config directory:
 
-- Linux/macOS: `$HOME/.gitPrompt/config.json`
-- Windows Git Bash: `$HOME/.gitPrompt/config.json`
+- Linux/macOS: `$XDG_CONFIG_HOME/gitprompt/config.json` (default: `~/.config/gitprompt/config.json`)
+- Windows Git Bash: `%APPDATA%/gitprompt/config.json`
 
 If the file is absent or cannot be parsed, all settings fall back to their defaults. The parser is case-insensitive and accepts comments and trailing commas.
 

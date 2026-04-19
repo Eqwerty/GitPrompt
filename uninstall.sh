@@ -249,6 +249,29 @@ scan_shell_configs() {
   done
 }
 
+get_config_dir() {
+  if [ "$TARGET_OS" = "windows" ]; then
+    if command -v cygpath >/dev/null 2>&1 && [ -n "${APPDATA:-}" ]; then
+      printf '%s/gitprompt' "$(cygpath -u "$APPDATA")"
+    else
+      printf '%s/.config/gitprompt' "$HOME"
+    fi
+  else
+    printf '%s/gitprompt' "${XDG_CONFIG_HOME:-$HOME/.config}"
+  fi
+}
+
+get_cache_dir() {
+  if [ "$TARGET_OS" = "windows" ]; then
+    if command -v cygpath >/dev/null 2>&1 && [ -n "${LOCALAPPDATA:-}" ]; then
+      printf '%s/gitprompt' "$(cygpath -u "$LOCALAPPDATA")"
+    else
+      printf '%s/.cache/gitprompt' "$HOME"
+    fi
+  else
+    printf '%s/gitprompt' "${XDG_CACHE_HOME:-$HOME/.cache}"
+  fi
+}
 
 remove_binary() {
   if [ -f "$FINAL_BINARY_PATH" ]; then
@@ -257,8 +280,12 @@ remove_binary() {
     printf 'Binary not found at %s — already removed.\n' "$FINAL_BINARY_PATH"
   fi
 
-  # Remove the entire install directory (binary, .gitpromptrc, config.json, cache folders).
-  rm -rf "$INSTALL_DIR"
+  # Remove XDG config and cache directories.
+  rm -rf "$XDG_CONFIG_DIR"
+  rm -rf "$XDG_CACHE_DIR"
+
+  # Remove old install directory from pre-XDG installs.
+  rm -rf "$HOME/.gitprompt"
 }
 
 OPERATING_SYSTEM="$(uname -s | tr '[:upper:]' '[:lower:]')"
@@ -273,15 +300,16 @@ case "$OPERATING_SYSTEM" in
 esac
 
 if [ "$TARGET_OS" = "windows" ]; then
-  INSTALL_DIR="$HOME/.gitprompt"
   INSTALLED_BINARY_NAME="gitprompt.exe"
 else
-  INSTALL_DIR="$HOME/.gitprompt"
   INSTALLED_BINARY_NAME="gitprompt"
 fi
 
-FINAL_BINARY_PATH="$INSTALL_DIR/$INSTALLED_BINARY_NAME"
-GITPROMPT_RC_PATH="$INSTALL_DIR/.gitpromptrc"
+BIN_DIR="$HOME/.local/bin"
+XDG_CONFIG_DIR="$(get_config_dir)"
+XDG_CACHE_DIR="$(get_cache_dir)"
+FINAL_BINARY_PATH="$BIN_DIR/$INSTALLED_BINARY_NAME"
+GITPROMPT_RC_PATH="$HOME/.gitprompt/.gitpromptrc"
 
 TEMPORARY_DIRECTORY="$(mktemp -d)"
 trap 'rm -rf "$TEMPORARY_DIRECTORY"' EXIT INT TERM
@@ -291,7 +319,9 @@ mkdir -p "$LOG_DIRECTORY"
 touch "$MATCHES_FILE"
 
 print_banner
-print_status "$COLOR_DIM" "INFO" "Binary: $FINAL_BINARY_PATH"
+print_status "$COLOR_DIM" "INFO" "Binary:  $FINAL_BINARY_PATH"
+print_status "$COLOR_DIM" "INFO" "Config:  $XDG_CONFIG_DIR"
+print_status "$COLOR_DIM" "INFO" "Cache:   $XDG_CACHE_DIR"
 
 printf '\n'
 
@@ -305,13 +335,10 @@ if [ -s "$MATCHES_FILE" ]; then
   done < "$MATCHES_FILE"
 fi
 
-GITPROMPT_RC_EXISTED=0
-[ -f "$GITPROMPT_RC_PATH" ] && GITPROMPT_RC_EXISTED=1
-
-run_step "2" "Removing $FINAL_BINARY_PATH" "$LOG_DIRECTORY/remove.log" \
+run_step "2" "Removing gitprompt files" "$LOG_DIRECTORY/remove.log" \
   remove_binary
 
-if [ "$GITPROMPT_RC_EXISTED" -eq 1 ]; then
+if [ -f "$GITPROMPT_RC_PATH" ]; then
   print_status "$COLOR_GREEN" "INFO" "Removed shell config: $GITPROMPT_RC_PATH"
 fi
 
