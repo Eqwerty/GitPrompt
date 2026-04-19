@@ -520,21 +520,15 @@ run_step "5" "Installing to $FINAL_BINARY_PATH" "$LOG_DIRECTORY/install.log" \
 
 write_default_config
 
-printf '\n'
-print_status "$COLOR_DIM" "INFO" "Add the following to your ~/.bashrc:"
-
-case ":${PATH}:" in
-  *":${BIN_DIR}:"*) ;;
-  *)
-    print_status "$COLOR_YELLOW" "WARN" "  $BIN_DIR is not in your PATH — add this first:"
-    print_status "$COLOR_YELLOW" "WARN" "    export PATH=\"\$HOME/.local/bin:\$PATH\""
-    ;;
-esac
-
-print_status "$COLOR_DIM" "INFO" '  eval "$(gitprompt init bash)"  # gitprompt'
-
 SCRIPT_FINISHED_AT="$(current_timestamp)"
 OVERALL_DURATION=$((SCRIPT_FINISHED_AT - SCRIPT_STARTED_AT))
 
 printf '\n'
 print_status "$COLOR_GREEN" "DONE" "Installed local build to: $FINAL_BINARY_PATH $(format_duration_segment "$(format_duration "$OVERALL_DURATION")")"
+
+printf '\n'
+printf '%s%sNext steps%s\n' "$COLOR_BOLD" "$COLOR_CYAN" "$COLOR_RESET"
+printf 'Add to your Bash startup file (~/.bashrc, or ~/.bash_profile on macOS):\n'
+printf '\n'
+printf '  export PATH="$HOME/.local/bin:$PATH"  # skip if already set\n'
+printf '  eval "$(gitprompt init bash)"          # gitprompt\n'

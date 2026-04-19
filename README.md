@@ -2,7 +2,7 @@
 
 A fast cross-platform shell prompt binary for Git repositories.
 
-`gitPrompt` prints a two-line prompt:
+`gitprompt` prints a two-line prompt:
 
 1. `user host path [git-status]`
 2. prompt symbol (`$`, `#`, or `>`)
@@ -11,33 +11,21 @@ This repository contains the source code for that binary.
 
 ## Quick Install
 
-Install latest release:
+Install the latest release:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/Eqwerty/GitPrompt/master/install.sh | sh
 ```
 
-Default install location:
-
-- Linux/macOS: `$HOME/.local/bin/gitPrompt`
-- Windows Git Bash: `$HOME/.local/bin/gitPrompt.exe`
-
-Update is the same command.
-
-## Uninstall
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/Eqwerty/GitPrompt/master/uninstall.sh | sh
-```
-
-This removes the binary, config, and cache files. If any GitPrompt references are found in your shell config files, the uninstaller will print them so you can remove them manually.
+Default install location: `~/.local/bin/gitprompt` (Linux/macOS) or `~/.local/bin/gitprompt.exe` (Windows Git Bash).
 
 ## Bash Setup
 
-After `install.sh` runs, add one line to your `~/.bashrc`:
+After installing, add to your Bash startup file (`~/.bashrc`, or `~/.bash_profile` on macOS):
 
 ```sh
-eval "$(gitprompt init bash)"  # gitprompt
+export PATH="$HOME/.local/bin:$PATH"  # skip if already set
+eval "$(gitprompt init bash)"         # gitprompt
 ```
 
 This generates and sources the shell integration at startup. The integration sets `PROMPT_COMMAND` and a `DEBUG` trap to update `PS1` on every prompt. If `gitprompt` is not on `PATH`, the integration silently does nothing.
@@ -55,6 +43,38 @@ Windows Git Bash:
 ```sh
 PS1='$([ -x "$HOME/.local/bin/gitprompt.exe" ] && "$HOME/.local/bin/gitprompt.exe" || printf "\w > ")'
 ```
+
+## Update
+
+```sh
+gitprompt update
+```
+
+Requires `curl` and network access. Alternatively, re-run the install script.
+
+## Uninstall
+
+```sh
+gitprompt uninstall
+```
+
+Removes the binary, config, and cache files, and prints any gitprompt references found in your shell config files for manual removal. Requires `curl` and network access.
+
+Alternatively, without the binary:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/Eqwerty/GitPrompt/master/uninstall.sh | sh
+```
+
+## Commands
+
+| Command | Description |
+|---|---|
+| `gitprompt init bash` | Print the Bash shell integration script |
+| `gitprompt config` | Open the config file in `$EDITOR` (or a default editor) |
+| `gitprompt update` | Update to the latest release |
+| `gitprompt uninstall` | Uninstall gitprompt |
+| `gitprompt --help` | Show help |
 
 ## Prompt Format Reference
 
@@ -140,7 +160,7 @@ In that example, `+1 ~2` is staged, and `+3 -1` is unstaged.
 
 ## Configuration
 
-`gitPrompt` optionally reads a `config.json` file from the platform config directory:
+`gitprompt` optionally reads a `config.json` file from the platform config directory:
 
 - Linux/macOS: `$XDG_CONFIG_HOME/gitprompt/config.json` (default: `~/.config/gitprompt/config.json`)
 - Windows Git Bash: `%APPDATA%/gitprompt/config.json`
@@ -149,7 +169,7 @@ If the file is absent or cannot be parsed, all settings fall back to their defau
 
 ### Cache
 
-Controls how long `gitPrompt` reuses cached results before re-running a Git command. TTL values are specified in **seconds**. Setting a value to `0` disables caching for that entry.
+Controls how long `gitprompt` reuses cached results before re-running a Git command. TTL values are specified in **seconds**. Setting a value to `0` disables caching for that entry.
 
 | Key | Default | Description |
 |---|---|---|
@@ -180,8 +200,7 @@ Useful flags:
 ```sh
 sh ./dev-install-local.sh --verbose
 sh ./dev-install-local.sh --skip-tests
-sh ./dev-install-local.sh --yes
-sh ./dev-install-local.sh -svy
+sh ./dev-install-local.sh -sv
 ```
 
 ### Native AOT prerequisites
