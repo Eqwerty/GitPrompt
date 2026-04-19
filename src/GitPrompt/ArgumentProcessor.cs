@@ -38,6 +38,18 @@ internal static class ArgumentProcessor
                 ConfigCommand.Run();
                 Environment.Exit(0);
             }
+
+            if (string.Equals(argument, "update", StringComparison.Ordinal))
+            {
+                UpdateCommand.Run();
+                Environment.Exit(0);
+            }
+
+            if (string.Equals(argument, "uninstall", StringComparison.Ordinal))
+            {
+                UninstallCommand.Run();
+                Environment.Exit(0);
+            }
         }
     }
 }
