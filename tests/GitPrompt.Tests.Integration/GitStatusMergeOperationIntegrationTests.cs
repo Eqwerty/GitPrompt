@@ -99,7 +99,8 @@ public sealed class GitStatusMergeOperationIntegrationTests
 
         // Assert
         mergeCommandResult.ExitCode.Should().NotBe(0);
-        gitStatusSegment.Should().Contain(TestHelpers.BranchLabelWithOperation(TestHelpers.NoUpstreamBranchLabel("feature"), "MERGE"));
+        gitStatusSegment.Should().Contain(TestHelpers.BranchLabelWithOperation(TestHelpers.TrackedBranchLabel("feature"), "MERGE"));
+        gitStatusSegment.Should().NotContain(TestHelpers.NoUpstreamBranchLabel("feature"));
     }
 
     [Fact]
@@ -131,7 +132,8 @@ public sealed class GitStatusMergeOperationIntegrationTests
 
         // Assert
         cherryPickCommandResult.ExitCode.Should().NotBe(0);
-        gitStatusSegment.Should().Contain(TestHelpers.BranchLabelWithOperation(TestHelpers.NoUpstreamBranchLabel("feature"), "CHERRY-PICK"));
+        gitStatusSegment.Should().Contain(TestHelpers.BranchLabelWithOperation(TestHelpers.TrackedBranchLabel("feature"), "CHERRY-PICK"));
+        gitStatusSegment.Should().NotContain(TestHelpers.NoUpstreamBranchLabel("feature"));
     }
 
     [Fact]

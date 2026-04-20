@@ -50,7 +50,7 @@ internal static class GitStatusSegmentBuilder
             var rebaseBranchName = GitOperationDetector.ResolveRebaseBranchName(gitDirectoryPath);
             if (!string.IsNullOrEmpty(rebaseBranchName))
             {
-                var rebaseBranchLabel = GitStatusDisplayFormatter.BuildBranchLabel(rebaseBranchName, hasUpstream);
+                var rebaseBranchLabel = GitStatusDisplayFormatter.BuildBranchLabel(rebaseBranchName);
                 return CacheAndReturn(GitStatusDisplayFormatter.BuildDisplay(rebaseBranchLabel,
                     commitsAhead,
                     commitsBehind,
@@ -94,7 +94,8 @@ internal static class GitStatusSegmentBuilder
             commitsBehind = 0;
         }
 
-        var branchLabel = GitStatusDisplayFormatter.BuildBranchLabel(branchHeadName, hasUpstream);
+        var isInOperation = !string.IsNullOrEmpty(GitOperationDetector.ReadGitOperationMarker(gitDirectoryPath));
+        var branchLabel = GitStatusDisplayFormatter.BuildBranchLabel(branchHeadName, hasUpstream || isInOperation);
 
         return CacheAndReturn(GitStatusDisplayFormatter.BuildDisplay(branchLabel,
             commitsAhead,
