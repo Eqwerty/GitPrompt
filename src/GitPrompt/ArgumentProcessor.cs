@@ -1,5 +1,4 @@
 using GitPrompt.Commands;
-using GitPrompt.Git;
 
 namespace GitPrompt;
 
@@ -7,48 +6,18 @@ internal static class ArgumentProcessor
 {
     internal static void HandleArguments(string[] arguments)
     {
-        for (var i = 0; i < arguments.Length; i++)
+        if (arguments.Length is 0)
         {
-            var argument = arguments[i];
-
-            if (string.Equals(argument, "--help", StringComparison.Ordinal) ||
-                string.Equals(argument, "-h", StringComparison.Ordinal) ||
-                string.Equals(argument, "help", StringComparison.Ordinal))
-            {
-                HelpCommand.PrintHelp();
-                Environment.Exit(0);
-            }
-
-            if (string.Equals(argument, "--invalidate-status-cache", StringComparison.Ordinal))
-            {
-                GitStatusSharedCache.Invalidate();
-                Environment.Exit(0);
-            }
-
-            if (string.Equals(argument, "init", StringComparison.Ordinal))
-            {
-                var shell = i + 1 < arguments.Length ? arguments[i + 1] : string.Empty;
-                InitCommand.Run(shell);
-                Environment.Exit(0);
-            }
-
-            if (string.Equals(argument, "config", StringComparison.Ordinal))
-            {
-                ConfigCommand.Run();
-                Environment.Exit(0);
-            }
-
-            if (string.Equals(argument, "update", StringComparison.Ordinal))
-            {
-                UpdateCommand.Run();
-                Environment.Exit(0);
-            }
-
-            if (string.Equals(argument, "uninstall", StringComparison.Ordinal))
-            {
-                UninstallCommand.Run();
-                Environment.Exit(0);
-            }
+            return;
         }
+
+        if (!CommandRegistry.TryGetCommandByVerb(arguments[0], out var command))
+        {
+            return;
+        }
+
+        command.Execute(arguments);
+
+        Environment.Exit(0);
     }
 }

@@ -2,21 +2,24 @@ namespace GitPrompt.Commands;
 
 internal static class HelpCommand
 {
-    internal static void PrintHelp()
+    internal static void PrintHelp(TextWriter? output = null)
     {
+        output ??= Console.Out;
+
         var configPath = ConfigCommand.GetConfigFilePath();
-        var padWidth = CommandRegistry.All.Max(commandDescriptor => commandDescriptor.Usage.Length) + 5;
+        var visibleCommands = CommandRegistry.Commands.Where(command => !command.IsHidden).ToList();
+        var padWidth = visibleCommands.Max(command => command.Usage.Length) + 5;
 
-        Console.WriteLine("GitPrompt - fast Git prompt for Bash");
-        Console.WriteLine();
-        Console.WriteLine("Usage:");
+        output.WriteLine("GitPrompt - fast Git prompt for Bash");
+        output.WriteLine();
+        output.WriteLine("Usage:");
 
-        foreach (var command in CommandRegistry.All)
+        foreach (var command in visibleCommands)
         {
-            Console.WriteLine($"  {command.Usage.PadRight(padWidth)}{command.Description}");
+            output.WriteLine($"  {command.Usage.PadRight(padWidth)}{command.Description}");
         }
 
-        Console.WriteLine();
-        Console.WriteLine($"Config: {configPath}");
+        output.WriteLine();
+        output.WriteLine($"Config: {configPath}");
     }
 }
