@@ -1,5 +1,5 @@
 using System.Text;
-using GitPrompt;
+using GitPrompt.Commands;
 using GitPrompt.Git;
 using GitPrompt.Platform;
 using GitPrompt.Prompting;
@@ -7,7 +7,7 @@ using static GitPrompt.Constants.PromptColors;
 
 Console.OutputEncoding = Encoding.UTF8;
 
-ArgumentProcessor.HandleArguments(args);
+CommandRegistry.Dispatch(args);
 
 var platformProvider = PlatformProvider.System;
 var workingDirectoryPath = platformProvider.WorkingDirectory.Path;

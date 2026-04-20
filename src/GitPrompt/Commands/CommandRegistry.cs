@@ -39,13 +39,31 @@ internal static class CommandRegistry
             IsHidden: true)
     ];
 
-    private static readonly Dictionary<string, CommandDescriptor> CommandDescriptorsLookup =
-        Commands
-            .SelectMany(command => command.Verbs, (command, verb) => (verb, command))
-            .ToDictionary(tuple => tuple.verb, tuple => tuple.command);
+    internal static void Dispatch(string[] args)
+    {
+        if (args.Length is 0)
+        {
+            return;
+        }
+
+        if (!TryGetCommandByVerb(args[0], out var command))
+        {
+            Console.Error.WriteLine($"gitprompt: '{args[0]}' is not a gitprompt command. See gitprompt --help.");
+            Environment.Exit(1);
+        }
+
+        command.Execute(args);
+
+        Environment.Exit(0);
+    }
 
     internal static bool TryGetCommandByVerb(string verb, [NotNullWhen(returnValue: true)] out CommandDescriptor? command)
     {
         return CommandDescriptorsLookup.TryGetValue(verb, out command);
     }
+
+    private static readonly Dictionary<string, CommandDescriptor> CommandDescriptorsLookup =
+        Commands
+            .SelectMany(command => command.Verbs, (command, verb) => (verb, command))
+            .ToDictionary(tuple => tuple.verb, tuple => tuple.command);
 }
