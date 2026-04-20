@@ -26,8 +26,7 @@ internal static class ConfigCommand
         }
     }
 
-    internal static string GetConfigFilePath()
-        => Path.Combine(XdgPaths.GetConfigDirectory(), "config.json");
+    internal static string GetConfigFilePath() => Path.Combine(XdgPaths.GetConfigDirectory(), "config.json");
 
     internal static string GetEditor(string? editorEnv, string? visualEnv)
     {
@@ -41,7 +40,7 @@ internal static class ConfigCommand
             return visualEnv;
         }
 
-        return OperatingSystem.IsWindows() ? "notepad.exe" : "vi";
+        return "vi";
     }
 
     private static string GetEditor() => GetEditor(Environment.GetEnvironmentVariable("EDITOR"), Environment.GetEnvironmentVariable("VISUAL"));

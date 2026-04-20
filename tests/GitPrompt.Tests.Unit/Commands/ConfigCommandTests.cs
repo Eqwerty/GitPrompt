@@ -43,7 +43,6 @@ public class ConfigCommandTests
     public void GetEditor_FallsBackToPlatformDefault_WhenNeitherSet()
     {
         var editor = ConfigCommand.GetEditor(null, null);
-        Assert.True(editor is "vi" or "notepad.exe",
-            $"Expected 'vi' or 'notepad.exe', got '{editor}'");
+        Assert.Equal("vi", editor);
     }
 }
