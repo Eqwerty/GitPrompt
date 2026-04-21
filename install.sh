@@ -84,7 +84,8 @@ fi
 RELEASE_ASSET_URL="https://github.com/Eqwerty/GitPrompt/releases/download/latest/${RELEASE_ASSET_NAME}"
 
 TEMPORARY_DIRECTORY="$(mktemp -d)"
-trap 'rm -rf "$TEMPORARY_DIRECTORY"' EXIT INT TERM
+trap 'rm -rf "$TEMPORARY_DIRECTORY"' EXIT
+trap 'printf "\n${RED}error:${R} Cancelled.\n" >&2; exit 130' INT TERM
 
 RELEASE_ASSET_PATH="$TEMPORARY_DIRECTORY/$RELEASE_ASSET_NAME"
 EXTRACTED_BINARY_PATH="$TEMPORARY_DIRECTORY/$BINARY_NAME"

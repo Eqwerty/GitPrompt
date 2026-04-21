@@ -1,348 +1,53 @@
 #!/usr/bin/env sh
 set -eu
 
-# Local development installer:
-# - runs tests
-# - publishes a local single-file binary (non-AOT) for the current OS/arch
-# - installs it to the same default path used by install.sh
-#
+# Local development installer: builds and installs a local binary.
 # Usage:
-#   ./dev-install-local.sh
-# Optional:
-#   ./dev-install-local.sh --skip-tests --verbose
-#   ./dev-install-local.sh -sv
+#   sh ./dev-install-local.sh
 
 SCRIPT_DIRECTORY="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
-REPOSITORY_ROOT="${SCRIPT_DIRECTORY}"
+REPOSITORY_ROOT="$SCRIPT_DIRECTORY"
 
-SKIP_TESTS=0
-VERBOSE_MODE=0
-TOTAL_STEPS=5
-SCRIPT_STARTED_AT="$(date +%s)"
-LOADER_INDEX=0
-
-IS_TTY=0
-USE_ANSI=0
-USE_COLOR=0
-ESCAPE_CHARACTER="$(printf '\033')"
-
-if [ -t 1 ] && [ "${TERM:-}" != "dumb" ]; then
-  IS_TTY=1
-  USE_ANSI=1
-fi
-
-if [ "$USE_ANSI" -eq 1 ] && [ -z "${NO_COLOR:-}" ]; then
-  USE_COLOR=1
-fi
-
-if [ "$USE_COLOR" -eq 1 ]; then
-  COLOR_RESET="${ESCAPE_CHARACTER}[0m"
-  COLOR_BOLD="${ESCAPE_CHARACTER}[1m"
-  COLOR_DIM="${ESCAPE_CHARACTER}[2m"
-  COLOR_RED="${ESCAPE_CHARACTER}[31m"
-  COLOR_GREEN="${ESCAPE_CHARACTER}[32m"
-  COLOR_YELLOW="${ESCAPE_CHARACTER}[33m"
-  COLOR_BLUE="${ESCAPE_CHARACTER}[34m"
-  COLOR_CYAN="${ESCAPE_CHARACTER}[36m"
+ESC=$(printf '\033')
+if [ -z "${NO_COLOR:-}" ] && [ "${TERM:-}" != "dumb" ]; then
+  R="$ESC[0m"; BOLD="$ESC[1m"
+  GREEN="$ESC[32m"; YELLOW="$ESC[33m"; RED="$ESC[31m"
 else
-  COLOR_RESET=""
-  COLOR_BOLD=""
-  COLOR_DIM=""
-  COLOR_RED=""
-  COLOR_GREEN=""
-  COLOR_YELLOW=""
-  COLOR_BLUE=""
-  COLOR_CYAN=""
+  R=''; BOLD=''; GREEN=''; YELLOW=''; RED=''
 fi
 
-print_status() {
-  status_color="$1"
-  status_label="$2"
-  shift 2
-
-  printf '%s[%s]%s %s\n' "$status_color" "$status_label" "$COLOR_RESET" "$*"
-}
-
-print_banner() {
-  printf '%s%sGitPrompt local installer%s\n' "$COLOR_BOLD" "$COLOR_BLUE" "$COLOR_RESET"
-  print_status "$COLOR_DIM" "INFO" "Repo: $REPOSITORY_ROOT"
-}
-
-format_step_label() {
-  step_number="$1"
-  printf '[%s/%s]' "$step_number" "$TOTAL_STEPS"
-}
-
-format_colored_step_label() {
-  step_number="$1"
-  printf '%s%s%s' "${COLOR_BOLD}${COLOR_CYAN}" "$(format_step_label "$step_number")" "$COLOR_RESET"
-}
-
-current_timestamp() {
-  date +%s
-}
-
-format_duration() {
-  total_seconds="$1"
-
-  if [ "$total_seconds" -lt 60 ]; then
-    printf '%ss' "$total_seconds"
-    return
-  fi
-
-  total_minutes=$(( total_seconds / 60 ))
-  remaining_seconds=$(( total_seconds % 60 ))
-
-  if [ "$total_minutes" -lt 60 ]; then
-    printf '%sm %02ss' "$total_minutes" "$remaining_seconds"
-    return
-  fi
-
-  total_hours=$(( total_minutes / 60 ))
-  remaining_minutes=$(( total_minutes % 60 ))
-  printf '%sh %02sm %02ss' "$total_hours" "$remaining_minutes" "$remaining_seconds"
-}
-
-format_duration_segment() {
-  duration_text="$1"
-  printf '%s(%s)%s' "$COLOR_DIM" "$duration_text" "$COLOR_RESET"
-}
-
-next_loader_frame() {
-  frame_index=$((LOADER_INDEX % 4))
-
-  case "$frame_index" in
-    0) frame='|' ;;
-    1) frame='/' ;;
-    2) frame='-' ;;
-    *) frame='\\' ;;
-  esac
-
-  LOADER_INDEX=$((LOADER_INDEX + 1))
-  printf '%s' "$frame"
-}
-
-render_step_loader() {
-  step_number="$1"
-  step_message="$2"
-  elapsed_seconds="$3"
-  loader_frame="$4"
-  elapsed_clock="$(format_duration "$elapsed_seconds")"
-
-  printf '\r%s%s%s %s %s %s%s%s' \
-    "${COLOR_BOLD}${COLOR_CYAN}" "$(format_step_label "$step_number")" "$COLOR_RESET" "$loader_frame" \
-    "$step_message" "$COLOR_DIM" "$elapsed_clock" "$COLOR_RESET"
-}
-
-clear_loader_line() {
-  if [ "$USE_ANSI" -eq 1 ]; then
-    printf '\r%s[2K' "$ESCAPE_CHARACTER"
-  fi
-}
-
-print_step_start() {
-  step_number="$1"
-  step_message="$2"
-
-  if [ "$USE_ANSI" -eq 1 ]; then
-    printf '\r%s[2K' "$ESCAPE_CHARACTER"
-  else
-    printf '\r'
-  fi
-
-  printf '%s %s' "$(format_colored_step_label "$step_number")" "$step_message"
-}
-
-print_step_done() {
-  step_number="$1"
-  step_message="$2"
-  step_duration="$3"
-
-  if [ "$USE_ANSI" -eq 1 ]; then
-    printf '\r%s[2K' "$ESCAPE_CHARACTER"
-  else
-    printf '\r'
-  fi
-
-  print_status "$COLOR_GREEN" "OK" "$(format_colored_step_label "$step_number") $step_message $(format_duration_segment "$(format_duration "$step_duration")")"
-}
-
-print_step_warning() {
-  step_number="$1"
-  step_message="$2"
-  step_duration="$3"
-
-  if [ "$USE_ANSI" -eq 1 ]; then
-    printf '\r%s[2K' "$ESCAPE_CHARACTER"
-  else
-    printf '\r'
-  fi
-
-  print_status "$COLOR_YELLOW" "OK" "$(format_colored_step_label "$step_number") $step_message $(format_duration_segment "$(format_duration "$step_duration") skipped")"
-}
-
-print_step_failed() {
-  step_number="$1"
-  step_message="$2"
-  step_duration="$3"
-
-  if [ "$USE_ANSI" -eq 1 ]; then
-    printf '\r%s[2K' "$ESCAPE_CHARACTER"
-  else
-    printf '\r'
-  fi
-
-  print_status "$COLOR_RED" "FAIL" "$(format_colored_step_label "$step_number") $step_message $(format_duration_segment "$(format_duration "$step_duration")")"
-}
-
-print_error_and_exit() {
-  message="$1"
-  print_status "$COLOR_RED" "ERROR" "$message"
+die() {
+  printf "\n${RED}error:${R} %s\n" "$1" >&2
   exit 1
 }
 
-print_usage() {
-  cat <<EOF
-Usage: sh ./dev-install-local.sh [options]
-
-Options:
-  -s,  --skip-tests                Skip test execution only
-  -v,  --verbose                   Show dotnet output while commands run
-  -h,  --help                      Show this help text
-EOF
-}
-
-parse_arguments() {
-  while [ "$#" -gt 0 ]; do
-    case "$1" in
-      --skip-tests)  SKIP_TESTS=1 ;;
-      --verbose)     VERBOSE_MODE=1 ;;
-      --help)        print_usage; exit 0 ;;
-      --)            shift; break ;;
-      --*)
-        print_usage >&2
-        print_error_and_exit "Unknown option: $1"
-        ;;
-      -*)
-        flags="${1#-}"
-        while [ -n "$flags" ]; do
-          flag="${flags%"${flags#?}"}"
-          flags="${flags#?}"
-          case "$flag" in
-            s) SKIP_TESTS=1 ;;
-            v) VERBOSE_MODE=1 ;;
-            h) print_usage; exit 0 ;;
-            *)
-              print_usage >&2
-              print_error_and_exit "Unknown option: -$flag"
-              ;;
-          esac
-        done
-        ;;
-      *)
-        print_usage >&2
-        print_error_and_exit "Unknown option: $1"
-        ;;
-    esac
-
-    shift
-  done
-}
-
 run_step() {
-  step_number="$1"
-  step_message="$2"
-  log_file="$3"
-  shift 3
-  step_started_at="$(current_timestamp)"
+  step_message="$1"
+  log_file="$2"
+  shift 2
 
-  print_step_start "$step_number" "$step_message"
-
-  if [ "$VERBOSE_MODE" -eq 1 ]; then
-    status_file="${log_file}.status"
-    rm -f "$status_file"
-
-    (
-      printf '\n'
-      command_status=0
-      "$@" || command_status=$?
-      printf '%s\n' "$command_status" >"$status_file"
-      exit 0
-    ) 2>&1 | tee "$log_file"
-
-    if [ -f "$status_file" ]; then
-      step_status="$(cat "$status_file")"
-      rm -f "$status_file"
-    else
-      step_status=1
-    fi
-
-    step_finished_at="$(current_timestamp)"
-    step_duration=$((step_finished_at - step_started_at))
-
-    if [ "$step_status" -eq 0 ]; then
-      print_step_done "$step_number" "$step_message" "$step_duration"
-    else
-      print_step_failed "$step_number" "$step_message" "$step_duration"
-      exit "$step_status"
-    fi
-  elif [ "$USE_ANSI" -eq 1 ]; then
-    "$@" >"$log_file" 2>&1 &
-    command_pid=$!
-
-    while kill -0 "$command_pid" 2>/dev/null; do
-      now_timestamp="$(current_timestamp)"
-      elapsed_seconds=$((now_timestamp - step_started_at))
-      render_step_loader "$step_number" "$step_message" "$elapsed_seconds" "$(next_loader_frame)"
-      sleep 0.1
-    done
-
-    step_finished_at="$(current_timestamp)"
-    step_duration=$((step_finished_at - step_started_at))
-
-    clear_loader_line
-
-    if wait "$command_pid"; then
-      print_step_done "$step_number" "$step_message" "$step_duration"
-    else
-      step_status=$?
-      print_step_failed "$step_number" "$step_message" "$step_duration"
-      printf '%s\n' ""
-      cat "$log_file"
-      exit "$step_status"
-    fi
+  printf "${YELLOW}●${R} %s..." "$step_message"
+  if "$@" >"$log_file" 2>&1; then
+    printf "\r${GREEN}✓${R} %s...\n" "$step_message"
   else
-    if "$@" >"$log_file" 2>&1; then
-      step_finished_at="$(current_timestamp)"
-      step_duration=$((step_finished_at - step_started_at))
-      print_step_done "$step_number" "$step_message" "$step_duration"
-    else
-      step_status=$?
-      step_finished_at="$(current_timestamp)"
-      step_duration=$((step_finished_at - step_started_at))
-      print_step_failed "$step_number" "$step_message" "$step_duration"
-      printf '%s\n' ""
-      cat "$log_file"
-      exit "$step_status"
-    fi
+    step_status=$?
+    printf '\n'
+    cat "$log_file" >&2
+    exit "$step_status"
   fi
 }
 
 install_binary() {
   if [ "$TARGET_OS" = "windows" ]; then
-    if mv -f "$STAGED_BINARY_PATH" "$FINAL_BINARY_PATH" 2>/dev/null; then
-      return 0
+    if ! mv -f "$STAGED_BINARY_PATH" "$FINAL_BINARY_PATH" 2>/dev/null; then
+      rm -f "$STAGED_BINARY_PATH"
+      printf 'Failed to replace %s.\n' "$FINAL_BINARY_PATH" >&2
+      die "Close shells using gitprompt.exe and run again."
     fi
-
-    rm -f "$STAGED_BINARY_PATH"
-    printf '%s\n' "Failed to replace $FINAL_BINARY_PATH." >&2
-    printf '%s\n' "Close shells/processes using gitprompt.exe and run again." >&2
-    return 1
+  else
+    mv -f "$STAGED_BINARY_PATH" "$FINAL_BINARY_PATH"
   fi
-
-  mv -f "$STAGED_BINARY_PATH" "$FINAL_BINARY_PATH"
 }
-
 
 publish_binary() {
   if dotnet publish "$REPOSITORY_ROOT/src/GitPrompt/GitPrompt.csproj" \
@@ -374,117 +79,79 @@ publish_binary() {
     -o "$PUBLISH_DIRECTORY"
 }
 
-parse_arguments "$@"
-
-BINARY_BASENAME="gitprompt"
 OPERATING_SYSTEM="$(uname -s | tr '[:upper:]' '[:lower:]')"
 CPU_ARCHITECTURE="$(uname -m)"
 
-print_banner
-
 case "$OPERATING_SYSTEM" in
-  linux) TARGET_OS="linux" ;;
-  darwin) TARGET_OS="darwin" ;;
+  linux)            TARGET_OS="linux" ;;
+  darwin)           TARGET_OS="darwin" ;;
   msys*|mingw*|cygwin*) TARGET_OS="windows" ;;
-  *)
-    print_error_and_exit "Unsupported OS: $OPERATING_SYSTEM"
-    ;;
+  *) die "Unsupported OS: $OPERATING_SYSTEM. Supported: Linux, macOS, Windows (Git Bash)." ;;
 esac
 
 case "$CPU_ARCHITECTURE" in
   x86_64|amd64) TARGET_ARCHITECTURE="amd64" ;;
-  *)
-    print_error_and_exit "Unsupported architecture: $CPU_ARCHITECTURE. This script currently supports amd64 only."
-    ;;
+  *) die "Unsupported architecture: $CPU_ARCHITECTURE. Supported: amd64 only." ;;
 esac
 
-BIN_DIR="$HOME/.local/bin"              # binary goes here; typically already on PATH
+if ! command -v dotnet >/dev/null 2>&1; then
+  die "dotnet CLI is required but was not found in PATH."
+fi
 
 if [ "$TARGET_OS" = "windows" ]; then
   RUNTIME_IDENTIFIER="win-x64"
-  INSTALLED_BINARY_NAME="${BINARY_BASENAME}.exe"
+  BINARY_NAME="gitprompt.exe"
   PUBLISHED_BINARY_NAME="GitPrompt.exe"
 elif [ "$TARGET_OS" = "darwin" ]; then
   RUNTIME_IDENTIFIER="osx-x64"
-  INSTALLED_BINARY_NAME="${BINARY_BASENAME}"
+  BINARY_NAME="gitprompt"
   PUBLISHED_BINARY_NAME="GitPrompt"
 else
   RUNTIME_IDENTIFIER="linux-x64"
-  INSTALLED_BINARY_NAME="${BINARY_BASENAME}"
+  BINARY_NAME="gitprompt"
   PUBLISHED_BINARY_NAME="GitPrompt"
 fi
 
-if ! command -v dotnet >/dev/null 2>&1; then
-  print_error_and_exit "dotnet CLI is required but was not found in PATH."
-fi
+BIN_DIR="$HOME/.local/bin"
+FINAL_BINARY_PATH="$BIN_DIR/$BINARY_NAME"
+STAGED_BINARY_PATH="$BIN_DIR/.$BINARY_NAME.new.$$"
 
 TEMPORARY_DIRECTORY="$(mktemp -d)"
-trap 'rm -rf "$TEMPORARY_DIRECTORY"' EXIT INT TERM
+trap 'rm -rf "$TEMPORARY_DIRECTORY"' EXIT
+trap 'printf "\n${RED}error:${R} Cancelled.\n" >&2; exit 130' INT TERM
+
 PUBLISH_DIRECTORY="$TEMPORARY_DIRECTORY/publish"
-LOG_DIRECTORY="$TEMPORARY_DIRECTORY/logs"
 AOT_STATUS_FILE="$TEMPORARY_DIRECTORY/aot_status"
-mkdir -p "$PUBLISH_DIRECTORY" "$LOG_DIRECTORY"
+mkdir -p "$PUBLISH_DIRECTORY"
 
-print_status "$COLOR_DIM" "INFO" "Target runtime: $RUNTIME_IDENTIFIER"
-print_status "$COLOR_DIM" "INFO" "Binary: $BIN_DIR/$INSTALLED_BINARY_NAME"
-if [ "$VERBOSE_MODE" -eq 1 ]; then
-  print_status "$COLOR_DIM" "INFO" "Output mode: verbose"
-else
-  print_status "$COLOR_DIM" "INFO" "Output mode: quiet (use -v or --verbose to stream dotnet output)"
-fi
-
-printf '\n'
-
-run_step "1" "Restoring solution packages" "$LOG_DIRECTORY/restore.log" \
+run_step "Restoring packages" "$TEMPORARY_DIRECTORY/restore.log" \
   dotnet restore "$REPOSITORY_ROOT/GitPrompt.slnx" --nologo
 
-run_step "2" "Building solution (Release)" "$LOG_DIRECTORY/build.log" \
+run_step "Building" "$TEMPORARY_DIRECTORY/build.log" \
   dotnet build "$REPOSITORY_ROOT/GitPrompt.slnx" --configuration Release --nologo --no-restore
 
-if [ "$SKIP_TESTS" -ne 1 ]; then
-  run_step "3" "Running tests (Release)" "$LOG_DIRECTORY/test.log" \
-    dotnet test "$REPOSITORY_ROOT/GitPrompt.slnx" --configuration Release --nologo --no-build --no-restore
-else
-  print_step_warning "3" "Running tests (Release)" "0"
-fi
-
-run_step "4" "Publishing binary ($RUNTIME_IDENTIFIER, AOT if available)" "$LOG_DIRECTORY/publish.log" \
+run_step "Publishing ($RUNTIME_IDENTIFIER)" "$TEMPORARY_DIRECTORY/publish.log" \
   publish_binary
 
-if [ "$(cat "$AOT_STATUS_FILE" 2>/dev/null)" = "aot" ]; then
-  print_status "$COLOR_DIM" "INFO" "Binary type: native AOT"
-else
-  print_status "$COLOR_DIM" "INFO" "Binary type: single-file (AOT native toolchain not found)"
-fi
-
 SOURCE_BINARY_PATH="$PUBLISH_DIRECTORY/$PUBLISHED_BINARY_NAME"
-if [ ! -f "$SOURCE_BINARY_PATH" ]; then
-  print_error_and_exit "Published binary not found: $SOURCE_BINARY_PATH"
-fi
-
-mkdir -p "$BIN_DIR"
-FINAL_BINARY_PATH="$BIN_DIR/$INSTALLED_BINARY_NAME"
-STAGED_BINARY_PATH="$BIN_DIR/.${INSTALLED_BINARY_NAME}.new.$$"
+[ -f "$SOURCE_BINARY_PATH" ] || die "Published binary not found: $SOURCE_BINARY_PATH"
 
 cp "$SOURCE_BINARY_PATH" "$STAGED_BINARY_PATH"
 chmod +x "$STAGED_BINARY_PATH" 2>/dev/null || true
 
-run_step "5" "Installing to $FINAL_BINARY_PATH" "$LOG_DIRECTORY/install.log" \
+run_step "Installing to $FINAL_BINARY_PATH" "$TEMPORARY_DIRECTORY/install.log" \
   install_binary
 
-SCRIPT_FINISHED_AT="$(current_timestamp)"
-OVERALL_DURATION=$((SCRIPT_FINISHED_AT - SCRIPT_STARTED_AT))
+if [ "$(cat "$AOT_STATUS_FILE" 2>/dev/null)" = "aot" ]; then
+  printf "  ${BOLD}(native AOT)${R}\n"
+else
+  printf "  ${BOLD}(single-file — AOT toolchain not found)${R}\n"
+fi
 
 printf '\n'
-print_status "$COLOR_GREEN" "DONE" "Installed local build to: $FINAL_BINARY_PATH $(format_duration_segment "$(format_duration "$OVERALL_DURATION")")"
-
-printf '\n'
-printf '%s%sNext steps%s\n' "$COLOR_BOLD" "$COLOR_CYAN" "$COLOR_RESET"
-printf 'Add to your Bash startup file (~/.bashrc, or ~/.bash_profile on macOS):\n'
-printf '\n'
+printf 'Next steps — add to your shell startup file:\n'
 if [ "$TARGET_OS" = "windows" ]; then
   printf '  eval "$($HOME/.local/bin/gitprompt.exe init bash)"  # gitprompt\n'
 else
-  printf '  export PATH="$HOME/.local/bin:$PATH"  # skip if already set\n'
-  printf '  eval "$(gitprompt init bash)"          # gitprompt\n'
+  printf '  eval "$(gitprompt init bash)"  # gitprompt\n'
 fi
