@@ -5,9 +5,7 @@ namespace GitPrompt.Tests.Unit.Commands;
 
 public sealed class HelpCommandTests
 {
-    private static IReadOnlyList<CommandDescriptor> VisibleCommands => CommandRegistry.Commands.Where(command => !command.IsHidden).ToList();
-
-    public static TheoryData<string> VisibleCommandUsages => [..VisibleCommands.Select(command => command.Usage)];
+    public static TheoryData<string> VisibleCommandUsages => [..CommandRegistry.VisibleCommands().Select(command => command.Usage)];
 
     [Theory]
     [MemberData(nameof(VisibleCommandUsages))]
@@ -55,7 +53,7 @@ public sealed class HelpCommandTests
 
         // Assert
         var text = output.ToString();
-        foreach (var command in VisibleCommands)
+        foreach (var command in CommandRegistry.VisibleCommands())
         {
             text.Should().Contain(command.Description);
         }
@@ -66,7 +64,7 @@ public sealed class HelpCommandTests
     {
         // Arrange
         var output = new StringWriter();
-        var expectedPadWidth = VisibleCommands.Max(command => command.Usage.Length) + 5;
+        var expectedPadWidth = CommandRegistry.VisibleCommands().Max(command => command.Usage.Length) + 5;
         var expectedDescriptionColumn = 2 + expectedPadWidth;
 
         // Act
