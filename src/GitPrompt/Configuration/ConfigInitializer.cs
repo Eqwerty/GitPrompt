@@ -8,29 +8,24 @@ internal static class ConfigInitializer
     {
         try
         {
-            InitializeDefaultConfig(XdgPaths.GetConfigDirectory());
+            var configDirectory = XdgPaths.GetConfigDirectory();
+            var configFile = Path.Combine(configDirectory, "config.json");
+
+            if (File.Exists(configFile))
+            {
+                return;
+            }
+
+            Directory.CreateDirectory(configDirectory);
+
+            using var stream = typeof(ConfigInitializer).Assembly.GetManifestResourceStream("default-config.json")!;
+
+            using var fileStream = File.Create(configFile);
+            stream.CopyTo(fileStream);
         }
         catch
         {
             // Non-critical: the binary works fine with default settings even when the config file is absent.
         }
-    }
-
-    // Exposed for testing.
-    internal static void InitializeDefaultConfig(string configDir)
-    {
-        var configFile = Path.Combine(configDir, "config.json");
-
-        if (File.Exists(configFile))
-        {
-            return;
-        }
-
-        Directory.CreateDirectory(configDir);
-
-        using var stream = typeof(ConfigInitializer).Assembly.GetManifestResourceStream("default-config.json")!;
-
-        using var fileStream = File.Create(configFile);
-        stream.CopyTo(fileStream);
     }
 }
