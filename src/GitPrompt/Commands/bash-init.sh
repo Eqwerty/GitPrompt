@@ -6,6 +6,10 @@ else
   _GITPROMPT_BIN="$HOME/.local/bin/gitprompt"
 fi
 
+if [ -z "${_GITPROMPT_ORIGINAL_PS1+x}" ]; then
+  _GITPROMPT_ORIGINAL_PS1="$PS1"
+fi
+
 __gitprompt_preexec_flag=0
 __gitprompt_running=0
 
@@ -24,7 +28,7 @@ _gitprompt_update_ps1() {
   if output="$("$_GITPROMPT_BIN" 2>/dev/null)" && [ -n "$output" ]; then
     PS1="$output"
   else
-    PS1='__FALLBACK_PS1__'
+    PS1="${_GITPROMPT_ORIGINAL_PS1-__FALLBACK_PS1__}"
   fi
   __gitprompt_running=0
 }

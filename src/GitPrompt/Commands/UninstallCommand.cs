@@ -17,7 +17,7 @@ internal static class UninstallCommand
         var configDir = XdgPaths.GetConfigDirectory();
         var cacheDir = XdgPaths.GetCacheDirectory();
 
-        WarnAboutShellConfigReferences();
+        CleanShellConfigs();
 
         if (Directory.Exists(configDir))
         {
@@ -37,10 +37,10 @@ internal static class UninstallCommand
         Console.WriteLine("Uninstalled.");
     }
 
-    private static void WarnAboutShellConfigReferences()
+    private static void CleanShellConfigs()
     {
         var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        var matches = new List<string>();
+        var remainingRefs = new List<string>();
 
         foreach (var fileName in ShellConfigFiles)
         {
@@ -51,27 +51,44 @@ internal static class UninstallCommand
             }
 
             var lines = File.ReadAllLines(path);
-            for (var i = 0; i < lines.Length; i++)
+            var filtered = lines.Where(line => !IsGitPromptInitEvalLine(line)).ToArray();
+
+            if (filtered.Length != lines.Length)
             {
-                if (lines[i].Contains("gitprompt", StringComparison.OrdinalIgnoreCase))
+                File.WriteAllLines(path, filtered);
+                Console.WriteLine($"Removed gitprompt init from {path}");
+            }
+
+            for (var i = 0; i < filtered.Length; i++)
+            {
+                if (filtered[i].Contains("gitprompt", StringComparison.OrdinalIgnoreCase))
                 {
-                    matches.Add($"{path}:{i + 1}: {lines[i].Trim()}");
+                    remainingRefs.Add($"{path}:{i + 1}: {filtered[i].Trim()}");
                 }
             }
         }
 
-        if (matches.Count is 0)
+        if (remainingRefs.Count is 0)
         {
             return;
         }
 
         Console.Error.WriteLine("warn: Found gitprompt references — remove from your shell config manually:");
-        foreach (var match in matches)
+        foreach (var match in remainingRefs)
         {
             Console.Error.WriteLine($"  {match}");
         }
 
         Console.Error.WriteLine();
+    }
+
+    private static bool IsGitPromptInitEvalLine(string line)
+    {
+        var trimmed = line.TrimStart();
+        return trimmed.StartsWith("eval", StringComparison.OrdinalIgnoreCase)
+            && trimmed.Contains("gitprompt", StringComparison.OrdinalIgnoreCase)
+            && trimmed.Contains("init", StringComparison.OrdinalIgnoreCase)
+            && trimmed.Contains("bash", StringComparison.OrdinalIgnoreCase);
     }
 
     private static void DeleteBinary(string binaryPath)
