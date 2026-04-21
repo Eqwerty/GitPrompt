@@ -10,7 +10,7 @@ else
 fi
 
 die() {
-  printf "\n${RED}error:${R} %s\n" "$1" >&2
+  printf "${RED}error:${R} %s\n" "$1" >&2
   exit 1
 }
 
@@ -105,9 +105,10 @@ install_binary
 printf "\r${GREEN}✓${R} Installing to %s...\n" "$FINAL_BINARY_PATH"
 
 printf '\n'
-printf 'Next steps — add to your shell startup file:\n'
+printf "${YELLOW}Next steps — add to your shell startup file:\n"
 if [ "$TARGET_OS" = "windows" ]; then
-  printf '  eval "$($HOME/.local/bin/gitprompt.exe init bash)"  # gitprompt\n'
+  printf '  eval "$($HOME/.local/bin/gitprompt.exe init bash)"\n'
 else
-  printf '  eval "$(gitprompt init bash)"  # gitprompt\n'
+  printf '  eval "$(gitprompt init bash)"\n'
 fi
+printf "${R}"

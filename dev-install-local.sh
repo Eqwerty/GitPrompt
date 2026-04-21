@@ -10,14 +10,14 @@ REPOSITORY_ROOT="$SCRIPT_DIRECTORY"
 
 ESC=$(printf '\033')
 if [ -z "${NO_COLOR:-}" ] && [ "${TERM:-}" != "dumb" ]; then
-  R="$ESC[0m"; BOLD="$ESC[1m"
+  R="$ESC[0m"
   GREEN="$ESC[32m"; YELLOW="$ESC[33m"; RED="$ESC[31m"
 else
-  R=''; BOLD=''; GREEN=''; YELLOW=''; RED=''
+  R=''; GREEN=''; YELLOW=''; RED=''
 fi
 
 die() {
-  printf "\n${RED}error:${R} %s\n" "$1" >&2
+  printf "${RED}error:${R} %s\n" "$1" >&2
   exit 1
 }
 
@@ -32,8 +32,24 @@ run_step() {
   else
     step_status=$?
     printf '\n'
+    printf "${RED}error:${R} " >&2
     cat "$log_file" >&2
     exit "$step_status"
+  fi
+}
+
+try_step() {
+  step_message="$1"
+  log_file="$2"
+  shift 2
+
+  printf "${YELLOW}●${R} %s..." "$step_message"
+  if "$@" >"$log_file" 2>&1; then
+    printf "\r${GREEN}✓${R} %s...\n" "$step_message"
+    return 0
+  else
+    printf "\r${YELLOW}○${R} %s...\n" "$step_message"
+    return 1
   fi
 }
 
@@ -47,36 +63,6 @@ install_binary() {
   else
     mv -f "$STAGED_BINARY_PATH" "$FINAL_BINARY_PATH"
   fi
-}
-
-publish_binary() {
-  if dotnet publish "$REPOSITORY_ROOT/src/GitPrompt/GitPrompt.csproj" \
-      --configuration Release \
-      --runtime "$RUNTIME_IDENTIFIER" \
-      --nologo \
-      --no-restore \
-      -p:DebugType=None \
-      -p:DebugSymbols=false \
-      -o "$PUBLISH_DIRECTORY"; then
-    printf 'aot' > "$AOT_STATUS_FILE"
-    return 0
-  fi
-
-  rm -rf "$PUBLISH_DIRECTORY"
-  mkdir -p "$PUBLISH_DIRECTORY"
-  printf 'non-aot' > "$AOT_STATUS_FILE"
-
-  dotnet publish "$REPOSITORY_ROOT/src/GitPrompt/GitPrompt.csproj" \
-    --configuration Release \
-    --runtime "$RUNTIME_IDENTIFIER" \
-    --nologo \
-    --no-restore \
-    -p:PublishAot=false \
-    -p:PublishSingleFile=true \
-    -p:SelfContained=false \
-    -p:DebugType=None \
-    -p:DebugSymbols=false \
-    -o "$PUBLISH_DIRECTORY"
 }
 
 OPERATING_SYSTEM="$(uname -s | tr '[:upper:]' '[:lower:]')"
@@ -121,7 +107,6 @@ trap 'rm -rf "$TEMPORARY_DIRECTORY"' EXIT
 trap 'printf "\n${RED}error:${R} Cancelled.\n" >&2; exit 130' INT TERM
 
 PUBLISH_DIRECTORY="$TEMPORARY_DIRECTORY/publish"
-AOT_STATUS_FILE="$TEMPORARY_DIRECTORY/aot_status"
 mkdir -p "$PUBLISH_DIRECTORY"
 
 run_step "Restoring packages" "$TEMPORARY_DIRECTORY/restore.log" \
@@ -130,8 +115,30 @@ run_step "Restoring packages" "$TEMPORARY_DIRECTORY/restore.log" \
 run_step "Building" "$TEMPORARY_DIRECTORY/build.log" \
   dotnet build "$REPOSITORY_ROOT/GitPrompt.slnx" --configuration Release --nologo --no-restore
 
-run_step "Publishing ($RUNTIME_IDENTIFIER)" "$TEMPORARY_DIRECTORY/publish.log" \
-  publish_binary
+if ! try_step "Publishing AOT ($RUNTIME_IDENTIFIER)" "$TEMPORARY_DIRECTORY/publish_aot.log" \
+    dotnet publish "$REPOSITORY_ROOT/src/GitPrompt/GitPrompt.csproj" \
+      --configuration Release \
+      --runtime "$RUNTIME_IDENTIFIER" \
+      --nologo \
+      --no-restore \
+      -p:DebugType=None \
+      -p:DebugSymbols=false \
+      -o "$PUBLISH_DIRECTORY"; then
+  rm -rf "$PUBLISH_DIRECTORY"
+  mkdir -p "$PUBLISH_DIRECTORY"
+  run_step "Publishing ($RUNTIME_IDENTIFIER)" "$TEMPORARY_DIRECTORY/publish.log" \
+    dotnet publish "$REPOSITORY_ROOT/src/GitPrompt/GitPrompt.csproj" \
+      --configuration Release \
+      --runtime "$RUNTIME_IDENTIFIER" \
+      --nologo \
+      --no-restore \
+      -p:PublishAot=false \
+      -p:PublishSingleFile=true \
+      -p:SelfContained=false \
+      -p:DebugType=None \
+      -p:DebugSymbols=false \
+      -o "$PUBLISH_DIRECTORY"
+fi
 
 SOURCE_BINARY_PATH="$PUBLISH_DIRECTORY/$PUBLISHED_BINARY_NAME"
 [ -f "$SOURCE_BINARY_PATH" ] || die "Published binary not found: $SOURCE_BINARY_PATH"
@@ -142,16 +149,11 @@ chmod +x "$STAGED_BINARY_PATH" 2>/dev/null || true
 run_step "Installing to $FINAL_BINARY_PATH" "$TEMPORARY_DIRECTORY/install.log" \
   install_binary
 
-if [ "$(cat "$AOT_STATUS_FILE" 2>/dev/null)" = "aot" ]; then
-  printf "  ${BOLD}(native AOT)${R}\n"
-else
-  printf "  ${BOLD}(single-file — AOT toolchain not found)${R}\n"
-fi
-
 printf '\n'
-printf 'Next steps — add to your shell startup file:\n'
+printf "${YELLOW}Next steps — add to your shell startup file:\n"
 if [ "$TARGET_OS" = "windows" ]; then
-  printf '  eval "$($HOME/.local/bin/gitprompt.exe init bash)"  # gitprompt\n'
+  printf '  eval "$($HOME/.local/bin/gitprompt.exe init bash)"\n'
 else
-  printf '  eval "$(gitprompt init bash)"  # gitprompt\n'
+  printf '  eval "$(gitprompt init bash)"\n'
 fi
+printf "${R}"
