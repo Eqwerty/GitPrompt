@@ -34,7 +34,7 @@ internal static class UninstallCommand
             DeleteBinary(binaryPath);
         }
 
-        Console.WriteLine("Uninstalled.");
+        Console.WriteLine("Uninstalled. Restart your terminal to restore your original prompt.");
     }
 
     private static void CleanShellConfigs()
