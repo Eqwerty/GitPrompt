@@ -174,6 +174,5 @@ chmod +x "$STAGED_BINARY_PATH" 2>/dev/null || true
 run_step "Installing to $FINAL_BINARY_PATH" "$TEMPORARY_DIRECTORY/install.log" \
   install_binary
 
-printf '\n'
 add_to_shell_config
 printf '\nRestart your terminal or run: source ~/.bashrc\n'

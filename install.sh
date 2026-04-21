@@ -129,6 +129,5 @@ printf "${YELLOW}●${R} Installing to %s..." "$FINAL_BINARY_PATH"
 install_binary
 printf "\r${GREEN}✓${R} Installing to %s...\n" "$FINAL_BINARY_PATH"
 
-printf '\n'
 add_to_shell_config
 printf '\nRestart your terminal or run: source ~/.bashrc\n'
