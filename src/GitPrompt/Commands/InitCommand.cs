@@ -4,8 +4,6 @@ namespace GitPrompt.Commands;
 
 internal static class InitCommand
 {
-    private const string FallbackPlaceholder = "__FALLBACK_PS1__";
-
     internal static void Run(string shell)
     {
         EnsureValidShell(shell);
@@ -37,11 +35,8 @@ internal static class InitCommand
 
     private static string GenerateBashInit()
     {
-        var fallbackPs1 = OperatingSystem.IsWindows() ? @"\w > " : @"\w \$ ";
-
         using var stream = typeof(InitCommand).Assembly.GetManifestResourceStream("bash-init.sh")!;
         using var reader = new StreamReader(stream);
-
-        return reader.ReadToEnd().Replace(FallbackPlaceholder, fallbackPs1);
+        return reader.ReadToEnd();
     }
 }

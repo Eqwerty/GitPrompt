@@ -2,8 +2,11 @@
 # Add to ~/.bashrc: eval "$($HOME/.local/bin/gitprompt.exe init bash)"
 if [[ "$OSTYPE" == msys || "$OSTYPE" == cygwin ]]; then
   _GITPROMPT_BIN="$HOME/.local/bin/gitprompt.exe"
+  _GITPROMPT_FALLBACK_PS1='\w > '
+  gitprompt() { "$_GITPROMPT_BIN" "$@"; }
 else
   _GITPROMPT_BIN="$HOME/.local/bin/gitprompt"
+  _GITPROMPT_FALLBACK_PS1='\w \$ '
 fi
 
 if [ -z "${_GITPROMPT_ORIGINAL_PS1+x}" ]; then
@@ -28,7 +31,7 @@ _gitprompt_update_ps1() {
   if output="$("$_GITPROMPT_BIN" 2>/dev/null)" && [ -n "$output" ]; then
     PS1="$output"
   else
-    PS1="${_GITPROMPT_ORIGINAL_PS1-__FALLBACK_PS1__}"
+    PS1="${_GITPROMPT_ORIGINAL_PS1:-$_GITPROMPT_FALLBACK_PS1}"
   fi
   __gitprompt_running=0
 }
@@ -36,10 +39,6 @@ _gitprompt_update_ps1() {
 if [ -x "$_GITPROMPT_BIN" ]; then
   trap '__gitprompt_debug_trap' DEBUG
   PROMPT_COMMAND="_gitprompt_update_ps1${PROMPT_COMMAND:+; $PROMPT_COMMAND}"
-fi
-
-if [[ "$OSTYPE" == msys || "$OSTYPE" == cygwin ]]; then
-  gitprompt() { "$_GITPROMPT_BIN" "$@"; }
 fi
 
 _gitprompt_complete() {
