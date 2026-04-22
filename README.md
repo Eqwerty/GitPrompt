@@ -24,24 +24,7 @@ Default install location: `~/.local/bin/gitprompt` (Linux/macOS) or `~/.local/bi
 After installing, add to your Bash startup file (`~/.bashrc`, or `~/.bash_profile` on macOS):
 
 ```sh
-export PATH="$HOME/.local/bin:$PATH"  # skip if already set
-eval "$(gitprompt init bash)"         # gitprompt
-```
-
-This generates and sources the shell integration at startup. The integration sets `PROMPT_COMMAND` and a `DEBUG` trap to update `PS1` on every prompt. If `gitprompt` is not on `PATH`, the integration silently does nothing.
-
-If you prefer to manage `PS1` manually, you can call the binary directly:
-
-Linux/macOS:
-
-```sh
-PS1='$([ -x "$HOME/.local/bin/gitprompt" ] && "$HOME/.local/bin/gitprompt" || printf "\w \$ ")'
-```
-
-Windows Git Bash:
-
-```sh
-PS1='$([ -x "$HOME/.local/bin/gitprompt.exe" ] && "$HOME/.local/bin/gitprompt.exe" || printf "\w > ")'
+eval "$(gitprompt init bash)"
 ```
 
 ## Update
@@ -58,13 +41,7 @@ Requires `curl` and network access. Alternatively, re-run the install script.
 gitprompt uninstall
 ```
 
-Removes the binary, config, and cache files, and prints any gitprompt references found in your shell config files for manual removal. Requires `curl` and network access.
-
-Alternatively, without the binary:
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/Eqwerty/GitPrompt/master/uninstall.sh | sh
-```
+Removes the binary, config, and cache files, and prints any gitprompt references found in your shell config files for manual removal.
 
 ## Commands
 
@@ -72,6 +49,7 @@ curl -fsSL https://raw.githubusercontent.com/Eqwerty/GitPrompt/master/uninstall.
 |---|---|
 | `gitprompt init bash` | Print the Bash shell integration script |
 | `gitprompt config` | Open the config file in `$EDITOR` (or a default editor) |
+| `gitprompt config reset` | Reset the config file to defaults |
 | `gitprompt update` | Update to the latest release |
 | `gitprompt uninstall` | Uninstall gitprompt |
 | `gitprompt --help` | Show help |
@@ -96,7 +74,7 @@ If you are outside a Git repo, the git-status segment is omitted.
 - `<host>`: machine name (fallback `?`)
 - `<path>`: current working directory
 - Home path is shortened to `~`
-- If the working directory no longer exists but a shell fallback path is available, `<path>` is rendered in red and suffixed with `[missing]`
+- If the working directory no longer exists, `<path>` is rendered in red and suffixed with `[missing]`
 
 ### Git Status Segment
 
@@ -115,40 +93,19 @@ Render order:
 7. Conflicts (`!N`)
 8. Stash (`@N`)
 
-### Branch Labels
+| Icon | Meaning |
+|---|---|
+| `↑` | Commits ahead |
+| `↓` | Commits behind |
+| `+` | Added |
+| `~` | Modified |
+| `→` | Renamed/copied |
+| `-` | Deleted |
+| `?` | Untracked |
+| `!` | Conflicts |
+| `@` | Stash entries |
 
-- Tracked branch: `(main)`
-- No upstream: `*(feature)`
-  - `*` means no upstream tracking branch.
-- Detached HEAD commit: `(abc1234...)`
-- Detached HEAD with one matching remote ref: `(origin/main abc1234...)`
-
-### Operation Markers
-
-If Git has an in-progress operation, it appears inside the branch label:
-
-- `(main|MERGE)`
-- `*(feature|CHERRY-PICK)`
-- `(feature|REBASE)`
-
-Supported markers: `REBASE`, `MERGE`, `CHERRY-PICK`, `REVERT`, `BISECT`.
-
-### Icons
-
-- `↑` ahead commits
-- `↓` behind commits
-- `+` added
-- `~` modified
-- `→` renamed/copied
-- `-` deleted
-- `?` untracked
-- `!` conflicts
-- `@` stash entries
-
-Staged and unstaged share the same file-state icons (`+ ~ → -`) and are distinguished by color:
-
-- staged: green
-- unstaged: red
+Staged and unstaged share the same file-state icons (`+ ~ → -`) and are distinguished by color: staged in green, unstaged in red.
 
 Example:
 
@@ -158,6 +115,21 @@ Example:
 
 In that example, `+1 ~2` is staged, and `+3 -1` is unstaged.
 
+### Branch Labels
+
+| Format | Meaning |
+|---|---|
+| `(main)` | Tracked branch |
+| `*(feature)` | No upstream tracking branch |
+| `(abc1234...)` | Detached HEAD |
+| `(origin/main abc1234...)` | Detached HEAD matching one remote ref |
+
+### Operation Markers
+
+In-progress Git operations appear inside the branch label, e.g. `(main|MERGE)` or `*(feature|CHERRY-PICK)`. REBASE includes progress when available: `(main|REBASE 1/3)`.
+
+Supported: `REBASE`, `MERGE`, `CHERRY-PICK`, `REVERT`, `BISECT`.
+
 ## Configuration
 
 `gitprompt` optionally reads a `config.jsonc` file from the platform config directory:
@@ -165,16 +137,16 @@ In that example, `+1 ~2` is staged, and `+3 -1` is unstaged.
 - Linux/macOS: `$XDG_CONFIG_HOME/gitprompt/config.jsonc` (default: `~/.config/gitprompt/config.jsonc`)
 - Windows Git Bash: `%APPDATA%/gitprompt/config.jsonc`
 
-If the file is absent or cannot be parsed, all settings fall back to their defaults. The parser is case-insensitive and accepts comments and trailing commas.
+If the file is absent or cannot be parsed, all settings fall back to their defaults.
 
 ### Cache
 
-Controls how long `gitprompt` reuses cached results before re-running a Git command. TTL values are specified in **seconds**. Setting a value to `0` disables caching for that entry.
+Controls how long `gitprompt` reuses cached results before re-running a Git command (in seconds; `0` disables caching).
 
 | Key | Default | Description |
 |---|---|---|
-| `cache.gitStatusTtl` | `5` | TTL for cached Git status results (staged, unstaged, untracked, etc.) |
-| `cache.repositoryTtl` | `60` | TTL for cached repository detection results |
+| `cache.gitStatusTtl` | `5` | Git status results (staged, unstaged, untracked, etc.) |
+| `cache.repositoryTtl` | `60` | Repository detection results |
 
 Example `config.jsonc`:
 
@@ -189,30 +161,6 @@ Example `config.jsonc`:
 
 ## Local Development
 
-Run the local dev install script:
-
 ```sh
 sh ./dev-install-local.sh
 ```
-
-Useful flags:
-
-```sh
-sh ./dev-install-local.sh --verbose
-sh ./dev-install-local.sh --skip-tests
-sh ./dev-install-local.sh -sv
-```
-
-### Native AOT prerequisites
-
-The dev script attempts native AOT compilation (same as the release build) and automatically falls
-back to a non-AOT single-file binary if the required toolchain is not present. To enable AOT
-locally, install the appropriate toolchain for your OS:
-
-| OS | Requirement |
-|---|---|
-| **Windows** | [Visual Studio 2022](https://visualstudio.microsoft.com/) with the **"Desktop development with C++"** workload |
-| **Linux** | `clang` and `zlib1g-dev` — e.g. `sudo apt install clang zlib1g-dev` on Debian/Ubuntu |
-| **macOS** | Xcode Command Line Tools — run `xcode-select --install` |
-
-If these are absent the script falls back silently; no extra steps required.
