@@ -10,7 +10,6 @@ internal static class GitStatusSharedCache
     private const string CacheDirectoryName = "git-status-cache-v1";
     private const string InvalidationTokenFileName = "status-invalidation.token";
 
-    private static readonly TimeSpan DefaultCacheTtl = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan StaleCacheEntryThreshold = TimeSpan.FromDays(7);
     private static readonly TimeSpan CleanupInterval = TimeSpan.FromMinutes(5);
     private static TimeProvider _timeProvider = TimeProvider.System;
@@ -127,7 +126,10 @@ internal static class GitStatusSharedCache
         {
             if (tempFilePath is not null)
             {
-                try { File.Delete(tempFilePath); }
+                try
+                {
+                    File.Delete(tempFilePath);
+                }
                 catch (Exception)
                 {
                     /* best-effort temp file cleanup */
@@ -150,18 +152,15 @@ internal static class GitStatusSharedCache
         }
 
         var cachedAtUtc = new DateTimeOffset(cachedAtUtcTicks, TimeSpan.Zero);
+
         return GetUtcNow() - cachedAtUtc > cacheTtl;
     }
 
     private static TimeSpan GetCacheTtl()
     {
-        var configured = ConfigReader.Config.Cache.GitStatusTtl;
-        if (configured.HasValue)
-        {
-            return configured.Value > TimeSpan.Zero ? configured.Value : TimeSpan.Zero;
-        }
+        var ttl = ConfigReader.Config.Cache.GitStatusTtl;
 
-        return DefaultCacheTtl;
+        return ttl > TimeSpan.Zero ? ttl : TimeSpan.Zero;
     }
 
     internal static void Invalidate()

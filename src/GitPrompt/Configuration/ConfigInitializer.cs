@@ -1,3 +1,4 @@
+using System.Globalization;
 using GitPrompt.Platform;
 
 namespace GitPrompt.Configuration;
@@ -17,14 +18,24 @@ internal static class ConfigInitializer
 
             Directory.CreateDirectory(Path.GetDirectoryName(configFile)!);
 
-            using var stream = typeof(ConfigInitializer).Assembly.GetManifestResourceStream("default-config.jsonc")!;
-
-            using var fileStream = File.Create(configFile);
-            stream.CopyTo(fileStream);
+            File.WriteAllText(configFile, BuildDefaultConfigContent());
         }
         catch
         {
             // Non-critical: the binary works fine with default settings even when the config file is absent.
         }
+    }
+
+    internal static string BuildDefaultConfigContent()
+    {
+        using var stream = typeof(ConfigInitializer).Assembly.GetManifestResourceStream("default-config.jsonc")!;
+        using var reader = new StreamReader(stream);
+        var template = reader.ReadToEnd();
+
+        var config = new Config();
+
+        return template
+            .Replace("{gitStatusTtl}", config.Cache.GitStatusTtl.TotalSeconds.ToString(CultureInfo.InvariantCulture))
+            .Replace("{repositoryTtl}", config.Cache.RepositoryTtl.TotalSeconds.ToString(CultureInfo.InvariantCulture));
     }
 }

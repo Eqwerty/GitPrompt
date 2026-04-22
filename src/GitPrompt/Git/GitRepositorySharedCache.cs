@@ -8,7 +8,6 @@ namespace GitPrompt.Git;
 internal static class GitRepositorySharedCache
 {
     private const string CacheDirectoryName = "repository-cache-v1";
-    private static readonly TimeSpan DefaultCacheTtl = TimeSpan.FromSeconds(60);
     private static readonly TimeSpan StaleCacheEntryThreshold = TimeSpan.FromDays(7);
     private static readonly TimeSpan CleanupInterval = TimeSpan.FromMinutes(5);
     private static TimeProvider _timeProvider = TimeProvider.System;
@@ -185,13 +184,8 @@ internal static class GitRepositorySharedCache
 
     private static TimeSpan GetCacheTtl()
     {
-        var configured = ConfigReader.Config.Cache.RepositoryTtl;
-        if (configured.HasValue)
-        {
-            return configured.Value > TimeSpan.Zero ? configured.Value : TimeSpan.Zero;
-        }
-
-        return DefaultCacheTtl;
+        var ttl = ConfigReader.Config.Cache.RepositoryTtl;
+        return ttl > TimeSpan.Zero ? ttl : TimeSpan.Zero;
     }
 
     private static DateTimeOffset GetUtcNow()

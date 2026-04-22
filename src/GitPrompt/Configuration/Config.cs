@@ -10,10 +10,10 @@ internal sealed record Config
     internal sealed record CacheConfig
     {
         [JsonConverter(typeof(TimeSpanSecondsConverter))]
-        internal TimeSpan? GitStatusTtl { get; init; }
+        internal TimeSpan GitStatusTtl { get; init; } = TimeSpan.FromSeconds(5);
 
         [JsonConverter(typeof(TimeSpanSecondsConverter))]
-        internal TimeSpan? RepositoryTtl { get; init; }
+        internal TimeSpan RepositoryTtl { get; init; } = TimeSpan.FromSeconds(60);
     }
 }
 
