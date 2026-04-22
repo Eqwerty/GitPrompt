@@ -131,3 +131,4 @@ printf "\r${GREEN}✓${R} Installing to %s...\n" "$FINAL_BINARY_PATH"
 
 add_to_shell_config
 printf '\nRestart your terminal or run: source ~/.bashrc\n'
+printf "Run 'gitprompt --help' to see available commands.\n"

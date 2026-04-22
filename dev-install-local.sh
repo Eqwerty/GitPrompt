@@ -176,3 +176,4 @@ run_step "Installing to $FINAL_BINARY_PATH" "$TEMPORARY_DIRECTORY/install.log" \
 
 add_to_shell_config
 printf '\nRestart your terminal or run: source ~/.bashrc\n'
+printf "Run 'gitprompt --help' to see available commands.\n"
