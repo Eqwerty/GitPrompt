@@ -5,13 +5,40 @@ ESC=$(printf '\033')
 if [ -z "${NO_COLOR:-}" ] && [ "${TERM:-}" != "dumb" ]; then
   R="$ESC[0m"; BOLD="$ESC[1m"
   GREEN="$ESC[32m"; YELLOW="$ESC[33m"; RED="$ESC[31m"
+  HIDE_CURSOR="$ESC[?25l"; SHOW_CURSOR="$ESC[?25h"
 else
   R=''; BOLD=''; GREEN=''; YELLOW=''; RED=''
+  HIDE_CURSOR=''; SHOW_CURSOR=''
 fi
 
 die() {
   printf "${RED}error:${R} %s\n" "$1" >&2
   exit 1
+}
+
+_run_animated_step() {
+  _ra_msg="$1"; _ra_log="$2"; shift 2
+  printf "${HIDE_CURSOR}${YELLOW}●${R} %s%-3s" "$_ra_msg" "."
+  (
+    _sp_i=0
+    while true; do
+      sleep 0.5
+      _sp_i=$((_sp_i + 1))
+      case $((_sp_i % 3)) in
+        1) _sp_d=".." ;;
+        2) _sp_d="..." ;;
+        *) _sp_d="." ;;
+      esac
+      printf "\r${YELLOW}●${R} %s%-3s" "$_ra_msg" "$_sp_d"
+    done
+  ) &
+  _ra_pid=$!
+  ( "$@" ) >"$_ra_log" 2>&1
+  _ra_code=$?
+  kill "$_ra_pid" 2>/dev/null || true
+  wait "$_ra_pid" 2>/dev/null || true
+  printf "${SHOW_CURSOR}"
+  return $_ra_code
 }
 
 download_release_asset() {
@@ -122,26 +149,35 @@ if [ -z "${_INSTALL_SOURCED:-}" ]; then
 
   TEMPORARY_DIRECTORY="$(mktemp -d)"
   trap 'rm -rf "$TEMPORARY_DIRECTORY"' EXIT
-  trap 'printf "\n${RED}error:${R} Cancelled.\n" >&2; exit 130' INT TERM
+  trap 'printf "${SHOW_CURSOR}\n${RED}error:${R} Cancelled.\n" >&2; exit 130' INT TERM
 
   RELEASE_ASSET_PATH="$TEMPORARY_DIRECTORY/$RELEASE_ASSET_NAME"
   EXTRACTED_BINARY_PATH="$TEMPORARY_DIRECTORY/$BINARY_NAME"
 
-  printf "${YELLOW}●${R} Downloading %s..." "$RELEASE_ASSET_NAME"
-  download_release_asset
-  printf "\r${GREEN}✓${R} Downloading %s...\n" "$RELEASE_ASSET_NAME"
+  if _run_animated_step "Downloading $RELEASE_ASSET_NAME" "$TEMPORARY_DIRECTORY/download.log" \
+      download_release_asset; then
+    printf "\r${GREEN}✓${R} Downloading %s...\n" "$RELEASE_ASSET_NAME"
+  else
+    printf '\n'; cat "$TEMPORARY_DIRECTORY/download.log" >&2; exit 1
+  fi
 
-  printf "${YELLOW}●${R} Extracting..."
-  extract_release_asset
-  printf "\r${GREEN}✓${R} Extracting...\n"
+  if _run_animated_step "Extracting" "$TEMPORARY_DIRECTORY/extract.log" \
+      extract_release_asset; then
+    printf "\r${GREEN}✓${R} Extracting...\n"
+  else
+    printf '\n'; cat "$TEMPORARY_DIRECTORY/extract.log" >&2; exit 1
+  fi
 
   mkdir -p "$BIN_DIR"
   cp "$EXTRACTED_BINARY_PATH" "$STAGED_BINARY_PATH"
   chmod +x "$STAGED_BINARY_PATH" 2>/dev/null || true
 
-  printf "${YELLOW}●${R} Installing to %s..." "$FINAL_BINARY_PATH"
-  install_binary
-  printf "\r${GREEN}✓${R} Installing to %s...\n" "$FINAL_BINARY_PATH"
+  if _run_animated_step "Installing to $FINAL_BINARY_PATH" "$TEMPORARY_DIRECTORY/install.log" \
+      install_binary; then
+    printf "\r${GREEN}✓${R} Installing to %s...\n" "$FINAL_BINARY_PATH"
+  else
+    printf '\n'; cat "$TEMPORARY_DIRECTORY/install.log" >&2; exit 1
+  fi
 
   add_to_shell_config
   printf '\nRestart your terminal or run: source ~/.bashrc\n'

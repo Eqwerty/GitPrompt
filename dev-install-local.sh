@@ -16,8 +16,7 @@ run_step() {
   log_file="$2"
   shift 2
 
-  printf "${YELLOW}●${R} %s..." "$step_message"
-  if "$@" >"$log_file" 2>&1; then
+  if _run_animated_step "$step_message" "$log_file" "$@"; then
     printf "\r${GREEN}✓${R} %s...\n" "$step_message"
   else
     step_status=$?
@@ -33,8 +32,7 @@ try_step() {
   log_file="$2"
   shift 2
 
-  printf "${YELLOW}●${R} %s..." "$step_message"
-  if "$@" >"$log_file" 2>&1; then
+  if _run_animated_step "$step_message" "$log_file" "$@"; then
     printf "\r${GREEN}✓${R} %s...\n" "$step_message"
     return 0
   else
@@ -60,7 +58,7 @@ fi
 
 TEMPORARY_DIRECTORY="$(mktemp -d)"
 trap 'rm -rf "$TEMPORARY_DIRECTORY"' EXIT
-trap 'printf "\n${RED}error:${R} Cancelled.\n" >&2; exit 130' INT TERM
+trap 'printf "${SHOW_CURSOR}\n${RED}error:${R} Cancelled.\n" >&2; exit 130' INT TERM
 
 PUBLISH_DIRECTORY="$TEMPORARY_DIRECTORY/publish"
 mkdir -p "$PUBLISH_DIRECTORY"
