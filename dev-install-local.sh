@@ -55,10 +55,22 @@ try_step() {
 
 install_binary() {
   if [ "$TARGET_OS" = "windows" ]; then
+    OLD_BINARY_PATH="${FINAL_BINARY_PATH}.old"
+    rm -f "$OLD_BINARY_PATH" 2>/dev/null || true
+
+    # Rename the current binary before replacing — rename is allowed even when
+    # the file is running (Windows only blocks overwrite/delete of running .exe).
+    if [ -f "$FINAL_BINARY_PATH" ]; then
+      if ! mv "$FINAL_BINARY_PATH" "$OLD_BINARY_PATH" 2>/dev/null; then
+        rm -f "$STAGED_BINARY_PATH"
+        die "Cannot rename ${FINAL_BINARY_PATH}. Close shells using gitprompt.exe and run again."
+      fi
+    fi
+
     if ! mv -f "$STAGED_BINARY_PATH" "$FINAL_BINARY_PATH" 2>/dev/null; then
+      mv -f "$OLD_BINARY_PATH" "$FINAL_BINARY_PATH" 2>/dev/null || true
       rm -f "$STAGED_BINARY_PATH"
-      printf 'Failed to replace %s.\n' "$FINAL_BINARY_PATH" >&2
-      die "Close shells using gitprompt.exe and run again."
+      die "Failed to install to ${FINAL_BINARY_PATH}."
     fi
   else
     mv -f "$STAGED_BINARY_PATH" "$FINAL_BINARY_PATH"

@@ -4,34 +4,62 @@ namespace GitPrompt.Commands;
 
 internal static class UpdateCommand
 {
-    private const string InstallScriptUrl =
-        "https://raw.githubusercontent.com/Eqwerty/GitPrompt/master/install.sh";
+    private const string InstallScriptUrl = "https://raw.githubusercontent.com/Eqwerty/GitPrompt/master/install.sh";
 
     internal static void Run()
     {
-        var sslOpt = OperatingSystem.IsWindows() ? "--ssl-no-revoke " : "";
-        var script = $"curl -fsSL {sslOpt}{InstallScriptUrl} | sh";
+        CleanUpOldBinary();
+
+        var sslOption = OperatingSystem.IsWindows() ? "--ssl-no-revoke " : "";
+        var script = $"curl -fsSL {sslOption}{InstallScriptUrl} | sh";
 
         try
         {
-            var psi = new ProcessStartInfo("sh") { UseShellExecute = false };
-            psi.ArgumentList.Add("-c");
-            psi.ArgumentList.Add(script);
-            var process = Process.Start(psi);
+            var processStartInfo = new ProcessStartInfo("sh")
+            {
+                UseShellExecute = false
+            };
 
-            // On Windows the running .exe is locked and cannot be replaced while
-            // we are still running. Exit immediately so the install script can
-            // move the staged binary into place once the lock is released.
-            if (OperatingSystem.IsWindows())
-                return;
+            processStartInfo.ArgumentList.Add("-c");
+            processStartInfo.ArgumentList.Add(script);
 
-            process?.WaitForExit();
+            var process = Process.Start(processStartInfo) ?? throw new InvalidOperationException("Failed to start shell process.");
+
+            process.WaitForExit();
+
+            if (process.ExitCode is not 0)
+            {
+                Environment.Exit(process.ExitCode);
+            }
         }
         catch (Exception ex)
         {
             Console.Error.WriteLine($"gitprompt: update failed: {ex.Message}");
             Console.Error.WriteLine($"gitprompt: to update manually, run: curl -fsSL {InstallScriptUrl} | sh");
+            
             Environment.Exit(1);
+        }
+    }
+
+    private static void CleanUpOldBinary()
+    {
+        try
+        {
+            var currentPath = Environment.ProcessPath;
+            if (currentPath is null)
+            {
+                return;
+            }
+
+            var oldPath = currentPath + ".old";
+            if (File.Exists(oldPath))
+            {
+                File.Delete(oldPath);
+            }
+        }
+        catch
+        {
+            // Best-effort; don't block the update if cleanup fails.
         }
     }
 }
