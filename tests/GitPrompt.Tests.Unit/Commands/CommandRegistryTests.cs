@@ -20,18 +20,10 @@ public sealed class CommandRegistryTests
     }
 
     [Fact]
-    public void Commands_ShouldHaveAtLeastOneVerbForEveryEntry()
-    {
-        // Act & Assert
-        CommandRegistry.Commands.Should().OnlyContain(command =>
-            command.Verbs.Length > 0 && command.Verbs.All(v => !string.IsNullOrWhiteSpace(v)));
-    }
-
-    [Fact]
     public void Commands_ShouldNotHaveDuplicateVerbs()
     {
         // Arrange
-        var allVerbs = CommandRegistry.Commands.SelectMany(command => command.Verbs).ToList();
+        var allVerbs = CommandRegistry.Commands.Select(command => command.Verb);
 
         // Act & Assert
         allVerbs.Should().OnlyHaveUniqueItems();
@@ -41,7 +33,7 @@ public sealed class CommandRegistryTests
     public void TryGetCommandByVerb_WhenKnownVerb_ShouldReturnTrue()
     {
         // Arrange
-        var allVerbs = CommandRegistry.Commands.SelectMany(command => command.Verbs).ToList();
+        var allVerbs = CommandRegistry.Commands.Select(command => command.Verb);
 
         // Act & Assert
         foreach (var verb in allVerbs)

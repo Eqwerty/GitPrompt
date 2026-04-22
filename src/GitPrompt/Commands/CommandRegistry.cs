@@ -7,32 +7,32 @@ internal static class CommandRegistry
 {
     internal static readonly IReadOnlyList<CommandDescriptor> Commands =
     [
-        new(Verbs: ["--help", "-h", "help"],
+        new(Verb: "--help",
             Usage: "gitprompt --help",
             Description: "Show this help",
             Execute: _ => HelpCommand.PrintHelp()),
 
-        new(Verbs: ["init"],
+        new(Verb: "init",
             Usage: "gitprompt init bash",
             Description: "Print Bash shell integration script",
             Execute: args => InitCommand.Run(args.Length > 1 ? args[1] : string.Empty)),
 
-        new(Verbs: ["config"],
+        new(Verb: "config",
             Usage: "gitprompt config",
             Description: "Open config.jsonc in $EDITOR",
             Execute: _ => ConfigCommand.Run()),
 
-        new(Verbs: ["update"],
+        new(Verb: "update",
             Usage: "gitprompt update",
             Description: "Update to the latest release",
             Execute: _ => UpdateCommand.Run()),
 
-        new(Verbs: ["uninstall"],
+        new(Verb: "uninstall",
             Usage: "gitprompt uninstall",
             Description: "Remove gitprompt and its config/cache",
             Execute: _ => UninstallCommand.Run()),
 
-        new(Verbs: ["--invalidate-status-cache"],
+        new(Verb: "--invalidate-status-cache",
             Usage: "gitprompt --invalidate-status-cache",
             Description: "Invalidate the shared Git status cache",
             Execute: _ => GitStatusSharedCache.Invalidate(),
@@ -68,7 +68,5 @@ internal static class CommandRegistry
             .ToList();
 
     private static readonly Dictionary<string, CommandDescriptor> CommandDescriptorsLookup =
-        Commands
-            .SelectMany(command => command.Verbs, (command, verb) => (verb, command))
-            .ToDictionary(tuple => tuple.verb, tuple => tuple.command);
+        Commands.ToDictionary(command => command.Verb);
 }

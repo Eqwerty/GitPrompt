@@ -1,7 +1,7 @@
 namespace GitPrompt.Commands;
 
 internal sealed record CommandDescriptor(
-    string[] Verbs,
+    string Verb,
     string Usage,
     string Description,
     Action<string[]> Execute,

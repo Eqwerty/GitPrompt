@@ -39,7 +39,7 @@ internal static class InitCommand
         using var reader = new StreamReader(stream);
         var template = reader.ReadToEnd();
 
-        var commands = string.Join(" ", CommandRegistry.VisibleCommands.SelectMany(c => c.Verbs));
+        var commands = string.Join(" ", CommandRegistry.VisibleCommands.Select(command => command.Verb));
         return template.Replace("{{GITPROMPT_COMMANDS}}", commands);
     }
 }
