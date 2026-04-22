@@ -68,7 +68,7 @@ install_binary() {
 add_to_shell_config() {
   for config in "$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.profile"; do
     if [ -f "$config" ]; then
-      if grep -qF "gitprompt init bash" "$config" 2>/dev/null; then
+      if grep -q "^[^#]*gitprompt.* init bash" "$config" 2>/dev/null; then
         printf "${GREEN}✓${R} Shell config already set up (%s)\n" "$config"
         return
       fi
