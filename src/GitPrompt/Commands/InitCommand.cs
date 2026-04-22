@@ -33,13 +33,15 @@ internal static class InitCommand
         Environment.Exit(1);
     }
 
-    private static string GenerateBashInit()
+    internal static string GenerateBashInit()
     {
         using var stream = typeof(InitCommand).Assembly.GetManifestResourceStream("bash-init.sh")!;
         using var reader = new StreamReader(stream);
         var template = reader.ReadToEnd();
 
-        var commands = string.Join(" ", CommandRegistry.VisibleCommands.Select(command => command.Verb));
+        var commands = string.Join(" ", CommandRegistry.VisibleCommands
+            .Select(command => command.Verb)
+            .Where(verb => !verb.Contains(' ')));
         return template.Replace("{{GITPROMPT_COMMANDS}}", commands);
     }
 }

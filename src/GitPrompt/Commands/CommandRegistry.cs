@@ -22,6 +22,11 @@ internal static class CommandRegistry
             Description: "Open config.jsonc in $EDITOR",
             Execute: _ => ConfigCommand.Run()),
 
+        new(Verb: "config reset",
+            Usage: "gitprompt config reset",
+            Description: "Reset config.jsonc to defaults",
+            Execute: _ => ConfigResetCommand.Run()),
+
         new(Verb: "update",
             Usage: "gitprompt update",
             Description: "Update to the latest release",
@@ -44,6 +49,12 @@ internal static class CommandRegistry
         if (args.Length is 0)
         {
             return;
+        }
+
+        if (args.Length > 1 && TryGetCommandByVerb($"{args[0]} {args[1]}", out var subCommand))
+        {
+            subCommand.Execute(args);
+            Environment.Exit(0);
         }
 
         if (!TryGetCommandByVerb(args[0], out var command))
