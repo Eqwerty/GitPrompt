@@ -85,6 +85,71 @@ public sealed class GitOperationDetectorTests
     }
 
     [Fact]
+    public async Task ReadGitOperationMarker_WhenRebaseMergeHasProgressFiles_ShouldReturnRebaseWithStepProgress()
+    {
+        // Arrange
+        using var gitDirectory = new TemporaryDirectory();
+        var rebaseDirectoryPath = Path.Combine(gitDirectory.DirectoryPath, "rebase-merge");
+        Directory.CreateDirectory(rebaseDirectoryPath);
+        await File.WriteAllTextAsync(Path.Combine(rebaseDirectoryPath, "msgnum"), "2\n");
+        await File.WriteAllTextAsync(Path.Combine(rebaseDirectoryPath, "end"), "5\n");
+
+        // Act
+        var operationMarker = GitOperationDetector.ReadGitOperationMarker(gitDirectory.DirectoryPath);
+
+        // Assert
+        operationMarker.Should().Be("REBASE 2/5");
+    }
+
+    [Fact]
+    public async Task ReadGitOperationMarker_WhenRebaseApplyHasProgressFiles_ShouldReturnRebaseWithStepProgress()
+    {
+        // Arrange
+        using var gitDirectory = new TemporaryDirectory();
+        var rebaseDirectoryPath = Path.Combine(gitDirectory.DirectoryPath, "rebase-apply");
+        Directory.CreateDirectory(rebaseDirectoryPath);
+        await File.WriteAllTextAsync(Path.Combine(rebaseDirectoryPath, "next"), "1\n");
+        await File.WriteAllTextAsync(Path.Combine(rebaseDirectoryPath, "last"), "3\n");
+
+        // Act
+        var operationMarker = GitOperationDetector.ReadGitOperationMarker(gitDirectory.DirectoryPath);
+
+        // Assert
+        operationMarker.Should().Be("REBASE 1/3");
+    }
+
+    [Fact]
+    public void ReadGitOperationMarker_WhenRebaseMergeProgressFilesAreMissing_ShouldReturnRebaseWithoutProgress()
+    {
+        // Arrange
+        using var gitDirectory = new TemporaryDirectory();
+        Directory.CreateDirectory(Path.Combine(gitDirectory.DirectoryPath, "rebase-merge"));
+
+        // Act
+        var operationMarker = GitOperationDetector.ReadGitOperationMarker(gitDirectory.DirectoryPath);
+
+        // Assert
+        operationMarker.Should().Be("REBASE");
+    }
+
+    [Fact]
+    public async Task ReadGitOperationMarker_WhenRebaseMergeProgressFilesAreMalformed_ShouldReturnRebaseWithoutProgress()
+    {
+        // Arrange
+        using var gitDirectory = new TemporaryDirectory();
+        var rebaseDirectoryPath = Path.Combine(gitDirectory.DirectoryPath, "rebase-merge");
+        Directory.CreateDirectory(rebaseDirectoryPath);
+        await File.WriteAllTextAsync(Path.Combine(rebaseDirectoryPath, "msgnum"), "not-a-number\n");
+        await File.WriteAllTextAsync(Path.Combine(rebaseDirectoryPath, "end"), "5\n");
+
+        // Act
+        var operationMarker = GitOperationDetector.ReadGitOperationMarker(gitDirectory.DirectoryPath);
+
+        // Assert
+        operationMarker.Should().Be("REBASE");
+    }
+
+    [Fact]
     public void ReadGitOperationMarker_WhenNoOperationMarkerExists_ShouldReturnEmptyMarker()
     {
         // Arrange

@@ -11,8 +11,27 @@ internal static class GitOperationDetector
             return string.Empty;
         }
 
-        if (Directory.Exists(Path.Combine(gitDirectoryPath, "rebase-merge")) || Directory.Exists(Path.Combine(gitDirectoryPath, "rebase-apply")))
+        if (Directory.Exists(Path.Combine(gitDirectoryPath, "rebase-merge")))
         {
+            var progress = TryReadRebaseProgress(gitDirectoryPath, rebaseDirectoryName: "rebase-merge", currentFileName: "msgnum", totalFileName: "end");
+
+            if (progress.HasValue)
+            {
+                return $"REBASE {progress.Value.Current}/{progress.Value.Total}";
+            }
+
+            return "REBASE";
+        }
+
+        if (Directory.Exists(Path.Combine(gitDirectoryPath, "rebase-apply")))
+        {
+            var progress = TryReadRebaseProgress(gitDirectoryPath, rebaseDirectoryName: "rebase-apply", currentFileName: "next", totalFileName: "last");
+
+            if (progress.HasValue)
+            {
+                return $"REBASE {progress.Value.Current}/{progress.Value.Total}";
+            }
+
             return "REBASE";
         }
 
@@ -37,6 +56,31 @@ internal static class GitOperationDetector
         }
 
         return string.Empty;
+    }
+
+    private static (int Current, int Total)? TryReadRebaseProgress(
+        string gitDirectoryPath,
+        string rebaseDirectoryName,
+        string currentFileName,
+        string totalFileName)
+    {
+        try
+        {
+            var rebaseDirectoryPath = Path.Combine(gitDirectoryPath, rebaseDirectoryName);
+            var currentText = File.ReadAllText(Path.Combine(rebaseDirectoryPath, currentFileName)).Trim();
+            var totalText = File.ReadAllText(Path.Combine(rebaseDirectoryPath, totalFileName)).Trim();
+
+            if (int.TryParse(currentText, out var current) && int.TryParse(totalText, out var total) && total > 0)
+            {
+                return (current, total);
+            }
+        }
+        catch
+        {
+            // Ignore unreadable or missing rebase progress files.
+        }
+
+        return null;
     }
 
     internal static string ResolveRebaseBranchName(string gitDirectoryPath)
