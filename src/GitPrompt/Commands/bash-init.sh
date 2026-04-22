@@ -46,7 +46,7 @@ _gitprompt_complete() {
   local cur="${COMP_WORDS[COMP_CWORD]}"
   local prev="${COMP_WORDS[COMP_CWORD-1]}"
   case "$prev" in
-    gitprompt|gitprompt.exe) COMPREPLY=($(compgen -W "init config update uninstall --help" -- "$cur")) ;;
+    gitprompt|gitprompt.exe) COMPREPLY=($(compgen -W "{{GITPROMPT_COMMANDS}}" -- "$cur")) ;;
     init)                    COMPREPLY=($(compgen -W "bash" -- "$cur")) ;;
   esac
 }

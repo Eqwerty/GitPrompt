@@ -37,6 +37,9 @@ internal static class InitCommand
     {
         using var stream = typeof(InitCommand).Assembly.GetManifestResourceStream("bash-init.sh")!;
         using var reader = new StreamReader(stream);
-        return reader.ReadToEnd();
+        var template = reader.ReadToEnd();
+
+        var commands = string.Join(" ", CommandRegistry.VisibleCommands.SelectMany(c => c.Verbs));
+        return template.Replace("{{GITPROMPT_COMMANDS}}", commands);
     }
 }
