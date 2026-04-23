@@ -1,4 +1,4 @@
-using System.Security.Cryptography;
+using System.Runtime.InteropServices;
 using System.Text;
 using GitPrompt.Configuration;
 using GitPrompt.Platform;
@@ -7,7 +7,7 @@ namespace GitPrompt.Git;
 
 internal static class GitRepositorySharedCache
 {
-    private const string CacheDirectoryName = "repository-cache-v1";
+    private const string CacheDirectoryName = "repository-cache-v2";
     private static readonly TimeSpan StaleCacheEntryThreshold = TimeSpan.FromDays(7);
     private static readonly TimeSpan CleanupInterval = TimeSpan.FromMinutes(5);
     private static TimeProvider _timeProvider = TimeProvider.System;
@@ -32,8 +32,8 @@ internal static class GitRepositorySharedCache
                 return false;
             }
 
-            var cacheLines = File.ReadAllLines(cacheFilePath);
-            if (!TryParseRecord(cacheLines, out var cacheRecord))
+            var cacheContent = File.ReadAllText(cacheFilePath);
+            if (!TryParseRecord(cacheContent, out var cacheRecord))
             {
                 return false;
             }
@@ -205,10 +205,39 @@ internal static class GitRepositorySharedCache
         return Path.Combine(GetCacheDirectoryPath(), pathHash + ".cache");
     }
 
-    private static string HashPath(string path)
+    private static string HashPath(string value)
     {
-        var pathBytes = Encoding.UTF8.GetBytes(path);
-        return Convert.ToHexStringLower(SHA256.HashData(pathBytes));
+        const int StackAllocThreshold = 512;
+        var byteCount = Encoding.UTF8.GetByteCount(value);
+        ulong hash;
+
+        if (byteCount <= StackAllocThreshold)
+        {
+            Span<byte> bytes = stackalloc byte[StackAllocThreshold];
+            var written = Encoding.UTF8.GetBytes(value.AsSpan(), bytes);
+            hash = Fnv1a64(bytes[..written]);
+        }
+        else
+        {
+            hash = Fnv1a64(Encoding.UTF8.GetBytes(value));
+        }
+
+        Span<char> chars = stackalloc char[16];
+        hash.TryFormat(chars, out _, "x16");
+        return new string(chars);
+    }
+
+    private static ulong Fnv1a64(ReadOnlySpan<byte> data)
+    {
+        const ulong offsetBasis = 14695981039346656037UL;
+        const ulong prime = 1099511628211UL;
+        var hash = offsetBasis;
+        foreach (var b in data)
+        {
+            hash ^= b;
+            hash *= prime;
+        }
+        return hash;
     }
 
     private static string NormalizePathOrEmpty(string path)
@@ -228,26 +257,27 @@ internal static class GitRepositorySharedCache
         ];
     }
 
-    private static bool TryParseRecord(string[] lines, out RepositorySharedCacheRecord cacheRecord)
+    private static bool TryParseRecord(string fileContent, out RepositorySharedCacheRecord cacheRecord)
     {
         cacheRecord = default;
-        if (lines.Length < 5 || !string.Equals(lines[0], "v1", StringComparison.Ordinal))
-        {
-            return false;
-        }
+        var span = fileContent.AsSpan();
 
-        if (!long.TryParse(lines[1], out var cachedAtUtcTicks))
-        {
+        if (!TryReadLine(ref span, out var versionLine) || !versionLine.Equals("v1", StringComparison.Ordinal))
             return false;
-        }
 
-        var startDirectoryPath = Decode(lines[2]);
-        var workingTreePath = Decode(lines[3]);
-        var gitDirectoryPath = Decode(lines[4]);
+        if (!TryReadLine(ref span, out var ticksLine) || !long.TryParse(ticksLine, out var cachedAtUtcTicks))
+            return false;
+
+        if (!TryReadLine(ref span, out var startDirLine) ||
+            !TryReadLine(ref span, out var workingTreeLine) ||
+            !TryReadLine(ref span, out var gitDirLine))
+            return false;
+
+        var startDirectoryPath = Decode(startDirLine);
+        var workingTreePath = Decode(workingTreeLine);
+        var gitDirectoryPath = Decode(gitDirLine);
         if (string.IsNullOrEmpty(startDirectoryPath) || string.IsNullOrEmpty(workingTreePath) || string.IsNullOrEmpty(gitDirectoryPath))
-        {
             return false;
-        }
 
         cacheRecord = new RepositorySharedCacheRecord(
             startDirectoryPath,
@@ -258,16 +288,53 @@ internal static class GitRepositorySharedCache
         return true;
     }
 
+    private static bool TryReadLine(ref ReadOnlySpan<char> span, out ReadOnlySpan<char> line)
+    {
+        if (span.IsEmpty)
+        {
+            line = default;
+            return false;
+        }
+
+        var newlineIndex = span.IndexOfAny('\r', '\n');
+        if (newlineIndex < 0)
+        {
+            line = span;
+            span = default;
+            return true;
+        }
+
+        line = span[..newlineIndex];
+        var next = span[(newlineIndex + 1)..];
+        if (!next.IsEmpty && span[newlineIndex] == '\r' && next[0] == '\n')
+            next = next[1..];
+        span = next;
+        return true;
+    }
+
     private static string Encode(string value)
     {
         return Convert.ToBase64String(Encoding.UTF8.GetBytes(value));
     }
 
-    private static string Decode(string encoded)
+    private static string Decode(ReadOnlySpan<char> encoded)
     {
         try
         {
-            return Encoding.UTF8.GetString(Convert.FromBase64String(encoded));
+            const int StackAllocThreshold = 512;
+            var maxByteCount = ((encoded.Length + 3) / 4) * 3;
+            if (maxByteCount <= StackAllocThreshold)
+            {
+                Span<byte> buffer = stackalloc byte[StackAllocThreshold];
+                if (!Convert.TryFromBase64Chars(encoded, buffer, out var bytesWritten))
+                    return string.Empty;
+                return Encoding.UTF8.GetString(buffer[..bytesWritten]);
+            }
+
+            var bytes = new byte[maxByteCount];
+            if (!Convert.TryFromBase64Chars(encoded, bytes, out var written))
+                return string.Empty;
+            return Encoding.UTF8.GetString(bytes, 0, written);
         }
         catch
         {

@@ -1,4 +1,4 @@
-using System.Security.Cryptography;
+using System.Runtime.InteropServices;
 using System.Text;
 using GitPrompt.Configuration;
 using GitPrompt.Platform;
@@ -7,7 +7,7 @@ namespace GitPrompt.Git;
 
 internal static class GitStatusSharedCache
 {
-    private const string CacheDirectoryName = "git-status-cache-v1";
+    private const string CacheDirectoryName = "git-status-cache-v2";
     private const string InvalidationTokenFileName = "status-invalidation.token";
 
     private static readonly TimeSpan StaleCacheEntryThreshold = TimeSpan.FromDays(7);
@@ -40,8 +40,10 @@ internal static class GitStatusSharedCache
                 return false;
             }
 
-            var cacheLines = File.ReadAllLines(cacheFilePath);
-            if (!TryParseRecord(cacheLines, out var cacheRecord))
+            using var cacheReader = OpenSmallReader(cacheFilePath, bufferSize: 512);
+            Span<char> cacheBuffer = stackalloc char[512];
+            var charsRead = cacheReader.Read(cacheBuffer);
+            if (!TryParseRecord(cacheBuffer[..charsRead], out var cacheRecord))
             {
                 return false;
             }
@@ -245,6 +247,14 @@ internal static class GitStatusSharedCache
         }
     }
 
+    private static StreamReader OpenSmallReader(string path, int bufferSize = 128)
+    {
+        // StreamReader(string path, ..., bufferSize) hardcodes DefaultFileStreamBufferSize=4096 for its
+        // internal FileStream regardless of bufferSize. Create the FileStream explicitly to control both buffers.
+        var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize);
+        return new StreamReader(fs, Encoding.UTF8, detectEncodingFromByteOrderMarks: false, bufferSize, leaveOpen: false);
+    }
+
     private static string GetCacheDirectoryPath()
     {
         return _cacheDirectoryOverride ?? Path.Combine(XdgPaths.GetCacheDirectory(), CacheDirectoryName);
@@ -270,7 +280,8 @@ internal static class GitStatusSharedCache
                 return string.Empty;
             }
 
-            return File.ReadAllText(tokenPath);
+            using var tokenReader = OpenSmallReader(tokenPath);
+            return tokenReader.ReadToEnd();
         }
         catch
         {
@@ -281,34 +292,35 @@ internal static class GitStatusSharedCache
     private static string BuildFingerprint(string normalizedGitDirectoryPath)
     {
         var commonGitDirectoryPath = ResolveCommonGitDirectoryPath(normalizedGitDirectoryPath);
-        var builder = new StringBuilder();
+        var hasher = new FingerprintHasher();
 
-        builder.Append("COMMON_GIT_DIR:").Append(commonGitDirectoryPath).Append(';');
+        hasher.AppendString("COMMON_GIT_DIR");
+        hasher.AppendString(commonGitDirectoryPath);
 
-        AppendStamp(builder, normalizedGitDirectoryPath, "HEAD");
-        AppendStamp(builder, normalizedGitDirectoryPath, "index");
-        AppendStamp(builder, commonGitDirectoryPath, "packed-refs");
-        AppendStamp(builder, commonGitDirectoryPath, Path.Combine("refs", "stash"));
-        AppendStamp(builder, commonGitDirectoryPath, "FETCH_HEAD");
-        AppendStamp(builder, normalizedGitDirectoryPath, "MERGE_HEAD");
-        AppendStamp(builder, normalizedGitDirectoryPath, "REBASE_HEAD");
-        AppendStamp(builder, normalizedGitDirectoryPath, "CHERRY_PICK_HEAD");
-        AppendStamp(builder, normalizedGitDirectoryPath, "REVERT_HEAD");
-        AppendStamp(builder, normalizedGitDirectoryPath, "BISECT_LOG");
+        AppendStamp(ref hasher, normalizedGitDirectoryPath, "HEAD");
+        AppendStamp(ref hasher, normalizedGitDirectoryPath, "index");
+        AppendStamp(ref hasher, commonGitDirectoryPath, "packed-refs");
+        AppendStamp(ref hasher, commonGitDirectoryPath, Path.Combine("refs", "stash"));
+        AppendStamp(ref hasher, commonGitDirectoryPath, "FETCH_HEAD");
+        AppendStamp(ref hasher, normalizedGitDirectoryPath, "MERGE_HEAD");
+        AppendStamp(ref hasher, normalizedGitDirectoryPath, "REBASE_HEAD");
+        AppendStamp(ref hasher, normalizedGitDirectoryPath, "CHERRY_PICK_HEAD");
+        AppendStamp(ref hasher, normalizedGitDirectoryPath, "REVERT_HEAD");
+        AppendStamp(ref hasher, normalizedGitDirectoryPath, "BISECT_LOG");
 
         var headRefPath = TryResolveHeadRefPath(normalizedGitDirectoryPath, commonGitDirectoryPath);
         if (!string.IsNullOrEmpty(headRefPath))
         {
-            AppendAbsoluteFileStamp(builder, headRefPath, "HEAD_REF");
+            AppendAbsoluteFileStamp(ref hasher, headRefPath, "HEAD_REF");
 
             var upstreamRefPath = TryResolveUpstreamRefPath(commonGitDirectoryPath, headRefPath);
             if (!string.IsNullOrEmpty(upstreamRefPath))
             {
-                AppendAbsoluteFileStamp(builder, upstreamRefPath, "UPSTREAM_REF");
+                AppendAbsoluteFileStamp(ref hasher, upstreamRefPath, "UPSTREAM_REF");
             }
         }
 
-        return HashPath(builder.ToString());
+        return hasher.GetHexString();
     }
 
     private static string ResolveCommonGitDirectoryPath(string normalizedGitDirectoryPath)
@@ -321,7 +333,8 @@ internal static class GitStatusSharedCache
                 return normalizedGitDirectoryPath;
             }
 
-            var commonDirValue = File.ReadLines(commonDirFilePath).FirstOrDefault()?.Trim();
+            using var commonDirReader = OpenSmallReader(commonDirFilePath);
+            var commonDirValue = commonDirReader.ReadLine()?.Trim();
             if (string.IsNullOrEmpty(commonDirValue))
             {
                 return normalizedGitDirectoryPath;
@@ -351,7 +364,8 @@ internal static class GitStatusSharedCache
                 return null;
             }
 
-            var headLine = File.ReadLines(headPath).FirstOrDefault()?.Trim();
+            using var headReader = OpenSmallReader(headPath);
+            var headLine = headReader.ReadLine()?.Trim();
             const string refPrefix = "ref:";
             if (string.IsNullOrEmpty(headLine) || !headLine.StartsWith(refPrefix, StringComparison.OrdinalIgnoreCase))
             {
@@ -451,7 +465,9 @@ internal static class GitStatusSharedCache
         }
 
         string? activeBranchSection = null;
-        foreach (var rawLine in File.ReadLines(configPath))
+        using var configReader = OpenSmallReader(configPath, bufferSize: 256);
+        string? rawLine;
+        while ((rawLine = configReader.ReadLine()) is not null)
         {
             var line = rawLine.Trim();
             if (line.Length == 0 || line.StartsWith('#') || line.StartsWith(';'))
@@ -514,31 +530,60 @@ internal static class GitStatusSharedCache
         return section[(firstQuoteIndex + 1)..lastQuoteIndex];
     }
 
-    private static void AppendStamp(StringBuilder builder, string gitDirectoryPath, string relativePath)
+    private static void AppendStamp(ref FingerprintHasher hasher, string gitDirectoryPath, string relativePath)
     {
         var absolutePath = Path.Combine(gitDirectoryPath, relativePath);
-        AppendAbsoluteFileStamp(builder, absolutePath, relativePath);
+        AppendAbsoluteFileStamp(ref hasher, absolutePath, relativePath);
     }
 
-    private static void AppendAbsoluteFileStamp(StringBuilder builder, string filePath, string label)
+    private static void AppendAbsoluteFileStamp(ref FingerprintHasher hasher, string filePath, string label)
     {
+        hasher.AppendString(label);
         var fileInfo = new FileInfo(filePath);
         if (!fileInfo.Exists)
         {
-            builder.Append(label).Append(':').Append('0').Append(';');
+            hasher.AppendByte(0);
             return;
         }
 
-        builder.Append(label).Append(':')
-            .Append('1').Append(':')
-            .Append(fileInfo.Length).Append(':')
-            .Append(fileInfo.LastWriteTimeUtc.Ticks).Append(';');
+        hasher.AppendByte(1);
+        hasher.AppendInt64(fileInfo.Length);
+        hasher.AppendInt64(fileInfo.LastWriteTimeUtc.Ticks);
     }
 
     private static string HashPath(string value)
     {
-        var valueBytes = Encoding.UTF8.GetBytes(value);
-        return Convert.ToHexStringLower(SHA256.HashData(valueBytes));
+        const int StackAllocThreshold = 512;
+        var byteCount = Encoding.UTF8.GetByteCount(value);
+        ulong hash;
+
+        if (byteCount <= StackAllocThreshold)
+        {
+            Span<byte> bytes = stackalloc byte[StackAllocThreshold];
+            var written = Encoding.UTF8.GetBytes(value.AsSpan(), bytes);
+            hash = Fnv1a64(bytes[..written]);
+        }
+        else
+        {
+            hash = Fnv1a64(Encoding.UTF8.GetBytes(value));
+        }
+
+        Span<char> chars = stackalloc char[16];
+        hash.TryFormat(chars, out _, "x16");
+        return new string(chars);
+    }
+
+    private static ulong Fnv1a64(ReadOnlySpan<byte> data)
+    {
+        const ulong offsetBasis = 14695981039346656037UL;
+        const ulong prime = 1099511628211UL;
+        var hash = offsetBasis;
+        foreach (var b in data)
+        {
+            hash ^= b;
+            hash *= prime;
+        }
+        return hash;
     }
 
     private static string NormalizePathOrEmpty(string path)
@@ -559,29 +604,55 @@ internal static class GitStatusSharedCache
         ];
     }
 
-    private static bool TryParseRecord(string[] lines, out GitStatusSharedCacheRecord cacheRecord)
+    private static bool TryParseRecord(ReadOnlySpan<char> fileContent, out GitStatusSharedCacheRecord cacheRecord)
     {
         cacheRecord = default;
-        if (lines.Length < 6 || !string.Equals(lines[0], "v3", StringComparison.Ordinal))
-        {
-            return false;
-        }
+        var span = fileContent;
 
-        if (!long.TryParse(lines[1], out var cachedAtUtcTicks))
-        {
+        if (!TryReadLine(ref span, out var versionLine) || !versionLine.Equals("v3", StringComparison.Ordinal))
             return false;
-        }
 
-        var repositoryRootPath = Decode(lines[2]);
-        var fingerprint = Decode(lines[3]);
-        var segment = Decode(lines[4]);
-        var invalidationTokenValue = Decode(lines[5]);
+        if (!TryReadLine(ref span, out var ticksLine) || !long.TryParse(ticksLine, out var cachedAtUtcTicks))
+            return false;
+
+        if (!TryReadLine(ref span, out var repoLine) ||
+            !TryReadLine(ref span, out var fingerprintLine) ||
+            !TryReadLine(ref span, out var segmentLine) ||
+            !TryReadLine(ref span, out var tokenLine))
+            return false;
+
+        var repositoryRootPath = Decode(repoLine);
+        var fingerprint = Decode(fingerprintLine);
+        var segment = Decode(segmentLine);
+        var invalidationTokenValue = Decode(tokenLine);
         if (string.IsNullOrEmpty(repositoryRootPath) || string.IsNullOrEmpty(fingerprint))
-        {
             return false;
-        }
 
         cacheRecord = new GitStatusSharedCacheRecord(repositoryRootPath, fingerprint, segment, cachedAtUtcTicks, invalidationTokenValue);
+        return true;
+    }
+
+    private static bool TryReadLine(ref ReadOnlySpan<char> span, out ReadOnlySpan<char> line)
+    {
+        if (span.IsEmpty)
+        {
+            line = default;
+            return false;
+        }
+
+        var newlineIndex = span.IndexOfAny('\r', '\n');
+        if (newlineIndex < 0)
+        {
+            line = span;
+            span = default;
+            return true;
+        }
+
+        line = span[..newlineIndex];
+        var next = span[(newlineIndex + 1)..];
+        if (!next.IsEmpty && span[newlineIndex] == '\r' && next[0] == '\n')
+            next = next[1..];
+        span = next;
         return true;
     }
 
@@ -590,11 +661,24 @@ internal static class GitStatusSharedCache
         return Convert.ToBase64String(Encoding.UTF8.GetBytes(value));
     }
 
-    private static string Decode(string encoded)
+    private static string Decode(ReadOnlySpan<char> encoded)
     {
         try
         {
-            return Encoding.UTF8.GetString(Convert.FromBase64String(encoded));
+            const int StackAllocThreshold = 512;
+            var maxByteCount = ((encoded.Length + 3) / 4) * 3;
+            if (maxByteCount <= StackAllocThreshold)
+            {
+                Span<byte> buffer = stackalloc byte[StackAllocThreshold];
+                if (!Convert.TryFromBase64Chars(encoded, buffer, out var bytesWritten))
+                    return string.Empty;
+                return Encoding.UTF8.GetString(buffer[..bytesWritten]);
+            }
+
+            var bytes = new byte[maxByteCount];
+            if (!Convert.TryFromBase64Chars(encoded, bytes, out var written))
+                return string.Empty;
+            return Encoding.UTF8.GetString(bytes, 0, written);
         }
         catch
         {
@@ -608,4 +692,63 @@ internal static class GitStatusSharedCache
         string Segment,
         long CachedAtUtcTicks,
         string InvalidationTokenValue);
+
+    private struct FingerprintHasher
+    {
+        private const ulong OffsetBasis = 14695981039346656037UL;
+        private const ulong Prime = 1099511628211UL;
+        private const int StackAllocThreshold = 512;
+
+        private ulong _hash;
+
+        public FingerprintHasher()
+        {
+            _hash = OffsetBasis;
+        }
+
+        public void AppendString(ReadOnlySpan<char> value)
+        {
+            var byteCount = Encoding.UTF8.GetByteCount(value);
+            if (byteCount <= StackAllocThreshold)
+            {
+                Span<byte> bytes = stackalloc byte[StackAllocThreshold];
+                var written = Encoding.UTF8.GetBytes(value, bytes);
+                AppendBytes(bytes[..written]);
+            }
+            else
+            {
+                var bytes = new byte[byteCount];
+                Encoding.UTF8.GetBytes(value, bytes);
+                AppendBytes(bytes);
+            }
+        }
+
+        public void AppendByte(byte value)
+        {
+            _hash ^= value;
+            _hash *= Prime;
+        }
+
+        public void AppendInt64(long value)
+        {
+            AppendBytes(MemoryMarshal.AsBytes(MemoryMarshal.CreateReadOnlySpan(ref value, 1)));
+        }
+
+        private void AppendBytes(ReadOnlySpan<byte> bytes)
+        {
+            foreach (var b in bytes)
+            {
+                _hash ^= b;
+                _hash *= Prime;
+            }
+        }
+
+        public string GetHexString()
+        {
+            var hash = _hash;
+            Span<char> chars = stackalloc char[16];
+            hash.TryFormat(chars, out _, "x16");
+            return new string(chars);
+        }
+    }
 }
