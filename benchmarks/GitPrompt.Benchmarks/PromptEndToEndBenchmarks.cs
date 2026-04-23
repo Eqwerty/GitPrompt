@@ -51,39 +51,39 @@ public class PromptEndToEndBenchmarks
     }
 
     [Benchmark]
-    public Task<string> BuildPrompt_NotInGitRepository()
+    public string BuildPrompt_NotInGitRepository()
     {
-        return BuildPromptAsync(_outsideRepositoryPath);
+        return BuildPrompt(_outsideRepositoryPath);
     }
 
     [Benchmark]
-    public Task<string> BuildPrompt_NormalRepositoryRoot()
+    public string BuildPrompt_NormalRepositoryRoot()
     {
-        return BuildPromptAsync(_normalRepositoryPath);
+        return BuildPrompt(_normalRepositoryPath);
     }
 
     [Benchmark]
-    public Task<string> BuildPrompt_NestedSubdirectory()
+    public string BuildPrompt_NestedSubdirectory()
     {
-        return BuildPromptAsync(_nestedRepositoryPath);
+        return BuildPrompt(_nestedRepositoryPath);
     }
 
     [Benchmark]
-    public Task<string> BuildPrompt_Worktree()
+    public string BuildPrompt_Worktree()
     {
-        return BuildPromptAsync(_worktreePath);
+        return BuildPrompt(_worktreePath);
     }
 
     [Benchmark]
-    public Task<string> BuildPrompt_DetachedHeadWithSingleMatchingRemoteReference()
+    public string BuildPrompt_DetachedHeadWithSingleMatchingRemoteReference()
     {
-        return BuildPromptAsync(_detachedHeadPath);
+        return BuildPrompt(_detachedHeadPath);
     }
 
     [Benchmark]
-    public Task<string> BuildPrompt_NoUpstreamBranchPath()
+    public string BuildPrompt_NoUpstreamBranchPath()
     {
-        return BuildPromptAsync(_noUpstreamPath);
+        return BuildPrompt(_noUpstreamPath);
     }
 
     private async Task<string> CreateWorktreeScenarioAsync()
@@ -174,12 +174,12 @@ public class PromptEndToEndBenchmarks
         return repositoryPath;
     }
 
-    private static async Task<string> BuildPromptAsync(string workingDirectoryPath)
+    private static string BuildPrompt(string workingDirectoryPath)
     {
         var platformProvider = PlatformProvider.System;
 
         var contextSegment = ContextSegmentBuilder.Build(platformProvider);
-        var gitStatusSegment = await GitStatusSegmentBuilder.BuildAsync(workingDirectoryPath);
+        var gitStatusSegment = GitStatusSegmentBuilder.Build(workingDirectoryPath);
         var promptSymbol = PromptSymbolBuilder.Build(platformProvider);
 
         var promptLine = string.IsNullOrEmpty(gitStatusSegment)

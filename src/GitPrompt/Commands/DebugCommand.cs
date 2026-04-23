@@ -8,7 +8,7 @@ namespace GitPrompt.Commands;
 
 internal static class DebugCommand
 {
-    internal static async Task RunAsync()
+    internal static void Run()
     {
         PromptDiagnostics.Enable();
         PromptDiagnostics.Reset();
@@ -23,7 +23,7 @@ internal static class DebugCommand
         contextSw.Stop();
 
         var gitSw = Stopwatch.StartNew();
-        var gitStatusSegment = await GitStatusSegmentBuilder.BuildAsync(workingDirectoryPath);
+        var gitStatusSegment = GitStatusSegmentBuilder.Build(workingDirectoryPath);
         gitSw.Stop();
 
         totalSw.Stop();

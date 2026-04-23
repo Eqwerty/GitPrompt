@@ -54,7 +54,27 @@ internal static class Utilities
         return commitHash.Length >= shortCommitHashLength ? commitHash[..shortCommitHashLength] : commitHash;
     }
 
-    internal static async Task<string?> RunGitCommandAsync(string repositoryRootPath, params string[] args)
+    // Synchronous entry point for callers that have no async context.
+    //
+    // .GetAwaiter().GetResult() is safe here for two independent reasons:
+    //
+    // 1. No SynchronizationContext deadlock: this is a console application.
+    //    SynchronizationContext.Current is always null, so async continuations are
+    //    scheduled on the thread pool and can never try to resume on the calling
+    //    thread. The classic deadlock (continuation captures a single-threaded
+    //    context and tries to re-enter the blocked caller) cannot occur.
+    //
+    // 2. No thread-pool starvation: this method is only ever called from the main
+    //    thread (via Program.cs or DebugCommand.Run). The main thread is the OS
+    //    process entry thread — it is NOT a thread-pool thread. Blocking it does
+    //    not consume a pool slot, so the async continuations (ReadToEndAsync,
+    //    WaitForExitAsync) can always find a free pool thread.
+    internal static string? RunGitCommand(string repositoryRootPath, params string[] args)
+    {
+        return RunGitCommandAsync(repositoryRootPath, args).GetAwaiter().GetResult();
+    }
+
+    private static async Task<string?> RunGitCommandAsync(string repositoryRootPath, params string[] args)
     {
         if (string.IsNullOrEmpty(repositoryRootPath))
         {

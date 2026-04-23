@@ -25,10 +25,10 @@ public sealed class GitStatusCacheIntegrationTests
         await TestHelpers.RunGitAsync(repositoryPath, "commit -m \"initial commit\"");
 
         // Act – first call populates the cache
-        var firstResult = await GitStatusSegmentBuilder.BuildAsync(repositoryPath);
+        var firstResult = GitStatusSegmentBuilder.Build(repositoryPath);
 
         // Act – second call should return the cached segment (state unchanged)
-        var secondResult = await GitStatusSegmentBuilder.BuildAsync(repositoryPath);
+        var secondResult = GitStatusSegmentBuilder.Build(repositoryPath);
 
         // Assert
         firstResult.Should().NotBeEmpty();
@@ -63,7 +63,7 @@ public sealed class GitStatusCacheIntegrationTests
         await TestHelpers.ConfigureGitIdentityAsync(localRepositoryPath);
 
         // Warm the cache: local is up-to-date with remote
-        var beforeFetchResult = await GitStatusSegmentBuilder.BuildAsync(localRepositoryPath);
+        var beforeFetchResult = GitStatusSegmentBuilder.Build(localRepositoryPath);
         beforeFetchResult.Should().NotBeEmpty();
         beforeFetchResult.Should().NotContain(PromptIcons.IconBehind.ToString());
 
@@ -77,7 +77,7 @@ public sealed class GitStatusCacheIntegrationTests
         await TestHelpers.RunGitAsync(localRepositoryPath, "fetch origin");
 
         // Act – should bypass the stale cache entry and compute fresh ahead/behind
-        var afterFetchResult = await GitStatusSegmentBuilder.BuildAsync(localRepositoryPath);
+        var afterFetchResult = GitStatusSegmentBuilder.Build(localRepositoryPath);
 
         // Assert
         afterFetchResult.Should().Contain(TestHelpers.Indicator(PromptIcons.IconBehind, 1));
@@ -108,8 +108,8 @@ public sealed class GitStatusCacheIntegrationTests
         await TestHelpers.RunGitAsync(worktreePath, "commit -m \"feature commit\"");
 
         // Act
-        var mainResult = await GitStatusSegmentBuilder.BuildAsync(repositoryPath);
-        var worktreeResult = await GitStatusSegmentBuilder.BuildAsync(worktreePath);
+        var mainResult = GitStatusSegmentBuilder.Build(repositoryPath);
+        var worktreeResult = GitStatusSegmentBuilder.Build(worktreePath);
 
         // Assert – each path gets its own prompt segment reflecting its own branch
         mainResult.Should().Contain(TestHelpers.NoUpstreamBranchLabel("main"));
@@ -145,7 +145,7 @@ public sealed class GitStatusCacheIntegrationTests
         await TestHelpers.RunGitAsync(worktreePath, "commit -m \"feature v1\"");
 
         // Warm the worktree cache (1 commit ahead)
-        var beforeResult = await GitStatusSegmentBuilder.BuildAsync(worktreePath);
+        var beforeResult = GitStatusSegmentBuilder.Build(worktreePath);
         beforeResult.Should().Contain(TestHelpers.Indicator(PromptIcons.IconAhead, 1));
 
         // Worktree branch advances (HEAD ref changes → cache fingerprint changes)
@@ -154,7 +154,7 @@ public sealed class GitStatusCacheIntegrationTests
         await TestHelpers.RunGitAsync(worktreePath, "commit -m \"feature v2\"");
 
         // Act – stale cache should be rejected and fresh result computed
-        var afterResult = await GitStatusSegmentBuilder.BuildAsync(worktreePath);
+        var afterResult = GitStatusSegmentBuilder.Build(worktreePath);
 
         // Assert
         afterResult.Should().Contain(TestHelpers.Indicator(PromptIcons.IconAhead, 2));

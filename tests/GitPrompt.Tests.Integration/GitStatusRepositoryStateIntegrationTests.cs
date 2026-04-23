@@ -13,7 +13,7 @@ public sealed class GitStatusRepositoryStateIntegrationTests
         using var sandbox = new TestHelpers.TemporaryDirectory();
 
         // Act
-        var gitStatusSegment = await GitStatusSegmentBuilder.BuildAsync(sandbox.DirectoryPath);
+        var gitStatusSegment = GitStatusSegmentBuilder.Build(sandbox.DirectoryPath);
 
         // Assert
         gitStatusSegment.Should().BeEmpty();
@@ -37,7 +37,7 @@ public sealed class GitStatusRepositoryStateIntegrationTests
         Directory.CreateDirectory(nestedDirectoryPath);
 
         // Act
-        var gitStatusSegment = await GitStatusSegmentBuilder.BuildAsync(nestedDirectoryPath);
+        var gitStatusSegment = GitStatusSegmentBuilder.Build(nestedDirectoryPath);
 
         // Assert
         gitStatusSegment.Should().Contain(TestHelpers.TrackedBranchLabel("main"));

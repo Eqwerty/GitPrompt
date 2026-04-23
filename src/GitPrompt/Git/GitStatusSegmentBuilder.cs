@@ -4,7 +4,7 @@ namespace GitPrompt.Git;
 
 internal static class GitStatusSegmentBuilder
 {
-    internal static async Task<string> BuildAsync(string workingDirectoryPath)
+    internal static string Build(string workingDirectoryPath)
     {
         var repositoryContext = GitRepositoryLocator.FindRepositoryContext(workingDirectoryPath);
         if (repositoryContext is null)
@@ -20,7 +20,7 @@ internal static class GitStatusSegmentBuilder
             return cachedSegment;
         }
 
-        var statusOutput = await RunGitCommandAsync(
+        var statusOutput = RunGitCommand(
             repositoryRootPath,
             "status",
             "--porcelain=2",
@@ -83,14 +83,14 @@ internal static class GitStatusSegmentBuilder
         if (hasUpstream && !hasAheadBehindCounts && !string.IsNullOrEmpty(upstreamReference))
         {
             var (computedAheadCount, computedBehindCount) =
-                await GitHistoryCalculator.ComputeAheadBehindAgainstUpstreamAsync(repositoryRootPath, upstreamReference);
+                GitHistoryCalculator.ComputeAheadBehindAgainstUpstream(repositoryRootPath, upstreamReference);
 
             commitsAhead = computedAheadCount;
             commitsBehind = computedBehindCount;
         }
         else if (!hasUpstream)
         {
-            commitsAhead = await GitHistoryCalculator.ComputeLocalAheadCommitCountAsync(repositoryRootPath);
+            commitsAhead = GitHistoryCalculator.ComputeLocalAheadCommitCount(repositoryRootPath);
             commitsBehind = 0;
         }
 

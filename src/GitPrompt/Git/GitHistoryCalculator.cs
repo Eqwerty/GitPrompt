@@ -6,40 +6,40 @@ internal static class GitHistoryCalculator
 {
     private static readonly string[] CandidateBaseReferences = ["origin/main", "origin/master", "main", "master"];
 
-    internal static async Task<int> ComputeLocalAheadCommitCountAsync(string repositoryRootPath)
+    internal static int ComputeLocalAheadCommitCount(string repositoryRootPath)
     {
-        var baseReference = await ResolveBaseReferenceAsync(repositoryRootPath);
+        var baseReference = ResolveBaseReference(repositoryRootPath);
 
         if (string.IsNullOrEmpty(baseReference))
         {
-            return await ComputeLocalAheadCommitCountWithFallbacksAsync(repositoryRootPath);
+            return ComputeLocalAheadCommitCountWithFallbacks(repositoryRootPath);
         }
 
-        var forkPointCommit = await RunGitCommandAsync(repositoryRootPath, "merge-base", "--fork-point", baseReference, "HEAD") ?? string.Empty;
+        var forkPointCommit = RunGitCommand(repositoryRootPath, "merge-base", "--fork-point", baseReference, "HEAD") ?? string.Empty;
         if (string.IsNullOrEmpty(forkPointCommit))
         {
-            forkPointCommit = await RunGitCommandAsync(repositoryRootPath, "merge-base", baseReference, "HEAD") ?? string.Empty;
+            forkPointCommit = RunGitCommand(repositoryRootPath, "merge-base", baseReference, "HEAD") ?? string.Empty;
         }
 
         var commitRangeSpec = !string.IsNullOrEmpty(forkPointCommit)
             ? $"{forkPointCommit}..HEAD"
             : $"{baseReference}..HEAD";
 
-        var commitCountOutput = await RunGitCommandAsync(repositoryRootPath, "rev-list", "--count", commitRangeSpec);
+        var commitCountOutput = RunGitCommand(repositoryRootPath, "rev-list", "--count", commitRangeSpec);
 
         return int.TryParse(commitCountOutput, out var commitCount) ? commitCount : 0;
     }
 
-    private static async Task<int> ComputeLocalAheadCommitCountWithFallbacksAsync(string repositoryRootPath)
+    private static int ComputeLocalAheadCommitCountWithFallbacks(string repositoryRootPath)
     {
-        var remoteHeadRef = await RunGitCommandAsync(repositoryRootPath, "symbolic-ref", "refs/remotes/origin/HEAD");
+        var remoteHeadRef = RunGitCommand(repositoryRootPath, "symbolic-ref", "refs/remotes/origin/HEAD");
 
         if (!string.IsNullOrEmpty(remoteHeadRef))
         {
             var baseReference = ExtractBranchNameFromRef(remoteHeadRef);
             if (!string.IsNullOrEmpty(baseReference))
             {
-                var commitCount = await TryGetAheadCountAgainstReferenceAsync(repositoryRootPath, baseReference);
+                var commitCount = TryGetAheadCountAgainstReference(repositoryRootPath, baseReference);
                 if (commitCount.HasValue)
                 {
                     return commitCount.Value;
@@ -49,7 +49,7 @@ internal static class GitHistoryCalculator
 
         foreach (var candidateReference in CandidateBaseReferences)
         {
-            var commitCount = await TryGetAheadCountAgainstReferenceAsync(repositoryRootPath, candidateReference);
+            var commitCount = TryGetAheadCountAgainstReference(repositoryRootPath, candidateReference);
             if (commitCount.HasValue)
             {
                 return commitCount.Value;
@@ -59,9 +59,9 @@ internal static class GitHistoryCalculator
         return 0;
     }
 
-    private static async Task<int?> TryGetAheadCountAgainstReferenceAsync(string repositoryRootPath, string baseReference)
+    private static int? TryGetAheadCountAgainstReference(string repositoryRootPath, string baseReference)
     {
-        var commitCountOutput = await RunGitCommandAsync(repositoryRootPath, "rev-list", "--count", $"{baseReference}..HEAD");
+        var commitCountOutput = RunGitCommand(repositoryRootPath, "rev-list", "--count", $"{baseReference}..HEAD");
 
         return int.TryParse(commitCountOutput, out var commitCount) ? commitCount : null;
     }
@@ -81,14 +81,14 @@ internal static class GitHistoryCalculator
         return string.Empty;
     }
 
-    internal static async Task<(int Ahead, int Behind)> ComputeAheadBehindAgainstUpstreamAsync(string repositoryRootPath, string upstreamReference)
+    internal static (int Ahead, int Behind) ComputeAheadBehindAgainstUpstream(string repositoryRootPath, string upstreamReference)
     {
         if (string.IsNullOrEmpty(upstreamReference))
         {
             return (Ahead: 0, Behind: 0);
         }
 
-        var leftRightCountsOutput = await RunGitCommandAsync(
+        var leftRightCountsOutput = RunGitCommand(
             repositoryRootPath,
             "rev-list",
             "--left-right",
@@ -116,15 +116,15 @@ internal static class GitHistoryCalculator
 
     internal static string EscapeCommandLineArgument(string argument) => Utilities.EscapeCommandLineArgument(argument);
 
-    private static async Task<string> ResolveBaseReferenceAsync(string repositoryRootPath)
+    private static string ResolveBaseReference(string repositoryRootPath)
     {
-        var baseReference = await RunGitCommandAsync(repositoryRootPath, "symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD");
+        var baseReference = RunGitCommand(repositoryRootPath, "symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD");
         if (!string.IsNullOrEmpty(baseReference))
         {
             return baseReference;
         }
 
-        var upstreamReference = await RunGitCommandAsync(repositoryRootPath, "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}");
+        var upstreamReference = RunGitCommand(repositoryRootPath, "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}");
         if (!string.IsNullOrEmpty(upstreamReference))
         {
             return "@{u}";
@@ -135,7 +135,7 @@ internal static class GitHistoryCalculator
             if (candidateReference.StartsWith("origin/", StringComparison.Ordinal))
             {
                 var remoteReferencePath = $"refs/remotes/{candidateReference}";
-                if (await ReferenceExistsAsync(repositoryRootPath, remoteReferencePath))
+                if (ReferenceExists(repositoryRootPath, remoteReferencePath))
                 {
                     return candidateReference;
                 }
@@ -144,7 +144,7 @@ internal static class GitHistoryCalculator
             }
 
             var localReferencePath = $"refs/heads/{candidateReference}";
-            if (await ReferenceExistsAsync(repositoryRootPath, localReferencePath))
+            if (ReferenceExists(repositoryRootPath, localReferencePath))
             {
                 return candidateReference;
             }
@@ -153,9 +153,9 @@ internal static class GitHistoryCalculator
         return string.Empty;
     }
 
-    private static async Task<bool> ReferenceExistsAsync(string repositoryRootPath, string referencePath)
+    private static bool ReferenceExists(string repositoryRootPath, string referencePath)
     {
-        var referenceOutput = await RunGitCommandAsync(repositoryRootPath, "show-ref", "--verify", referencePath);
+        var referenceOutput = RunGitCommand(repositoryRootPath, "show-ref", "--verify", referencePath);
 
         return !string.IsNullOrEmpty(referenceOutput);
     }

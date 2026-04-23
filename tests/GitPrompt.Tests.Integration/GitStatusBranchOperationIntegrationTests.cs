@@ -39,7 +39,7 @@ public sealed class GitStatusBranchOperationIntegrationTests
         await TestHelpers.RunGitAsync(localRepositoryPath, "fetch origin");
 
         // Act
-        var gitStatusSegment = await GitStatusSegmentBuilder.BuildAsync(localRepositoryPath);
+        var gitStatusSegment = GitStatusSegmentBuilder.Build(localRepositoryPath);
 
         // Assert
         gitStatusSegment.Should().Contain(TestHelpers.TrackedBranchLabel("main"));
@@ -67,7 +67,7 @@ public sealed class GitStatusBranchOperationIntegrationTests
         await TestHelpers.RunGitAsync(repositoryPath, "commit -m \"feature commit\"");
 
         // Act
-        var gitStatusSegment = await GitStatusSegmentBuilder.BuildAsync(repositoryPath);
+        var gitStatusSegment = GitStatusSegmentBuilder.Build(repositoryPath);
 
         // Assert
         gitStatusSegment.Should().Contain(TestHelpers.NoUpstreamBranchLabel("feature"));
@@ -96,7 +96,7 @@ public sealed class GitStatusBranchOperationIntegrationTests
         await TestHelpers.RunGitAsync(repositoryPath, $"checkout --detach {commitAObjectId}");
 
         // Act
-        var gitStatusSegment = await GitStatusSegmentBuilder.BuildAsync(repositoryPath);
+        var gitStatusSegment = GitStatusSegmentBuilder.Build(repositoryPath);
 
         // Assert
         gitStatusSegment.Should().Contain($"({commitAObjectId[..7]}...)");
@@ -125,7 +125,7 @@ public sealed class GitStatusBranchOperationIntegrationTests
         await TestHelpers.RunGitAsync(localRepositoryPath, $"checkout --detach {commitObjectId}");
 
         // Act
-        var gitStatusSegment = await GitStatusSegmentBuilder.BuildAsync(localRepositoryPath);
+        var gitStatusSegment = GitStatusSegmentBuilder.Build(localRepositoryPath);
 
         // Assert
         gitStatusSegment.Should().Contain($"(origin/main {commitObjectId[..7]}...)");
@@ -164,7 +164,7 @@ public sealed class GitStatusBranchOperationIntegrationTests
         originHeadResult.ExitCode.Should().NotBe(0);
 
         // Act
-        var localAheadCount = await GitHistoryCalculator.ComputeLocalAheadCommitCountAsync(localRepositoryPath);
+        var localAheadCount = GitHistoryCalculator.ComputeLocalAheadCommitCount(localRepositoryPath);
 
         // Assert
         localAheadCount.Should().Be(1);

@@ -39,7 +39,7 @@ internal static class CommandRegistry
         new(Verb: "debug",
             Usage: "gitprompt debug",
             Description: "Show a diagnostic report for the current directory",
-            Execute: _ => DebugCommand.RunAsync().GetAwaiter().GetResult()),
+            Execute: _ => DebugCommand.Run()),
 
         new(Verb: "--invalidate-status-cache",
             Usage: "gitprompt --invalidate-status-cache",

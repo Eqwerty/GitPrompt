@@ -13,7 +13,7 @@ var platformProvider = PlatformProvider.System;
 var workingDirectoryPath = platformProvider.WorkingDirectory.Path;
 
 var contextSegment = ContextSegmentBuilder.Build(platformProvider);
-var gitStatusSegment = await GitStatusSegmentBuilder.BuildAsync(workingDirectoryPath);
+var gitStatusSegment = GitStatusSegmentBuilder.Build(workingDirectoryPath);
 var promptSymbol = PromptSymbolBuilder.Build(platformProvider);
 
 var promptLine = string.IsNullOrEmpty(gitStatusSegment)

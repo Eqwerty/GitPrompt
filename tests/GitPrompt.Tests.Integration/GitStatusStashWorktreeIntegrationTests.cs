@@ -25,7 +25,7 @@ public sealed class GitStatusStashWorktreeIntegrationTests
         await TestHelpers.RunGitAsync(repositoryPath, "stash push -m \"wip\"");
 
         // Act
-        var gitStatusSegment = await GitStatusSegmentBuilder.BuildAsync(repositoryPath);
+        var gitStatusSegment = GitStatusSegmentBuilder.Build(repositoryPath);
 
         // Assert
         gitStatusSegment.Should().Contain(TestHelpers.Indicator(PromptIcons.IconStash, 1));
@@ -53,7 +53,7 @@ public sealed class GitStatusStashWorktreeIntegrationTests
         await TestHelpers.RunGitAsync(worktreePath, "commit -m \"feature commit\"");
 
         // Act
-        var gitStatusSegment = await GitStatusSegmentBuilder.BuildAsync(worktreePath);
+        var gitStatusSegment = GitStatusSegmentBuilder.Build(worktreePath);
 
         // Assert
         gitStatusSegment.Should().Contain(TestHelpers.NoUpstreamBranchLabel("feature"));
