@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices;
 using System.Text;
 using GitPrompt.Configuration;
 using GitPrompt.Platform;
@@ -207,19 +206,19 @@ internal static class GitRepositorySharedCache
 
     private static string HashPath(string value)
     {
-        const int StackAllocThreshold = 512;
+        const int stackAllocThreshold = 512;
         var byteCount = Encoding.UTF8.GetByteCount(value);
         ulong hash;
 
-        if (byteCount <= StackAllocThreshold)
+        if (byteCount <= stackAllocThreshold)
         {
-            Span<byte> bytes = stackalloc byte[StackAllocThreshold];
+            Span<byte> bytes = stackalloc byte[stackAllocThreshold];
             var written = Encoding.UTF8.GetBytes(value.AsSpan(), bytes);
-            hash = Fnv1a64(bytes[..written]);
+            hash = Fnv1A64(bytes[..written]);
         }
         else
         {
-            hash = Fnv1a64(Encoding.UTF8.GetBytes(value));
+            hash = Fnv1A64(Encoding.UTF8.GetBytes(value));
         }
 
         Span<char> chars = stackalloc char[16];
@@ -227,7 +226,7 @@ internal static class GitRepositorySharedCache
         return new string(chars);
     }
 
-    private static ulong Fnv1a64(ReadOnlySpan<byte> data)
+    private static ulong Fnv1A64(ReadOnlySpan<byte> data)
     {
         const ulong offsetBasis = 14695981039346656037UL;
         const ulong prime = 1099511628211UL;
@@ -237,6 +236,7 @@ internal static class GitRepositorySharedCache
             hash ^= b;
             hash *= prime;
         }
+
         return hash;
     }
 
@@ -263,21 +263,29 @@ internal static class GitRepositorySharedCache
         var span = fileContent.AsSpan();
 
         if (!TryReadLine(ref span, out var versionLine) || !versionLine.Equals("v1", StringComparison.Ordinal))
+        {
             return false;
+        }
 
         if (!TryReadLine(ref span, out var ticksLine) || !long.TryParse(ticksLine, out var cachedAtUtcTicks))
+        {
             return false;
+        }
 
         if (!TryReadLine(ref span, out var startDirLine) ||
             !TryReadLine(ref span, out var workingTreeLine) ||
             !TryReadLine(ref span, out var gitDirLine))
+        {
             return false;
+        }
 
         var startDirectoryPath = Decode(startDirLine);
         var workingTreePath = Decode(workingTreeLine);
         var gitDirectoryPath = Decode(gitDirLine);
         if (string.IsNullOrEmpty(startDirectoryPath) || string.IsNullOrEmpty(workingTreePath) || string.IsNullOrEmpty(gitDirectoryPath))
+        {
             return false;
+        }
 
         cacheRecord = new RepositorySharedCacheRecord(
             startDirectoryPath,
@@ -307,7 +315,10 @@ internal static class GitRepositorySharedCache
         line = span[..newlineIndex];
         var next = span[(newlineIndex + 1)..];
         if (!next.IsEmpty && span[newlineIndex] == '\r' && next[0] == '\n')
+        {
             next = next[1..];
+        }
+
         span = next;
         return true;
     }
@@ -321,19 +332,25 @@ internal static class GitRepositorySharedCache
     {
         try
         {
-            const int StackAllocThreshold = 512;
-            var maxByteCount = ((encoded.Length + 3) / 4) * 3;
-            if (maxByteCount <= StackAllocThreshold)
+            const int stackAllocThreshold = 512;
+            var maxByteCount = (encoded.Length + 3) / 4 * 3;
+            if (maxByteCount <= stackAllocThreshold)
             {
-                Span<byte> buffer = stackalloc byte[StackAllocThreshold];
+                Span<byte> buffer = stackalloc byte[stackAllocThreshold];
                 if (!Convert.TryFromBase64Chars(encoded, buffer, out var bytesWritten))
+                {
                     return string.Empty;
+                }
+
                 return Encoding.UTF8.GetString(buffer[..bytesWritten]);
             }
 
             var bytes = new byte[maxByteCount];
             if (!Convert.TryFromBase64Chars(encoded, bytes, out var written))
+            {
                 return string.Empty;
+            }
+
             return Encoding.UTF8.GetString(bytes, 0, written);
         }
         catch
