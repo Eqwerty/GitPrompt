@@ -1,16 +1,13 @@
 using System.Diagnostics;
 using BenchmarkDotNet.Attributes;
-using GitPrompt.Git;
 using GitPrompt.Platform;
 using GitPrompt.Prompting;
-using static GitPrompt.Constants.PromptColors;
 
 namespace GitPrompt.Benchmarks;
 
 [MemoryDiagnoser]
 public class PromptEndToEndBenchmarks
 {
-
     private string _sandboxRootPath = string.Empty;
     private string _outsideRepositoryPath = string.Empty;
     private string _normalRepositoryPath = string.Empty;
@@ -176,17 +173,9 @@ public class PromptEndToEndBenchmarks
 
     private static string BuildPrompt(string workingDirectoryPath)
     {
-        var platformProvider = PlatformProvider.System;
+        Directory.SetCurrentDirectory(workingDirectoryPath);
 
-        var contextSegment = ContextSegmentBuilder.Build(platformProvider);
-        var gitStatusSegment = GitStatusSegmentBuilder.Build(workingDirectoryPath);
-        var promptSymbol = PromptSymbolBuilder.Build(platformProvider);
-
-        var promptLine = string.IsNullOrEmpty(gitStatusSegment)
-            ? contextSegment
-            : $"{contextSegment} {gitStatusSegment}";
-
-        return $"{promptLine}\n{ColorPromptSymbol}{promptSymbol}{ColorReset} ";
+        return PromptBuilder.Build(PlatformProvider.System).Output;
     }
 
     private static async Task ConfigureGitIdentityAsync(string repositoryPath)

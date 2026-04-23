@@ -1,25 +1,15 @@
 using System.Text;
 using GitPrompt.Commands;
-using GitPrompt.Git;
 using GitPrompt.Platform;
 using GitPrompt.Prompting;
-using static GitPrompt.Constants.PromptColors;
 
 Console.OutputEncoding = Encoding.UTF8;
 
 CommandRegistry.Dispatch(args);
 
 var platformProvider = PlatformProvider.System;
-var workingDirectoryPath = platformProvider.WorkingDirectory.Path;
+var prompt = PromptBuilder.Build(platformProvider).Output;
 
-var contextSegment = ContextSegmentBuilder.Build(platformProvider);
-var gitStatusSegment = GitStatusSegmentBuilder.Build(workingDirectoryPath);
-var promptSymbol = PromptSymbolBuilder.Build(platformProvider);
-
-var promptLine = string.IsNullOrEmpty(gitStatusSegment)
-    ? contextSegment
-    : $"{contextSegment} {gitStatusSegment}";
-
-Console.Write($"{promptLine}\n{ColorPromptSymbol}{promptSymbol}{ColorReset} ");
+Console.Write(prompt);
 
 return 0;

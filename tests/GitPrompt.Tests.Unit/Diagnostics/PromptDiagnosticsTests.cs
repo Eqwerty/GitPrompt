@@ -1,5 +1,6 @@
 using FluentAssertions;
 using GitPrompt.Diagnostics;
+using GitPrompt.Prompting;
 
 namespace GitPrompt.Tests.Unit.Diagnostics;
 
@@ -13,14 +14,11 @@ public sealed class PromptDiagnosticsTests
         using var scope = PromptDiagnostics.EnableForTesting();
         PromptDiagnostics.RecordRepoCacheL2Hit();
         PromptDiagnostics.RecordStatusCacheHit(age: TimeSpan.FromSeconds(2), ttl: TimeSpan.FromSeconds(5));
+        var result = new PromptResult("user host ~/repo", "(main)", "$",
+            TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(3), TimeSpan.FromMilliseconds(4));
 
         // Act
-        var report = PromptDiagnostics.GetReport(
-            directory: "/home/user/repo",
-            gitStatusSegment: "(main)",
-            contextElapsed: TimeSpan.FromMilliseconds(1),
-            gitElapsed: TimeSpan.FromMilliseconds(3),
-            totalElapsed: TimeSpan.FromMilliseconds(4));
+        var report = PromptDiagnostics.GetReport("/home/user/repo", result);
 
         // Assert
         report.Should().Contain("Status cache    hit");
@@ -37,14 +35,11 @@ public sealed class PromptDiagnosticsTests
         PromptDiagnostics.RecordRepoCacheL2Hit();
         PromptDiagnostics.RecordStatusCacheMiss(StatusCacheMissReason.FingerprintChanged);
         PromptDiagnostics.RecordGitSubprocessElapsed(TimeSpan.FromMilliseconds(50));
+        var result = new PromptResult("user host ~/repo", "(main) ~2", "$",
+            TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(51), TimeSpan.FromMilliseconds(52));
 
         // Act
-        var report = PromptDiagnostics.GetReport(
-            directory: "/home/user/repo",
-            gitStatusSegment: "(main) ~2",
-            contextElapsed: TimeSpan.FromMilliseconds(1),
-            gitElapsed: TimeSpan.FromMilliseconds(51),
-            totalElapsed: TimeSpan.FromMilliseconds(52));
+        var report = PromptDiagnostics.GetReport("/home/user/repo", result);
 
         // Assert
         report.Should().Contain("miss · git state changed");
@@ -62,14 +57,11 @@ public sealed class PromptDiagnosticsTests
             StatusCacheMissReason.TtlExpired,
             age: TimeSpan.FromSeconds(6),
             ttl: TimeSpan.FromSeconds(5));
+        var result = new PromptResult("user host ~/repo", "(main)", "$",
+            TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(50), TimeSpan.FromMilliseconds(51));
 
         // Act
-        var report = PromptDiagnostics.GetReport(
-            directory: "/home/user/repo",
-            gitStatusSegment: "(main)",
-            contextElapsed: TimeSpan.FromMilliseconds(1),
-            gitElapsed: TimeSpan.FromMilliseconds(50),
-            totalElapsed: TimeSpan.FromMilliseconds(51));
+        var report = PromptDiagnostics.GetReport("/home/user/repo", result);
 
         // Assert
         report.Should().Contain("TTL expired");
@@ -86,14 +78,11 @@ public sealed class PromptDiagnosticsTests
         using var scope = PromptDiagnostics.EnableForTesting();
         PromptDiagnostics.RecordRepoCacheWalk(dirsWalked: 2, repoFound: true);
         PromptDiagnostics.RecordStatusCacheMiss(StatusCacheMissReason.NoEntry);
+        var result = new PromptResult("user host ~/repo", "(main)", "$",
+            TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(55), TimeSpan.FromMilliseconds(56));
 
         // Act
-        var report = PromptDiagnostics.GetReport(
-            directory: "/home/user/repo",
-            gitStatusSegment: "(main)",
-            contextElapsed: TimeSpan.FromMilliseconds(1),
-            gitElapsed: TimeSpan.FromMilliseconds(55),
-            totalElapsed: TimeSpan.FromMilliseconds(56));
+        var report = PromptDiagnostics.GetReport("/home/user/repo", result);
 
         // Assert
         report.Should().Contain("miss · no entry");
@@ -107,14 +96,11 @@ public sealed class PromptDiagnosticsTests
         using var scope = PromptDiagnostics.EnableForTesting();
         PromptDiagnostics.RecordRepoCacheL2Miss(RepoCacheMissReason.NoEntry);
         PromptDiagnostics.RecordRepoCacheWalk(dirsWalked: 4, repoFound: false);
+        var result = new PromptResult("user host ~/documents", string.Empty, "$",
+            TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(2));
 
         // Act
-        var report = PromptDiagnostics.GetReport(
-            directory: "/home/user/documents",
-            gitStatusSegment: string.Empty,
-            contextElapsed: TimeSpan.FromMilliseconds(1),
-            gitElapsed: TimeSpan.FromMilliseconds(1),
-            totalElapsed: TimeSpan.FromMilliseconds(2));
+        var report = PromptDiagnostics.GetReport("/home/user/documents", result);
 
         // Assert
         report.Should().Contain("Status cache    skipped");
@@ -129,14 +115,11 @@ public sealed class PromptDiagnosticsTests
         using var scope = PromptDiagnostics.EnableForTesting();
         PromptDiagnostics.RecordRepoCacheL1Hit();
         PromptDiagnostics.RecordStatusCacheHit(age: TimeSpan.FromSeconds(1), ttl: TimeSpan.FromSeconds(5));
+        var result = new PromptResult("user host ~/repo", "(main)", "$",
+            TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(2), TimeSpan.FromMilliseconds(3));
 
         // Act
-        var report = PromptDiagnostics.GetReport(
-            directory: "/home/user/repo",
-            gitStatusSegment: "(main)",
-            contextElapsed: TimeSpan.FromMilliseconds(1),
-            gitElapsed: TimeSpan.FromMilliseconds(2),
-            totalElapsed: TimeSpan.FromMilliseconds(3));
+        var report = PromptDiagnostics.GetReport("/home/user/repo", result);
 
         // Assert
         report.Should().Contain("Repository      hit (in-process)");
@@ -150,14 +133,11 @@ public sealed class PromptDiagnosticsTests
         PromptDiagnostics.RecordRepoCacheL2Miss(RepoCacheMissReason.NoEntry);
         PromptDiagnostics.RecordRepoCacheWalk(dirsWalked: 3, repoFound: true);
         PromptDiagnostics.RecordStatusCacheMiss(StatusCacheMissReason.NoEntry);
+        var result = new PromptResult("user host ~/repo", "(main)", "$",
+            TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(55), TimeSpan.FromMilliseconds(56));
 
         // Act
-        var report = PromptDiagnostics.GetReport(
-            directory: "/home/user/repo",
-            gitStatusSegment: "(main)",
-            contextElapsed: TimeSpan.FromMilliseconds(1),
-            gitElapsed: TimeSpan.FromMilliseconds(55),
-            totalElapsed: TimeSpan.FromMilliseconds(56));
+        var report = PromptDiagnostics.GetReport("/home/user/repo", result);
 
         // Assert
         report.Should().Contain("no entry → walked 3 dirs");
@@ -186,14 +166,11 @@ public sealed class PromptDiagnosticsTests
         using var scope = PromptDiagnostics.EnableForTesting();
         PromptDiagnostics.RecordRepoCacheL2Hit();
         PromptDiagnostics.RecordStatusCacheMiss(StatusCacheMissReason.Disabled);
+        var result = new PromptResult("user host ~/repo", string.Empty, "$",
+            TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(2));
 
         // Act
-        var report = PromptDiagnostics.GetReport(
-            directory: "/home/user/repo",
-            gitStatusSegment: string.Empty,
-            contextElapsed: TimeSpan.FromMilliseconds(1),
-            gitElapsed: TimeSpan.FromMilliseconds(1),
-            totalElapsed: TimeSpan.FromMilliseconds(2));
+        var report = PromptDiagnostics.GetReport("/home/user/repo", result);
 
         // Assert
         report.Should().Contain("miss · cache disabled");

@@ -1,3 +1,4 @@
+using GitPrompt.Prompting;
 using System.Text;
 
 namespace GitPrompt.Diagnostics;
@@ -49,6 +50,7 @@ internal static class PromptDiagnostics
     {
         Enable();
         Reset();
+
         return new DiagnosticsScope();
     }
 
@@ -140,12 +142,7 @@ internal static class PromptDiagnostics
         _gitSubprocessCount++;
     }
 
-    internal static string GetReport(
-        string directory,
-        string gitStatusSegment,
-        TimeSpan contextElapsed,
-        TimeSpan gitElapsed,
-        TimeSpan totalElapsed)
+    internal static string GetReport(string directory, PromptResult result)
     {
         var sb = new StringBuilder();
 
@@ -154,14 +151,15 @@ internal static class PromptDiagnostics
         var displayDirectory = directory.Replace('\\', '/');
         sb.AppendLine($"  Directory         {displayDirectory}");
 
-        if (!string.IsNullOrEmpty(gitStatusSegment))
+        var displayPrompt = StripAnsi(result.PromptLine);
+        if (!string.IsNullOrEmpty(displayPrompt))
         {
-            sb.AppendLine($"  Prompt            {StripAnsi(gitStatusSegment)}");
+            sb.AppendLine($"  Prompt            {displayPrompt} {result.PromptSymbol}");
         }
 
         sb.AppendLine();
-        sb.AppendLine($"  Context segment   {FormatMs(contextElapsed)}");
-        sb.AppendLine($"  Git segment       {FormatMs(gitElapsed)}");
+        sb.AppendLine($"  Context segment   {FormatMs(result.ContextElapsed)}");
+        sb.AppendLine($"  Git segment       {FormatMs(result.GitElapsed)}");
 
         sb.Append("    Repository      ");
         AppendRepoCacheStatus(sb);
@@ -169,7 +167,7 @@ internal static class PromptDiagnostics
         sb.Append("    Status cache    ");
         AppendStatusCacheStatus(sb);
 
-        sb.AppendLine($"  Total             {FormatMs(totalElapsed)}");
+        sb.AppendLine($"  Total             {FormatMs(result.TotalElapsed)}");
         sb.AppendLine();
         sb.Append(BuildSummary());
 

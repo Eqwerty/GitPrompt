@@ -2,6 +2,7 @@ using FluentAssertions;
 using GitPrompt.Configuration;
 using GitPrompt.Diagnostics;
 using GitPrompt.Git;
+using GitPrompt.Prompting;
 
 namespace GitPrompt.Tests.Unit.Git;
 
@@ -348,7 +349,7 @@ public sealed class GitStatusSharedCacheTests
 
         // Assert
         hit.Should().BeTrue();
-        var report = PromptDiagnostics.GetReport("/", string.Empty, TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero);
+        var report = PromptDiagnostics.GetReport("/", new PromptResult(string.Empty, string.Empty, string.Empty, TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero));
         report.Should().Contain("Status cache    hit");
     }
 
@@ -369,7 +370,7 @@ public sealed class GitStatusSharedCacheTests
 
         // Assert
         hit.Should().BeFalse();
-        var report = PromptDiagnostics.GetReport("/", string.Empty, TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero);
+        var report = PromptDiagnostics.GetReport("/", new PromptResult(string.Empty, string.Empty, string.Empty, TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero));
         report.Should().Contain("miss · no entry");
     }
 }

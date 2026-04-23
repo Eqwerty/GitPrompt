@@ -1,6 +1,4 @@
-using System.Diagnostics;
 using GitPrompt.Diagnostics;
-using GitPrompt.Git;
 using GitPrompt.Platform;
 using GitPrompt.Prompting;
 
@@ -14,26 +12,9 @@ internal static class DebugCommand
         PromptDiagnostics.Reset();
 
         var platformProvider = PlatformProvider.System;
-        var workingDirectoryPath = platformProvider.WorkingDirectory.Path;
+        var result = PromptBuilder.Build(platformProvider);
 
-        var totalSw = Stopwatch.StartNew();
-
-        var contextSw = Stopwatch.StartNew();
-        _ = ContextSegmentBuilder.Build(platformProvider);
-        contextSw.Stop();
-
-        var gitSw = Stopwatch.StartNew();
-        var gitStatusSegment = GitStatusSegmentBuilder.Build(workingDirectoryPath);
-        gitSw.Stop();
-
-        totalSw.Stop();
-
-        var report = PromptDiagnostics.GetReport(
-            directory: workingDirectoryPath,
-            gitStatusSegment: gitStatusSegment,
-            contextElapsed: contextSw.Elapsed,
-            gitElapsed: gitSw.Elapsed,
-            totalElapsed: totalSw.Elapsed);
+        var report = PromptDiagnostics.GetReport(platformProvider.WorkingDirectory.Path, result);
 
         Console.Write(report);
     }
