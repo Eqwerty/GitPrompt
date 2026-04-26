@@ -20,10 +20,12 @@ public sealed class GitStatusTimeoutIntegrationTests
         await TestHelpers.RunGitAsync(repositoryPath, "add file.txt");
         await TestHelpers.RunGitAsync(repositoryPath, "commit -m \"initial\"");
 
-        // Use a 1ms timeout (below git startup time) and disable the cache so git is always invoked.
+        // Replace git with a fake script that sleeps for 30s so the 100ms timeout reliably fires.
+        // This makes the test deterministic on fast CI runners where real git can complete in < 1ms.
+        using var fakeGit = new TestHelpers.FakeSlowGitOverride();
         using var configOverride = ConfigReader.OverrideForTesting(new Config
         {
-            CommandTimeoutMs = 1.0,
+            CommandTimeoutMs = 100.0,
             Cache = new Config.CacheConfig { GitStatusTtlSeconds = 0 }
         });
 
