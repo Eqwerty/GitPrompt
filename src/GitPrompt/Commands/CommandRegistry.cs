@@ -22,9 +22,9 @@ internal static class CommandRegistry
             Execute: _ => ConfigCommand.Run()),
 
         new(Verb: "config reset",
-            Usage: "gitprompt config reset",
-            Description: "Reset config.jsonc to defaults",
-            Execute: _ => ConfigResetCommand.Run()),
+            Usage: "gitprompt config reset [-y]",
+            Description: "Reset config.jsonc to defaults (-y to skip confirmation)",
+            Execute: args => ConfigResetCommand.Run(skipConfirmation: args.Contains("-y"))),
 
         new(Verb: "update",
             Usage: "gitprompt update",

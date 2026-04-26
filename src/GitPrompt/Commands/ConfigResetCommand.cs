@@ -5,20 +5,23 @@ namespace GitPrompt.Commands;
 
 internal static class ConfigResetCommand
 {
-    internal static void Run(string? configPath = null, TextReader? input = null, TextWriter? output = null)
+    internal static void Run(string? configPath = null, TextReader? input = null, TextWriter? output = null, bool skipConfirmation = false)
     {
         configPath ??= AppPaths.GetConfigFilePath();
         input ??= Console.In;
         output ??= Console.Out;
 
-        output.Write("Reset config.jsonc to defaults? [y/N]: ");
-
-        var answer = input.ReadLine();
-
-        if (!string.Equals(answer, "y", StringComparison.OrdinalIgnoreCase))
+        if (!skipConfirmation)
         {
-            output.WriteLine("Aborted.");
-            return;
+            output.Write("Reset config.jsonc to defaults? [y/N]: ");
+
+            var answer = input.ReadLine();
+
+            if (!string.Equals(answer, "y", StringComparison.OrdinalIgnoreCase))
+            {
+                output.WriteLine("Aborted.");
+                return;
+            }
         }
 
         Directory.CreateDirectory(Path.GetDirectoryName(configPath)!);

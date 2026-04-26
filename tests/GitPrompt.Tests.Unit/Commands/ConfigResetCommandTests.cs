@@ -74,4 +74,52 @@ public sealed class ConfigResetCommandTests
 
         File.Delete(configPath);
     }
+
+    [Fact]
+    public void Run_WhenSkipConfirmationIsTrue_ShouldOverwriteConfigWithDefaults()
+    {
+        // Arrange
+        var configPath = Path.GetTempFileName();
+        File.WriteAllText(configPath, "custom content");
+
+        // Act
+        ConfigResetCommand.Run(configPath, skipConfirmation: true, output: TextWriter.Null);
+
+        // Assert
+        File.ReadAllText(configPath).Should().Be(ConfigInitializer.BuildDefaultConfigContent());
+
+        File.Delete(configPath);
+    }
+
+    [Fact]
+    public void Run_WhenSkipConfirmationIsTrue_ShouldPrintSuccessMessage()
+    {
+        // Arrange
+        var configPath = Path.GetTempFileName();
+        var output = new StringWriter();
+
+        // Act
+        ConfigResetCommand.Run(configPath, skipConfirmation: true, output: output);
+
+        // Assert
+        output.ToString().Should().Contain("Config reset to defaults.");
+
+        File.Delete(configPath);
+    }
+
+    [Fact]
+    public void Run_WhenSkipConfirmationIsTrue_ShouldNotShowPrompt()
+    {
+        // Arrange
+        var configPath = Path.GetTempFileName();
+        var output = new StringWriter();
+
+        // Act
+        ConfigResetCommand.Run(configPath, skipConfirmation: true, output: output);
+
+        // Assert
+        output.ToString().Should().NotContain("[y/N]");
+
+        File.Delete(configPath);
+    }
 }
