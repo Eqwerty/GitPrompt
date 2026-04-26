@@ -7,8 +7,6 @@ A fast cross-platform shell prompt binary for Git repositories.
 1. `user host path [git-status]`
 2. prompt symbol (`$`, `#`, or `>`)
 
-This repository contains the source code for that binary.
-
 ## Quick Install
 
 Install the latest release:
@@ -41,17 +39,18 @@ Requires `curl` and network access. Alternatively, re-run the install script.
 gitprompt uninstall
 ```
 
-Removes the binary, config, and cache files, and prints any gitprompt references found in your shell config files for manual removal.
+Removes the binary, config, and cache files. Automatically cleans up `gitprompt init` lines from your shell config files, and warns about any remaining references for manual removal.
 
 ## Commands
 
 | Command | Description |
 |---|---|
 | `gitprompt init bash` | Print the Bash shell integration script |
-| `gitprompt config` | Open the config file in `$EDITOR` (or a default editor) |
-| `gitprompt config reset` | Reset the config file to defaults |
+| `gitprompt config` | Open config.jsonc in `$EDITOR` or `$VISUAL` (fallback: vim) |
+| `gitprompt config reset [-y]` | Reset config.jsonc to defaults (`-y` skips confirmation) |
 | `gitprompt update` | Update to the latest release |
 | `gitprompt uninstall` | Uninstall gitprompt |
+| `gitprompt debug` | Show a diagnostic report for the current directory |
 | `gitprompt --help` | Show help |
 
 ## Prompt Format Reference
