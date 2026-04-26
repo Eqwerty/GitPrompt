@@ -7,19 +7,6 @@ namespace GitPrompt.Tests.Integration;
 public sealed class GitStatusRepositoryStateIntegrationTests
 {
     [Fact]
-    public async Task BuildGitStatusSegment_WhenCurrentDirectoryIsNotInGitRepository_ShouldReturnEmpty()
-    {
-        // Arrange
-        using var sandbox = new TestHelpers.TemporaryDirectory();
-
-        // Act
-        var gitStatusSegment = GitStatusSegmentBuilder.Build(sandbox.DirectoryPath);
-
-        // Assert
-        gitStatusSegment.Should().BeEmpty();
-    }
-
-    [Fact]
     public async Task BuildGitStatusSegment_WhenExecutedFromNestedRepositoryDirectory_ShouldFindGitDirectoryInParent()
     {
         // Arrange

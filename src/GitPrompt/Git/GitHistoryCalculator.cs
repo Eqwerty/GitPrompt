@@ -114,8 +114,6 @@ internal static class GitHistoryCalculator
         return (commitsAhead, commitsBehind);
     }
 
-    internal static string EscapeCommandLineArgument(string argument) => Utilities.EscapeCommandLineArgument(argument);
-
     private static string ResolveBaseReference(string repositoryRootPath)
     {
         var baseReference = RunGitCommand(repositoryRootPath, "symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD");

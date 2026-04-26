@@ -6,6 +6,16 @@ namespace GitPrompt.Tests.Unit.Git;
 public sealed class GitRepositoryLocatorTests
 {
     [Fact]
+    public void FindRepositoryContext_WhenDirectoryIsNotInARepository_ShouldReturnNull()
+    {
+        // Arrange
+        using var plainDirectory = new TemporaryDirectory();
+
+        // Act & Assert
+        GitRepositoryLocator.FindRepositoryContext(plainDirectory.DirectoryPath).Should().BeNull();
+    }
+
+    [Fact]
     public void FindRepositoryContext_WhenDirectoryIsInsideRepository_ShouldReturnWorkingTreeAndGitDirectory()
     {
         // Arrange

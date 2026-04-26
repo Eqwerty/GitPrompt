@@ -105,39 +105,60 @@ internal static class TestHelpers
     internal readonly record struct GitCommandResult(int ExitCode, string StandardOutput, string StandardError);
 
     /// <summary>
-    /// Injects a fake <c>git</c> executable that sleeps for 30 seconds by prepending a temp
-    /// directory to PATH. This guarantees that any timeout shorter than 30 s fires reliably,
-    /// regardless of how fast the real git binary starts on the host machine.
-    /// On Windows the fake script is omitted (PATH is still patched but falls back to real git)
-    /// because git startup there is already slow enough for the tests that use this.
+    /// Injects a fake <c>git</c> executable that sleeps for 30 seconds. This guarantees that any
+    /// timeout shorter than 30 s fires reliably, regardless of how fast the real git binary starts
+    /// on the host machine.
+    /// On Unix, a shell script named <c>git</c> is placed in a temp directory prepended to PATH.
+    /// On Windows, a <see cref="Utilities.OverrideProcessStartInfoForTesting"/> seam replaces the
+    /// git process with <c>ping.exe -n 31 127.0.0.1</c>, which sleeps ~30 seconds and is always
+    /// available on Windows. The PATH manipulation is skipped on Windows because <c>CreateProcess</c>
+    /// cannot execute <c>.bat</c>/<c>.cmd</c> scripts directly.
     /// </summary>
     internal sealed class FakeSlowGitOverride : IDisposable
     {
         private readonly string? _originalPath;
         private readonly string _tempDirectory;
+        private readonly IDisposable? _processStartInfoOverride;
 
         public FakeSlowGitOverride()
         {
-            _originalPath = Environment.GetEnvironmentVariable("PATH");
             _tempDirectory = Path.Combine(Path.GetTempPath(), "Prompt.Tests.Integration.FakeGit", Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(_tempDirectory);
 
-            if (!OperatingSystem.IsWindows())
+            if (OperatingSystem.IsWindows())
             {
+                _processStartInfoOverride = Utilities.OverrideProcessStartInfoForTesting(info => new ProcessStartInfo
+                {
+                    FileName = "ping.exe",
+                    Arguments = "-n 31 127.0.0.1",
+                    RedirectStandardOutput = info.RedirectStandardOutput,
+                    RedirectStandardError = info.RedirectStandardError,
+                    UseShellExecute = info.UseShellExecute,
+                    CreateNoWindow = info.CreateNoWindow,
+                    WorkingDirectory = info.WorkingDirectory
+                });
+            }
+            else
+            {
+                _originalPath = Environment.GetEnvironmentVariable("PATH");
                 var fakeGitPath = Path.Combine(_tempDirectory, "git");
                 File.WriteAllText(fakeGitPath, "#!/bin/sh\nsleep 30\n");
                 File.SetUnixFileMode(fakeGitPath,
                     UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
                     UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
                     UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
+                Environment.SetEnvironmentVariable("PATH", _tempDirectory + Path.PathSeparator + (_originalPath ?? string.Empty));
             }
-
-            Environment.SetEnvironmentVariable("PATH", _tempDirectory + Path.PathSeparator + (_originalPath ?? string.Empty));
         }
 
         public void Dispose()
         {
-            Environment.SetEnvironmentVariable("PATH", _originalPath);
+            _processStartInfoOverride?.Dispose();
+
+            if (!OperatingSystem.IsWindows())
+            {
+                Environment.SetEnvironmentVariable("PATH", _originalPath);
+            }
 
             try
             {

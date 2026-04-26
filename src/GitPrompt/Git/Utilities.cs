@@ -15,6 +15,23 @@ internal static class Utilities
         ? StringComparer.OrdinalIgnoreCase
         : StringComparer.Ordinal;
 
+    private static Func<ProcessStartInfo, ProcessStartInfo>? _processStartInfoTransformerOverride;
+
+    internal static IDisposable OverrideProcessStartInfoForTesting(Func<ProcessStartInfo, ProcessStartInfo> transformer)
+    {
+        var previous = _processStartInfoTransformerOverride;
+        _processStartInfoTransformerOverride = transformer;
+
+        return new RestoreAction(() => _processStartInfoTransformerOverride = previous);
+    }
+
+    private sealed class RestoreAction(Action restore) : IDisposable
+    {
+        private readonly Action _restore = restore;
+
+        public void Dispose() => _restore();
+    }
+
     internal static readonly StringComparison FileSystemPathComparison = OperatingSystem.IsWindows()
         ? StringComparison.OrdinalIgnoreCase
         : StringComparison.Ordinal;
@@ -108,7 +125,7 @@ internal static class Utilities
         try
         {
             process = new Process();
-            process.StartInfo = new ProcessStartInfo
+            var startInfo = new ProcessStartInfo
             {
                 FileName = fileName,
                 Arguments = arguments,
@@ -118,6 +135,8 @@ internal static class Utilities
                 CreateNoWindow = true,
                 WorkingDirectory = workingDirectory ?? string.Empty
             };
+
+            process.StartInfo = _processStartInfoTransformerOverride?.Invoke(startInfo) ?? startInfo;
 
             var sw = PromptDiagnostics.IsEnabled ? Stopwatch.StartNew() : null;
             process.Start();
