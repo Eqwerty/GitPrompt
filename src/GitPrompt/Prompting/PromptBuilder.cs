@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using GitPrompt.Diagnostics;
 using GitPrompt.Git;
 using GitPrompt.Platform;
 
@@ -10,25 +11,25 @@ internal static class PromptBuilder
     {
         var workingDirectoryPath = platformProvider.WorkingDirectory.Path;
 
-        var totalSw = Stopwatch.StartNew();
+        var totalSw = PromptDiagnostics.IsEnabled ? Stopwatch.StartNew() : null;
 
-        var contextSw = Stopwatch.StartNew();
+        var contextSw = PromptDiagnostics.IsEnabled ? Stopwatch.StartNew() : null;
         var contextSegment = ContextSegmentBuilder.Build(platformProvider);
-        contextSw.Stop();
+        contextSw?.Stop();
 
-        var gitSw = Stopwatch.StartNew();
+        var gitSw = PromptDiagnostics.IsEnabled ? Stopwatch.StartNew() : null;
         var gitStatusSegment = GitStatusSegmentBuilder.Build(workingDirectoryPath);
-        gitSw.Stop();
+        gitSw?.Stop();
 
         var promptSymbol = PromptSymbolBuilder.Build(platformProvider);
-        totalSw.Stop();
+        totalSw?.Stop();
 
         return new PromptResult(
             contextSegment,
             gitStatusSegment,
             promptSymbol,
-            contextSw.Elapsed,
-            gitSw.Elapsed,
-            totalSw.Elapsed);
+            contextSw?.Elapsed ?? TimeSpan.Zero,
+            gitSw?.Elapsed ?? TimeSpan.Zero,
+            totalSw?.Elapsed ?? TimeSpan.Zero);
     }
 }
