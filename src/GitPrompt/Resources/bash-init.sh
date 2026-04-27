@@ -76,3 +76,8 @@ _gitprompt_complete() {
 }
 complete -F _gitprompt_complete gitprompt
 [[ "$OSTYPE" == msys || "$OSTYPE" == cygwin ]] && complete -F _gitprompt_complete gitprompt.exe
+
+_gitprompt_aliases="$HOME/.local/share/gitprompt/git_aliases.sh"
+# shellcheck disable=SC1090
+[ -f "$_gitprompt_aliases" ] && . "$_gitprompt_aliases"
+unset _gitprompt_aliases

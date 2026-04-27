@@ -24,6 +24,13 @@ internal static class XdgPaths
         return Path.Combine(home, ".config", AppName);
     }
 
+    internal static string GetDataDirectory()
+    {
+        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
+        return Path.Combine(home, ".local", "share", AppName);
+    }
+
     internal static string GetCacheDirectory()
     {
         if (OperatingSystem.IsWindows())

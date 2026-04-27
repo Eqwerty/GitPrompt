@@ -15,6 +15,7 @@ internal static class UninstallCommand
         var binaryPath = Environment.ProcessPath;
         var configDir = XdgPaths.GetConfigDirectory();
         var cacheDir = XdgPaths.GetCacheDirectory();
+        var dataDir = XdgPaths.GetDataDirectory();
 
         CleanShellConfigs();
 
@@ -26,6 +27,11 @@ internal static class UninstallCommand
         if (Directory.Exists(cacheDir))
         {
             Directory.Delete(cacheDir, recursive: true);
+        }
+
+        if (Directory.Exists(dataDir))
+        {
+            Directory.Delete(dataDir, recursive: true);
         }
 
         if (binaryPath is not null)

@@ -117,6 +117,25 @@ add_to_shell_config() {
   printf "${R}"
 }
 
+download_aliases() {
+  if ! command -v curl >/dev/null 2>&1; then
+    die "curl is required but not found."
+  fi
+
+  mkdir -p "$ALIASES_DIR"
+  # shellcheck disable=SC2086
+  curl $CURL_SSL_OPT -fsSL "$ALIASES_URL" -o "$ALIASES_FILE_PATH" \
+    || die "Failed to download: $ALIASES_URL"
+}
+
+INSTALL_ALIASES=1
+for _arg in "$@"; do
+  case "$_arg" in
+    --no-aliases) INSTALL_ALIASES=0 ;;
+  esac
+done
+unset _arg
+
 OPERATING_SYSTEM="$(uname -s | tr '[:upper:]' '[:lower:]')"
 CPU_ARCHITECTURE="$(uname -m)"
 
@@ -133,6 +152,9 @@ case "$CPU_ARCHITECTURE" in
 esac
 
 BIN_DIR="$HOME/.local/bin"
+ALIASES_URL="https://raw.githubusercontent.com/Eqwerty/GitPrompt/master/git_aliases.sh"
+ALIASES_DIR="$HOME/.local/share/gitprompt"
+ALIASES_FILE_PATH="$ALIASES_DIR/git_aliases.sh"
 
 if [ "$TARGET_OS" = "windows" ]; then
   CURL_SSL_OPT="--ssl-no-revoke"
@@ -189,6 +211,17 @@ if [ -z "${_INSTALL_SOURCED:-}" ]; then
   fi
 
   add_to_shell_config
+
+  if [ "$INSTALL_ALIASES" = "1" ]; then
+    if _run_animated_step "Installing git aliases" "$TEMPORARY_DIRECTORY/aliases.log" \
+        download_aliases; then
+      printf "\r${GREEN}✓${R} Installing git aliases...\n"
+    else
+      printf '\n'
+      printf "${YELLOW}warning:${R} Git aliases install failed. Run 'gitprompt update aliases' later.\n" >&2
+    fi
+  fi
+
   printf '\nRestart your terminal or run: source ~/.bashrc\n'
   printf "Run 'gitprompt --help' to see available commands.\n"
 fi

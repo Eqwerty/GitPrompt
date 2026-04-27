@@ -49,6 +49,7 @@ Removes the binary, config, and cache files. Automatically cleans up `gitprompt 
 | `gitprompt config` | Open config.jsonc in `$EDITOR` or `$VISUAL` (fallback: vim) |
 | `gitprompt config reset [-y]` | Reset config.jsonc to defaults (`-y` skips confirmation) |
 | `gitprompt update` | Update to the latest release |
+| `gitprompt update aliases` | Update git aliases to the latest version |
 | `gitprompt uninstall` | Uninstall gitprompt |
 | `gitprompt debug` | Show a diagnostic report for the current directory |
 | `gitprompt --help` | Show help |
@@ -176,6 +177,28 @@ Example `config.jsonc`:
   "commandTimeoutMs": 500,  // kill git subprocess after 500ms (0 = disabled)
   "showCommandDuration": true  // show last command duration in the prompt
 }
+```
+
+## Git Aliases
+
+The installer also sets up a collection of Git aliases and shell functions for a faster Git workflow. They are loaded automatically via the `eval "$(gitprompt init bash)"` line — no second entry in your shell config is needed.
+
+Aliases are installed to `~/.local/share/gitprompt/git_aliases.sh`.
+
+### Update aliases
+
+To get the latest aliases without reinstalling:
+
+```sh
+gitprompt update aliases
+```
+
+### Skip alias installation
+
+To install the binary only, without the aliases:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/Eqwerty/GitPrompt/master/install.sh | sh -s -- --no-aliases
 ```
 
 ## Local Development

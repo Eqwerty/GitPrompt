@@ -31,6 +31,11 @@ internal static class CommandRegistry
             Description: "Update to the latest release",
             Execute: _ => UpdateCommand.Run()),
 
+        new(Verb: "update aliases",
+            Usage: "gitprompt update aliases",
+            Description: "Update git aliases to the latest version",
+            Execute: _ => UpdateCommand.RunUpdateAliases()),
+
         new(Verb: "uninstall",
             Usage: "gitprompt uninstall",
             Description: "Remove gitprompt and its config/cache",

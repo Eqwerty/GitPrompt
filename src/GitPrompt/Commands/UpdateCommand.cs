@@ -1,10 +1,13 @@
 using System.Diagnostics;
+using GitPrompt.Platform;
 
 namespace GitPrompt.Commands;
 
 internal static class UpdateCommand
 {
     private const string InstallScriptUrl = "https://raw.githubusercontent.com/Eqwerty/GitPrompt/master/install.sh";
+    private const string AliasesUrl = "https://raw.githubusercontent.com/Eqwerty/GitPrompt/master/git_aliases.sh";
+    private const string AliasesFileName = "git_aliases.sh";
 
     internal static void Run()
     {
@@ -36,6 +39,47 @@ internal static class UpdateCommand
         {
             Console.Error.WriteLine($"gitprompt: update failed: {exception.Message}");
             Console.Error.WriteLine($"gitprompt: to update manually, run: curl -fsSL {InstallScriptUrl} | sh");
+
+            Environment.Exit(1);
+        }
+    }
+
+    internal static void RunUpdateAliases()
+    {
+        var dataDir = XdgPaths.GetDataDirectory();
+        var aliasesPath = Path.Combine(dataDir, AliasesFileName);
+
+        Directory.CreateDirectory(dataDir);
+
+        var sslOption = OperatingSystem.IsWindows() ? "--ssl-no-revoke " : "";
+        var script = $"curl -fsSL {sslOption}{AliasesUrl} -o \"{aliasesPath}\"";
+
+        try
+        {
+            var processStartInfo = new ProcessStartInfo("sh")
+            {
+                UseShellExecute = false
+            };
+
+            processStartInfo.ArgumentList.Add("-c");
+            processStartInfo.ArgumentList.Add(script);
+
+            var process = Process.Start(processStartInfo) ?? throw new InvalidOperationException("Failed to start shell process.");
+
+            process.WaitForExit();
+
+            if (process.ExitCode is not 0)
+            {
+                Environment.Exit(process.ExitCode);
+            }
+
+            Console.WriteLine($"Updated git aliases: {aliasesPath}");
+            Console.WriteLine("Restart your shell or run: exec bash");
+        }
+        catch (Exception exception)
+        {
+            Console.Error.WriteLine($"gitprompt: update aliases failed: {exception.Message}");
+            Console.Error.WriteLine($"gitprompt: to update manually, run: curl -fsSL {AliasesUrl} -o \"{aliasesPath}\"");
 
             Environment.Exit(1);
         }

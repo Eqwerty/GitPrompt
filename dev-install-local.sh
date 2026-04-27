@@ -104,6 +104,12 @@ chmod +x "$STAGED_BINARY_PATH" 2>/dev/null || true
 run_step "Installing to $FINAL_BINARY_PATH" "$TEMPORARY_DIRECTORY/install.log" \
   install_binary
 
+if [ "$INSTALL_ALIASES" = "1" ]; then
+  mkdir -p "$ALIASES_DIR"
+  run_step "Installing git aliases" "$TEMPORARY_DIRECTORY/aliases.log" \
+    cp "$REPOSITORY_ROOT/git_aliases.sh" "$ALIASES_FILE_PATH"
+fi
+
 add_to_shell_config
 printf '\nRestart your terminal or run: source ~/.bashrc\n'
 printf "Run 'gitprompt --help' to see available commands.\n"
