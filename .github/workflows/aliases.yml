@@ -46,4 +46,8 @@ jobs:
       - name: Upload aliases to latest release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload latest git_aliases.sh --clobber
+        run: |
+          if ! gh release view latest >/dev/null 2>&1; then
+            gh release create latest --title "Git Aliases" --notes "Latest git aliases, auto-updated on push to master."
+          fi
+          gh release upload latest git_aliases.sh --clobber

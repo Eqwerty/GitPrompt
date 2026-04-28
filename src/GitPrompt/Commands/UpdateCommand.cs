@@ -74,7 +74,7 @@ internal static class UpdateCommand
             }
 
             Console.WriteLine($"Updated git aliases: {aliasesPath}");
-            Console.WriteLine("Restart your shell or run: exec bash");
+            Console.WriteLine("Restart your terminal to apply changes.");
         }
         catch (Exception exception)
         {

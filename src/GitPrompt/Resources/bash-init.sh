@@ -75,6 +75,7 @@ _gitprompt_complete() {
     gitprompt|gitprompt.exe) COMPREPLY=($(compgen -W "{{GITPROMPT_COMMANDS}}" -- "$cur")) ;;
     init)                    COMPREPLY=($(compgen -W "bash" -- "$cur")) ;;
     config)                  COMPREPLY=($(compgen -W "reset" -- "$cur")) ;;
+    update)                  COMPREPLY=($(compgen -W "aliases" -- "$cur")) ;;
   esac
 }
 complete -F _gitprompt_complete gitprompt
