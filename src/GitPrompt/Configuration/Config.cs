@@ -10,7 +10,7 @@ internal sealed record Config
 
     [JsonInclude]
     [JsonPropertyName("showCommandDuration")]
-    internal bool ShowCommandDuration { get; init; } = false;
+    internal bool ShowCommandDuration { get; init; } = true;
 
     [JsonInclude]
     [JsonPropertyName("commandTimeoutMs")]
