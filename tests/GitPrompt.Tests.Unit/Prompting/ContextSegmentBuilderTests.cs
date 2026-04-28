@@ -254,6 +254,40 @@ public sealed class ContextSegmentBuilderTests
         segment.Should().Be($"{ColorHost}machine{ColorReset} {ColorPath}/repo{ColorReset}");
     }
 
+    [Fact]
+    public void Build_WhenShowHostIsFalse_ShouldOmitHostSegment()
+    {
+        // Arrange
+        using var _ = ConfigReader.OverrideForTesting(new Config { ShowHost = false });
+        var platformProvider = new TestPlatformProvider(
+            user: "me",
+            host: "machine",
+            workingDirectoryPath: "/repo");
+
+        // Act
+        var segment = ContextSegmentBuilder.Build(platformProvider);
+
+        // Assert
+        segment.Should().Be($"{ColorUser}me{ColorReset} {ColorPath}/repo{ColorReset}");
+    }
+
+    [Fact]
+    public void Build_WhenShowUserAndShowHostAreFalse_ShouldRenderOnlyPath()
+    {
+        // Arrange
+        using var _ = ConfigReader.OverrideForTesting(new Config { ShowUser = false, ShowHost = false });
+        var platformProvider = new TestPlatformProvider(
+            user: "me",
+            host: "machine",
+            workingDirectoryPath: "/repo");
+
+        // Act
+        var segment = ContextSegmentBuilder.Build(platformProvider);
+
+        // Assert
+        segment.Should().Be($"{ColorPath}/repo{ColorReset}");
+    }
+
     private sealed class TemporaryDirectory : IDisposable
     {
         public TemporaryDirectory()

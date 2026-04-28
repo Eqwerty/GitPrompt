@@ -12,16 +12,27 @@ internal static class ContextSegmentBuilder
 
         var (resolvedPath, isMissingPath) = ResolveWorkingDirectoryPath(platformProvider);
         var pathColor = isMissingPath ? ColorMissingPath : ColorPath;
+        var pathSegment = $"{pathColor}{resolvedPath}{ColorReset}";
 
-        if (!config.ShowUser)
+        var showUser = config.ShowUser;
+        var showHost = config.ShowHost;
+
+        if (showUser && showHost)
         {
-            return $"{ColorHost}{ResolveHost(platformProvider)}{ColorReset} {pathColor}{resolvedPath}{ColorReset}";
+            return $"{ColorUser}{ResolveUser(platformProvider)}{ColorReset} {ColorHost}{ResolveHost(platformProvider)}{ColorReset} {pathSegment}";
         }
 
-        var resolvedUser = ResolveUser(platformProvider);
-        var resolvedHost = ResolveHost(platformProvider);
+        if (showUser)
+        {
+            return $"{ColorUser}{ResolveUser(platformProvider)}{ColorReset} {pathSegment}";
+        }
 
-        return $"{ColorUser}{resolvedUser}{ColorReset} {ColorHost}{resolvedHost}{ColorReset} {pathColor}{resolvedPath}{ColorReset}";
+        if (showHost)
+        {
+            return $"{ColorHost}{ResolveHost(platformProvider)}{ColorReset} {pathSegment}";
+        }
+
+        return pathSegment;
     }
 
     private static string ResolveUser(PlatformProvider platformProvider)

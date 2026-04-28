@@ -94,4 +94,24 @@ public sealed class ConfigInitializerTests
         // Assert
         content.Should().Contain($"\"showUser\": {expectedValue}");
     }
+
+    [Fact]
+    public void BuildDefaultConfigContent_ShouldIncludeShowHost()
+    {
+        // Act & Assert
+        ConfigInitializer.BuildDefaultConfigContent().Should().Contain("showHost");
+    }
+
+    [Fact]
+    public void BuildDefaultConfigContent_ShouldRenderShowHostAsDefaultValue()
+    {
+        // Arrange
+        var expectedValue = new Config().ShowHost ? "true" : "false";
+
+        // Act
+        var content = ConfigInitializer.BuildDefaultConfigContent();
+
+        // Assert
+        content.Should().Contain($"\"showHost\": {expectedValue}");
+    }
 }

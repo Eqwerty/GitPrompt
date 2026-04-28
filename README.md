@@ -173,6 +173,7 @@ Controls which parts of the context segment are rendered.
 | Key | Default | Description |
 |---|---|---|
 | `showUser` | `true` | Show the username in the prompt |
+| `showHost` | `true` | Show the hostname in the prompt |
 
 Example `config.jsonc`:
 

@@ -5,5 +5,6 @@
   },
   "commandTimeoutMs": {commandTimeoutMs},  // git subprocess timeout in milliseconds (0 = disabled)
   "showCommandDuration": {showCommandDuration},  // show last command duration in the prompt (true/false)
-  "showUser": {showUser}  // show username in the prompt (true/false)
+  "showUser": {showUser},  // show username in the prompt (true/false)
+  "showHost": {showHost}  // show hostname in the prompt (true/false)
 }

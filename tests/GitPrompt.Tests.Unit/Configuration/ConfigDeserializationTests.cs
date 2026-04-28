@@ -208,4 +208,43 @@ public sealed class ConfigDeserializationTests
         // Assert
         config!.ShowUser.Should().BeFalse();
     }
+
+    [Fact]
+    public void ShowHost_WhenAbsent_ShouldDefaultToFalse()
+    {
+        // Arrange
+        var json = "{}";
+
+        // Act
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+
+        // Assert
+        config!.ShowHost.Should().BeFalse();
+    }
+
+    [Fact]
+    public void ShowHost_WhenExplicitlyTrue_ShouldReturnTrue()
+    {
+        // Arrange
+        var json = """{"showHost": true}""";
+
+        // Act
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+
+        // Assert
+        config!.ShowHost.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ShowHost_WhenExplicitlyFalse_ShouldReturnFalse()
+    {
+        // Arrange
+        var json = """{"showHost": false}""";
+
+        // Act
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+
+        // Assert
+        config!.ShowHost.Should().BeFalse();
+    }
 }

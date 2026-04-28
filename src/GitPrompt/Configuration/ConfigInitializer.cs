@@ -42,6 +42,7 @@ internal static class ConfigInitializer
             .Replace("{repositoryTtl}", config.Cache.RepositoryTtl.TotalSeconds.ToString(CultureInfo.InvariantCulture))
             .Replace("{commandTimeoutMs}", ((long)(config.CommandTimeout?.TotalMilliseconds ?? 0)).ToString(CultureInfo.InvariantCulture))
             .Replace("{showCommandDuration}", config.ShowCommandDuration.ToString().ToLowerInvariant())
-            .Replace("{showUser}", config.ShowUser.ToString().ToLowerInvariant());
+            .Replace("{showUser}", config.ShowUser.ToString().ToLowerInvariant())
+            .Replace("{showHost}", config.ShowHost.ToString().ToLowerInvariant());
     }
 }
