@@ -134,4 +134,24 @@ public sealed class ConfigInitializerTests
         // Assert
         content.Should().Contain($"\"maxPathDepth\": {expectedValue}");
     }
+
+    [Fact]
+    public void BuildDefaultConfigContent_ShouldIncludeMultilinePrompt()
+    {
+        // Act & Assert
+        ConfigInitializer.BuildDefaultConfigContent().Should().Contain("multilinePrompt");
+    }
+
+    [Fact]
+    public void BuildDefaultConfigContent_ShouldRenderMultilinePromptAsDefaultValue()
+    {
+        // Arrange
+        var expectedValue = new Config().MultilinePrompt ? "true" : "false";
+
+        // Act
+        var content = ConfigInitializer.BuildDefaultConfigContent();
+
+        // Assert
+        content.Should().Contain($"\"multilinePrompt\": {expectedValue}");
+    }
 }

@@ -1,3 +1,4 @@
+using GitPrompt.Configuration;
 using static GitPrompt.Constants.PromptColors;
 
 namespace GitPrompt.Prompting;
@@ -11,8 +12,18 @@ internal readonly record struct PromptResult(
     TimeSpan GitElapsed,
     TimeSpan TotalElapsed)
 {
-    internal string Output =>
-        $"{PromptLine}\n{ColorPromptSymbol}{PromptSymbol}{ColorReset} ";
+    internal string Output
+    {
+        get
+        {
+            var config = ConfigReader.Config;
+            var promptSymbolSegment = $"{ColorPromptSymbol}{PromptSymbol}{ColorReset} ";
+
+            return config.MultilinePrompt
+                ? $"{PromptLine}\n{promptSymbolSegment}"
+                : $"{PromptLine} {promptSymbolSegment}";
+        }
+    }
 
     internal string PromptLine
     {

@@ -181,6 +181,25 @@ When `maxPathDepth` is set, paths deeper than the limit are truncated with `…`
 - `~/repos/company/project/src` → `~/…/project/src`
 - `/etc/nginx/conf.d` → `/…/nginx/conf.d`
 
+### Prompt Layout
+
+Controls the overall shape of the prompt output.
+
+| Key | Default | Description |
+|---|---|---|
+| `multilinePrompt` | `true` | Put the prompt symbol (`$`, `#`, `>`) on its own line |
+
+When `multilinePrompt: false`, the symbol appears at the end of the status line:
+
+```
+# two-line (default)
+user host ~/repo (main)
+$ 
+
+# single-line
+user host ~/repo (main) $ 
+```
+
 Example `config.jsonc`:
 
 ```jsonc

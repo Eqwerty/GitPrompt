@@ -21,6 +21,10 @@ internal sealed record Config
     internal int MaxPathDepth { get; init; } = 0;
 
     [JsonInclude]
+    [JsonPropertyName("multilinePrompt")]
+    internal bool MultilinePrompt { get; init; } = true;
+
+    [JsonInclude]
     [JsonPropertyName("showCommandDuration")]
     internal bool ShowCommandDuration { get; init; } = true;
 
