@@ -7,21 +7,23 @@ internal static class PromptColors
 
     private static string PromptColor(string ansiColor) => $"{ReadLineStart}{ansiColor}{ReadLineEnd}";
 
-    internal static readonly string ColorUser = PromptColor(AnsiColors.Green);
-    internal static readonly string ColorHost = PromptColor(AnsiColors.Magenta);
-    internal static readonly string ColorPath = PromptColor(AnsiColors.Orange);
-    internal static readonly string ColorCommandDuration = PromptColor(AnsiColors.Magenta);
-    internal static readonly string ColorBranch = PromptColor(AnsiColors.Blue);
-    internal static readonly string ColorBranchNoUpstream = PromptColor(AnsiColors.Blue);
-    internal static readonly string ColorAhead = PromptColor(AnsiColors.Blue);
-    internal static readonly string ColorBehind = PromptColor(AnsiColors.Blue);
-    internal static readonly string ColorStaged = PromptColor(AnsiColors.Green);
-    internal static readonly string ColorUnstaged = PromptColor(AnsiColors.Red);
-    internal static readonly string ColorUntracked = PromptColor(AnsiColors.Red);
-    internal static readonly string ColorStash = PromptColor(AnsiColors.Magenta);
-    internal static readonly string ColorConflict = PromptColor(AnsiColors.BoldRed);
-    internal static readonly string ColorMissingPath = PromptColor(AnsiColors.BoldRed);
-    internal static readonly string ColorTimeout = PromptColor(AnsiColors.Yellow);
-    internal static readonly string ColorPromptSymbol = PromptColor(AnsiColors.LightGray);
-    internal static readonly string ColorReset = PromptColor(AnsiColors.Reset);
+    private static string HexColor(string hexColor) => PromptColor(AnsiColorConverter.ToAnsi(hexColor));
+
+    internal static string ColorUser           => HexColor(AnsiColors.Green);
+    internal static string ColorHost           => HexColor(AnsiColors.Magenta);
+    internal static string ColorPath           => HexColor(AnsiColors.Orange);
+    internal static string ColorCommandDuration => HexColor(AnsiColors.Magenta);
+    internal static string ColorBranch         => HexColor(AnsiColors.Blue);
+    internal static string ColorBranchNoUpstream => HexColor(AnsiColors.Blue);
+    internal static string ColorAhead          => HexColor(AnsiColors.Blue);
+    internal static string ColorBehind         => HexColor(AnsiColors.Blue);
+    internal static string ColorStaged         => HexColor(AnsiColors.Green);
+    internal static string ColorUnstaged       => HexColor(AnsiColors.Red);
+    internal static string ColorUntracked      => HexColor(AnsiColors.Red);
+    internal static string ColorStash          => HexColor(AnsiColors.Magenta);
+    internal static string ColorConflict       => HexColor(AnsiColors.BoldRed);
+    internal static string ColorMissingPath    => HexColor(AnsiColors.BoldRed);
+    internal static string ColorTimeout        => HexColor(AnsiColors.Yellow);
+    internal static string ColorPromptSymbol   => HexColor(AnsiColors.LightGray);
+    internal static readonly string ColorReset  = PromptColor(AnsiColors.Reset);
 }
