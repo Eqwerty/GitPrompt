@@ -228,41 +228,84 @@ alias gcpa="git cherry-pick --abort" # Cancel the cherry-picking operation and r
 alias gcpc="git cherry-pick --continue" # Continue the cherry-picking operation in progress.
 
 # ============================ Links ============================
+# Resolve the base web URL for the origin remote (GitHub or Azure DevOps).
+# Supported inputs: GitHub HTTPS/SSH, AzDO modern HTTPS/SSH, AzDO legacy HTTPS/SSH.
+function __git_web_url() {
+  local remote_url
+  remote_url=$(git remote get-url origin 2>/dev/null) || { echo "Error: no remote 'origin' found" >&2; return 1; }
+
+  case "$remote_url" in
+    *github.com*)
+      printf '%s\n' "$(printf '%s' "$remote_url" | sed -Ee 's#git@github\.com:#https://github.com/#' -e 's%\.git$%%')"
+      ;;
+    git@ssh.dev.azure.com:*)
+      local path org project repo
+      path="${remote_url#git@ssh.dev.azure.com:v3/}"
+      IFS='/' read -r org project repo <<< "$path"
+      printf 'https://dev.azure.com/%s/%s/_git/%s\n' "$org" "$project" "$repo"
+      ;;
+    https://dev.azure.com/* | https://*@dev.azure.com/*)
+      # Strip embedded credentials if present (e.g. https://Org@dev.azure.com/... → https://dev.azure.com/...)
+      printf '%s\n' "$(printf '%s' "${remote_url%.git}" | sed 's#https://[^@/]*@#https://#')"
+      ;;
+    git@vs-ssh.visualstudio.com:*)
+      local path org project repo
+      path="${remote_url#git@vs-ssh.visualstudio.com:v3/}"
+      IFS='/' read -r org project repo <<< "$path"
+      printf 'https://dev.azure.com/%s/%s/_git/%s\n' "$org" "$project" "$repo"
+      ;;
+    https://*.visualstudio.com/*)
+      printf '%s\n' "${remote_url%.git}"
+      ;;
+    *)
+      printf 'Error: unsupported remote URL format: %s\n' "$remote_url" >&2
+      return 1
+      ;;
+  esac
+}
+
 # Create a pull request and open it in the default browser
 function pr() {
-  local github_url branch_name main_branch pr_url
+  local base_url branch_name main_branch pr_url
 
   git rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo "Error: not in a git repository"; return 1; }
 
-  github_url=$(git remote -v | awk '/fetch/{print $2}' | sed -Ee 's#(git@|git://)#https://#' -e 's@cloud:@cloud/@' -e 's@com:@com/@' -e 's%\.git$%%' | awk '/github/')
-  [ -n "$github_url" ] || { echo "Error: no GitHub remote found"; return 1; }
+  base_url=$(__git_web_url) || { echo "Error: no supported remote found (GitHub or Azure DevOps)"; return 1; }
 
-  branch_name=$(git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3,4)
+  branch_name=$(git symbolic-ref --short HEAD 2>/dev/null)
   [ -n "$branch_name" ] || { echo "Error: could not determine current branch (detached HEAD?)"; return 1; }
 
   main_branch=$(gdefault)
   [ -n "$main_branch" ] || { echo "Error: could not determine default branch"; return 1; }
 
-  pr_url="$github_url/compare/$main_branch...$branch_name"
+  if [[ "$base_url" == *dev.azure.com* || "$base_url" == *visualstudio.com* ]]; then
+    pr_url="$base_url/pullrequestcreate?sourceRef=refs/heads/$branch_name&targetRef=refs/heads/$main_branch"
+  else
+    pr_url="$base_url/compare/$main_branch...$branch_name"
+  fi
+
   explorer.exe "$pr_url"
 }
  
-# Open the current branch or the main branch in the GitHub repository
+# Open the current branch or the main branch in the repository
 function gh() {
-  local github_url main_branch current_branch url
+  local base_url main_branch current_branch url
 
   git rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo "Error: not in a git repository"; return 1; }
 
-  github_url=$(git remote -v | awk '/fetch/{print $2}' | sed -Ee 's#(git@|git://)#https://#' -e 's@cloud:@cloud/@' -e 's@com:@com/@' -e 's%\.git$%%' | awk '/github/')
-  [ -n "$github_url" ] || { echo "Error: no GitHub remote found"; return 1; }
+  base_url=$(__git_web_url) || { echo "Error: no supported remote found (GitHub or Azure DevOps)"; return 1; }
 
   main_branch=$(gdefault)
   [ -n "$main_branch" ] || { echo "Error: could not determine default branch"; return 1; }
 
   current_branch=$(gcurrent 2>/dev/null)
-  url="$github_url"
+  url="$base_url"
   if [[ -n "$current_branch" && "$main_branch" != "$current_branch" ]]; then
-    url="$github_url/tree/$current_branch"
+    if [[ "$base_url" == *dev.azure.com* || "$base_url" == *visualstudio.com* ]]; then
+      url="$base_url?version=GB$current_branch"
+    else
+      url="$base_url/tree/$current_branch"
+    fi
   fi
   
   explorer.exe "$url"
