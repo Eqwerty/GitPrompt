@@ -37,6 +37,9 @@ internal sealed record Config
     internal string? PromptSymbol { get; init; }
 
     [JsonInclude]
+    internal IconsConfig Icons { get; init; } = new();
+
+    [JsonInclude]
     [JsonPropertyName("commandTimeoutMs")]
     internal double? CommandTimeoutMs { get; init; }
 
@@ -66,6 +69,45 @@ internal sealed record Config
 
         [JsonIgnore]
         internal TimeSpan RepositoryTtl => TimeSpan.FromSeconds(RepositoryTtlSeconds ?? 60.0);
+    }
+
+    internal sealed record IconsConfig
+    {
+        [JsonInclude]
+        [JsonPropertyName("ahead")]
+        internal string? Ahead { get; init; }
+
+        [JsonInclude]
+        [JsonPropertyName("behind")]
+        internal string? Behind { get; init; }
+
+        [JsonInclude]
+        [JsonPropertyName("added")]
+        internal string? Added { get; init; }
+
+        [JsonInclude]
+        [JsonPropertyName("modified")]
+        internal string? Modified { get; init; }
+
+        [JsonInclude]
+        [JsonPropertyName("renamed")]
+        internal string? Renamed { get; init; }
+
+        [JsonInclude]
+        [JsonPropertyName("deleted")]
+        internal string? Deleted { get; init; }
+
+        [JsonInclude]
+        [JsonPropertyName("untracked")]
+        internal string? Untracked { get; init; }
+
+        [JsonInclude]
+        [JsonPropertyName("conflicts")]
+        internal string? Conflicts { get; init; }
+
+        [JsonInclude]
+        [JsonPropertyName("stash")]
+        internal string? Stash { get; init; }
     }
 }
 

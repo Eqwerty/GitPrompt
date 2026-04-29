@@ -1,4 +1,5 @@
 using System.Text;
+using GitPrompt.Configuration;
 using static GitPrompt.Constants.BranchLabelTokens;
 using static GitPrompt.Constants.PromptColors;
 using static GitPrompt.Constants.PromptIcons;
@@ -7,7 +8,7 @@ namespace GitPrompt.Git;
 
 internal static class GitStatusDisplayFormatter
 {
-    private readonly record struct CountStyle(int Value, string Color, char Icon);
+    private readonly record struct CountStyle(int Value, string Color, string Icon);
 
     internal static string BuildDisplay(
         string branchDescription,
@@ -17,6 +18,18 @@ internal static class GitStatusDisplayFormatter
         GitStatusCounts gitStatusCounts,
         string operationName)
     {
+        var icons = ConfigReader.Config.Icons;
+
+        var aheadIcon = icons.Ahead ?? IconAhead.ToString();
+        var behindIcon = icons.Behind ?? IconBehind.ToString();
+        var addedIcon = icons.Added ?? IconAdded.ToString();
+        var modifiedIcon = icons.Modified ?? IconModified.ToString();
+        var renamedIcon = icons.Renamed ?? IconRenamed.ToString();
+        var deletedIcon = icons.Deleted ?? IconDeleted.ToString();
+        var untrackedIcon = icons.Untracked ?? IconUntracked.ToString();
+        var conflictsIcon = icons.Conflicts ?? IconConflicts.ToString();
+        var stashIcon = icons.Stash ?? IconStash.ToString();
+
         var statusBuilder = new StringBuilder();
 
         branchDescription = AppendOperationToBranchLabel(branchDescription, operationName);
@@ -30,39 +43,39 @@ internal static class GitStatusDisplayFormatter
 
         if (commitsAhead > 0)
         {
-            statusBuilder.Append(' ').Append(ColorAhead).Append(IconAhead).Append(commitsAhead).Append(ColorReset);
+            statusBuilder.Append(' ').Append(ColorAhead).Append(aheadIcon).Append(commitsAhead).Append(ColorReset);
         }
 
         if (commitsBehind > 0)
         {
-            statusBuilder.Append(' ').Append(ColorBehind).Append(IconBehind).Append(commitsBehind).Append(ColorReset);
+            statusBuilder.Append(' ').Append(ColorBehind).Append(behindIcon).Append(commitsBehind).Append(ColorReset);
         }
 
         AppendCountIndicators(
             statusBuilder,
-            new CountStyle(gitStatusCounts.StagedAdded, ColorStaged, IconAdded),
-            new CountStyle(gitStatusCounts.StagedModified, ColorStaged, IconModified),
-            new CountStyle(gitStatusCounts.StagedRenamed, ColorStaged, IconRenamed),
-            new CountStyle(gitStatusCounts.StagedDeleted, ColorStaged, IconDeleted),
-            new CountStyle(gitStatusCounts.UnstagedAdded, ColorUnstaged, IconAdded),
-            new CountStyle(gitStatusCounts.UnstagedModified, ColorUnstaged, IconModified),
-            new CountStyle(gitStatusCounts.UnstagedRenamed, ColorUnstaged, IconRenamed),
-            new CountStyle(gitStatusCounts.UnstagedDeleted, ColorUnstaged, IconDeleted)
+            new CountStyle(gitStatusCounts.StagedAdded, ColorStaged, addedIcon),
+            new CountStyle(gitStatusCounts.StagedModified, ColorStaged, modifiedIcon),
+            new CountStyle(gitStatusCounts.StagedRenamed, ColorStaged, renamedIcon),
+            new CountStyle(gitStatusCounts.StagedDeleted, ColorStaged, deletedIcon),
+            new CountStyle(gitStatusCounts.UnstagedAdded, ColorUnstaged, addedIcon),
+            new CountStyle(gitStatusCounts.UnstagedModified, ColorUnstaged, modifiedIcon),
+            new CountStyle(gitStatusCounts.UnstagedRenamed, ColorUnstaged, renamedIcon),
+            new CountStyle(gitStatusCounts.UnstagedDeleted, ColorUnstaged, deletedIcon)
         );
 
         if (gitStatusCounts.Untracked > 0)
         {
-            statusBuilder.Append(' ').Append(ColorUntracked).Append(IconUntracked).Append(gitStatusCounts.Untracked).Append(ColorReset);
+            statusBuilder.Append(' ').Append(ColorUntracked).Append(untrackedIcon).Append(gitStatusCounts.Untracked).Append(ColorReset);
         }
 
         if (gitStatusCounts.Conflicts > 0)
         {
-            statusBuilder.Append(' ').Append(ColorConflict).Append(IconConflicts).Append(gitStatusCounts.Conflicts).Append(ColorReset);
+            statusBuilder.Append(' ').Append(ColorConflict).Append(conflictsIcon).Append(gitStatusCounts.Conflicts).Append(ColorReset);
         }
 
         if (stashEntryCount > 0)
         {
-            statusBuilder.Append(' ').Append(ColorStash).Append(IconStash).Append(stashEntryCount).Append(ColorReset);
+            statusBuilder.Append(' ').Append(ColorStash).Append(stashIcon).Append(stashEntryCount).Append(ColorReset);
         }
 
         return statusBuilder.ToString();

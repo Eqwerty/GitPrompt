@@ -42,7 +42,11 @@ internal static class ConfigReader
         try
         {
             var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
-            var resolved = config is null ? new Config() : config with { Cache = config.Cache };
+            var resolved = config is null ? new Config() : config with
+            {
+                Cache = config.Cache ?? new(),
+                Icons = config.Icons ?? new()
+            };
             return new ConfigLoadResult(filePath, ConfigLoadStatus.Loaded, resolved);
         }
         catch

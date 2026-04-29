@@ -377,4 +377,55 @@ public sealed class ConfigDeserializationTests
         // Assert
         config!.PromptSymbol.Should().BeEmpty();
     }
+
+    [Fact]
+    public void Icons_WhenAbsent_ShouldBeNull()
+    {
+        // Arrange
+        var json = "{}";
+
+        // Act
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+
+        // Assert
+        config!.Icons.Should().BeNull();
+    }
+
+    [Fact]
+    public void Icons_WhenPresentButEmpty_ShouldHaveAllNullIconValues()
+    {
+        // Arrange
+        var json = """{"icons": {}}""";
+
+        // Act
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+
+        // Assert
+        config!.Icons.Should().NotBeNull();
+        config.Icons!.Ahead.Should().BeNull();
+        config.Icons.Behind.Should().BeNull();
+        config.Icons.Added.Should().BeNull();
+        config.Icons.Modified.Should().BeNull();
+        config.Icons.Renamed.Should().BeNull();
+        config.Icons.Deleted.Should().BeNull();
+        config.Icons.Untracked.Should().BeNull();
+        config.Icons.Conflicts.Should().BeNull();
+        config.Icons.Stash.Should().BeNull();
+    }
+
+    [Fact]
+    public void Icons_WhenExplicitlySet_ShouldReturnValues()
+    {
+        // Arrange
+        var json = """{"icons": {"ahead": "⬆", "behind": "⬇", "stash": "S"}}""";
+
+        // Act
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+
+        // Assert
+        config!.Icons.Ahead.Should().Be("⬆");
+        config.Icons.Behind.Should().Be("⬇");
+        config.Icons.Stash.Should().Be("S");
+        config.Icons.Added.Should().BeNull();
+    }
 }

@@ -68,6 +68,22 @@ $
 user host ~/repo (main) $ 
 ```
 
+## Git Status Icons
+
+Customise the icon characters shown in the git status segment. Set any key to a string to override it; `null` restores the default.
+
+| Key | Default | Description |
+|---|---|---|
+| `icons.ahead` | `↑` | Commits ahead of upstream |
+| `icons.behind` | `↓` | Commits behind upstream |
+| `icons.added` | `+` | Added files (staged or unstaged) |
+| `icons.modified` | `~` | Modified files (staged or unstaged) |
+| `icons.renamed` | `→` | Renamed files (staged or unstaged) |
+| `icons.deleted` | `-` | Deleted files (staged or unstaged) |
+| `icons.untracked` | `?` | Untracked files |
+| `icons.conflicts` | `!` | Merge conflicts |
+| `icons.stash` | `@` | Stash entries |
+
 ## Example
 
 ```jsonc

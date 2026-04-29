@@ -26,6 +26,8 @@ internal static class TestHelpers
 
     internal static string Indicator(char icon, int count) => $"{icon}{count}";
 
+    internal static string Indicator(string icon, int count) => $"{icon}{count}";
+
     internal static string Colored(string color, string segment) => $"{color}{segment}{ColorReset}";
 }
 
