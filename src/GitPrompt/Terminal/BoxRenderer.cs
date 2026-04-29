@@ -1,7 +1,7 @@
 using System.Text;
 using GitPrompt.Constants;
 
-namespace GitPrompt.Diagnostics;
+namespace GitPrompt.Terminal;
 
 /// <summary>
 /// Renders a list of content lines inside a Unicode box with optional section separators.

@@ -2,15 +2,15 @@ namespace GitPrompt.Platform;
 
 internal static class ShellConfigScanner
 {
-    internal static readonly string[] SearchFileNames =
+    private static readonly string[] SearchFileNames =
     [
-        ".bashrc", ".bash_aliases", ".bash_profile", ".bash_login",
-        ".profile", ".zshenv", ".zshrc", ".zprofile"
+        ".bashrc", ".bash_aliases", ".bash_profile", ".bash_login", ".profile", ".zshenv", ".zshrc", ".zprofile"
     ];
 
     internal static string[] GetSearchPaths()
     {
         var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
         return Array.ConvertAll(SearchFileNames, name => Path.Combine(home, name));
     }
 

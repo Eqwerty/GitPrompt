@@ -2,7 +2,10 @@ namespace GitPrompt.Platform;
 
 internal static class AppPaths
 {
-    internal static string? GetBinaryPath() => Environment.ProcessPath;
+    internal static string? GetBinaryPath()
+    {
+        return Environment.ProcessPath;
+    }
 
     internal static string GetConfigFilePath()
     {
@@ -14,5 +17,8 @@ internal static class AppPaths
         return Path.Combine(XdgPaths.GetDataDirectory(), "git_aliases.sh");
     }
 
-    internal static string GetCacheDirectory() => XdgPaths.GetCacheDirectory();
+    internal static string GetCacheDirectory()
+    {
+        return XdgPaths.GetCacheDirectory();
+    }
 }

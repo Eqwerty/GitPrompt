@@ -1,13 +1,13 @@
 using GitPrompt.Constants;
-using GitPrompt.Diagnostics;
 using GitPrompt.Platform;
+using GitPrompt.Terminal;
 
 namespace GitPrompt.Commands;
 
 internal static class PathsCommand
 {
     private static readonly string[] Labels = ["binary", "config", "aliases", "cache dir", "shell config"];
-    private static readonly int LabelWidth = Labels.Max(l => l.Length);
+    private static readonly int LabelWidth = Labels.Max(label => label.Length);
 
     internal static void Run(TextWriter? output = null)
     {

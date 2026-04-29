@@ -1,6 +1,6 @@
 using FluentAssertions;
 using GitPrompt.Constants;
-using GitPrompt.Diagnostics;
+using GitPrompt.Terminal;
 
 namespace GitPrompt.Tests.Unit.Diagnostics;
 

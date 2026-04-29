@@ -3,6 +3,7 @@ using System.Text;
 using GitPrompt.Configuration;
 using GitPrompt.Constants;
 using GitPrompt.Prompting;
+using GitPrompt.Terminal;
 
 namespace GitPrompt.Diagnostics;
 
