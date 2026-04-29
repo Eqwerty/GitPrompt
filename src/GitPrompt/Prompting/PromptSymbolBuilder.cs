@@ -1,3 +1,4 @@
+using GitPrompt.Configuration;
 using GitPrompt.Platform;
 using GitPrompt.Constants;
 
@@ -7,6 +8,12 @@ internal static class PromptSymbolBuilder
 {
     internal static string Build(PlatformProvider platformProvider)
     {
+        var customSymbol = ConfigReader.Config.PromptSymbol;
+        if (customSymbol is not null)
+        {
+            return customSymbol;
+        }
+
         if (platformProvider.IsWindows())
         {
             return PromptSymbols.Windows;

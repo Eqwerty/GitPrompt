@@ -340,15 +340,41 @@ public sealed class ConfigDeserializationTests
     }
 
     [Fact]
-    public void NewlineBeforePrompt_WhenExplicitlyFalse_ShouldReturnFalse()
+    public void PromptSymbol_WhenAbsent_ShouldDefaultToNull()
     {
         // Arrange
-        var json = """{"newlineBeforePrompt": false}""";
+        var json = "{}";
 
         // Act
         var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
 
         // Assert
-        config!.NewlineBeforePrompt.Should().BeFalse();
+        config!.PromptSymbol.Should().BeNull();
+    }
+
+    [Fact]
+    public void PromptSymbol_WhenExplicitlySet_ShouldReturnValue()
+    {
+        // Arrange
+        var json = """{"promptSymbol": "❯"}""";
+
+        // Act
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+
+        // Assert
+        config!.PromptSymbol.Should().Be("❯");
+    }
+
+    [Fact]
+    public void PromptSymbol_WhenSetToEmptyString_ShouldReturnEmptyString()
+    {
+        // Arrange
+        var json = """{"promptSymbol": ""}""";
+
+        // Act
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+
+        // Assert
+        config!.PromptSymbol.Should().BeEmpty();
     }
 }

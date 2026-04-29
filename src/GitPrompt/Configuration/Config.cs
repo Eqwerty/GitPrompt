@@ -33,6 +33,10 @@ internal sealed record Config
     internal bool ShowCommandDuration { get; init; } = true;
 
     [JsonInclude]
+    [JsonPropertyName("promptSymbol")]
+    internal string? PromptSymbol { get; init; }
+
+    [JsonInclude]
     [JsonPropertyName("commandTimeoutMs")]
     internal double? CommandTimeoutMs { get; init; }
 
