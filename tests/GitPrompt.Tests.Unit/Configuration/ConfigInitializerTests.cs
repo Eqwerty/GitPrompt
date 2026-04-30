@@ -7,6 +7,172 @@ namespace GitPrompt.Tests.Unit.Configuration;
 public sealed class ConfigInitializerTests
 {
     [Fact]
+    public void BuildConfigContent_WhenPassedCustomConfig_ShouldUseItsValuesInsteadOfDefaults()
+    {
+        // Arrange
+        var customConfig = new Config
+        {
+            ShowUser = false,
+            MaxPathDepth = 3,
+            Compact = true
+        };
+
+        // Act
+        var content = ConfigInitializer.BuildConfigContent(customConfig);
+
+        // Assert
+        content.Should().Contain("\"showUser\": false");
+        content.Should().Contain("\"maxPathDepth\": 3");
+        content.Should().Contain("\"compact\": true");
+    }
+
+    [Fact]
+    public void BuildConfigContent_WhenPassedConfigWithCustomIcon_ShouldSerializeIconValue()
+    {
+        // Arrange
+        var customConfig = new Config
+        {
+            Icons = new Config.IconsConfig { Ahead = "↑" }
+        };
+
+        // Act
+        var content = ConfigInitializer.BuildConfigContent(customConfig);
+
+        // Assert
+        content.Should().Contain("\"ahead\": \"↑\"");
+    }
+
+    [Fact]
+    public void BuildConfigContent_WhenPassedNewConfig_ShouldProduceSameOutputAsBuildDefaultConfigContent()
+    {
+        // Act & Assert
+        ConfigInitializer.BuildConfigContent(new Config())
+            .Should().Be(ConfigInitializer.BuildDefaultConfigContent());
+    }
+
+    [Fact]
+    public void MigrateConfigIfNeeded_WhenFileIsUpToDate_ShouldNotModifyFile()
+    {
+        // Arrange
+        var configPath = Path.GetTempFileName();
+        var original = ConfigInitializer.BuildDefaultConfigContent();
+        File.WriteAllText(configPath, original);
+
+        // Act
+        ConfigInitializer.MigrateConfigIfNeeded(configPath);
+
+        // Assert
+        File.ReadAllText(configPath).Should().Be(original);
+
+        File.Delete(configPath);
+    }
+
+    [Fact]
+    public void MigrateConfigIfNeeded_WhenTopLevelKeyMissing_ShouldAddItWithDefaultValue()
+    {
+        // Arrange
+        var configPath = Path.GetTempFileName();
+        var contentMissingKey = """
+            {
+              "showUser": false,
+              "showHost": true
+            }
+            """;
+        File.WriteAllText(configPath, contentMissingKey);
+
+        // Act
+        ConfigInitializer.MigrateConfigIfNeeded(configPath);
+
+        // Assert
+        var result = File.ReadAllText(configPath);
+        result.Should().Contain("\"compact\":");
+        result.Should().Contain("\"multilinePrompt\":");
+
+        File.Delete(configPath);
+    }
+
+    [Fact]
+    public void MigrateConfigIfNeeded_WhenTopLevelKeyMissing_ShouldPreserveExistingCustomValues()
+    {
+        // Arrange
+        var configPath = Path.GetTempFileName();
+        var contentMissingKey = """
+            {
+              "showUser": false,
+              "showHost": false
+            }
+            """;
+        File.WriteAllText(configPath, contentMissingKey);
+
+        // Act
+        ConfigInitializer.MigrateConfigIfNeeded(configPath);
+
+        // Assert
+        var result = File.ReadAllText(configPath);
+        result.Should().Contain("\"showUser\": false");
+        result.Should().Contain("\"showHost\": false");
+
+        File.Delete(configPath);
+    }
+
+    [Fact]
+    public void MigrateConfigIfNeeded_WhenNestedKeyMissing_ShouldAddItWithDefaultValue()
+    {
+        // Arrange
+        var configPath = Path.GetTempFileName();
+        var contentMissingNestedKey = """
+            {
+              "cache": {
+                "gitStatusTtl": 10
+              }
+            }
+            """;
+        File.WriteAllText(configPath, contentMissingNestedKey);
+
+        // Act
+        ConfigInitializer.MigrateConfigIfNeeded(configPath);
+
+        // Assert
+        var result = File.ReadAllText(configPath);
+        result.Should().Contain("\"repositoryTtl\":");
+        result.Should().Contain("\"gitStatusTtl\": 10");
+
+        File.Delete(configPath);
+    }
+
+    [Fact]
+    public void MigrateConfigIfNeeded_WhenFileIsUnparseable_ShouldNotThrowAndNotModifyFile()
+    {
+        // Arrange
+        var configPath = Path.GetTempFileName();
+        const string malformed = "{ this is not valid json }}}";
+        File.WriteAllText(configPath, malformed);
+
+        // Act
+        var act = () => ConfigInitializer.MigrateConfigIfNeeded(configPath);
+
+        // Assert
+        act.Should().NotThrow();
+        File.ReadAllText(configPath).Should().Be(malformed);
+
+        File.Delete(configPath);
+    }
+
+    [Fact]
+    public void MigrateConfigIfNeeded_WhenFileDoesNotExist_ShouldNotThrow()
+    {
+        // Arrange
+        var configPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString(), "config.jsonc");
+
+        // Act
+        var act = () => ConfigInitializer.MigrateConfigIfNeeded(configPath);
+
+        // Assert
+        act.Should().NotThrow();
+    }
+
+
+    [Fact]
     public void EnsureConfigFileExists_WhenFileDoesNotExist_ShouldCreateDirectoryAndWriteDefaultContent()
     {
         // Arrange

@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.Json;
 using GitPrompt.Constants;
 using GitPrompt.Platform;
 
@@ -10,7 +11,9 @@ internal static class ConfigInitializer
     {
         try
         {
-            EnsureConfigFileExists(AppPaths.GetConfigFilePath());
+            var configPath = AppPaths.GetConfigFilePath();
+            EnsureConfigFileExists(configPath);
+            MigrateConfigIfNeeded(configPath);
         }
         catch
         {
@@ -30,13 +33,13 @@ internal static class ConfigInitializer
         File.WriteAllText(configPath, BuildDefaultConfigContent());
     }
 
-    internal static string BuildDefaultConfigContent()
+    internal static string BuildDefaultConfigContent() => BuildConfigContent(new Config());
+
+    internal static string BuildConfigContent(Config config)
     {
         using var stream = typeof(ConfigInitializer).Assembly.GetManifestResourceStream("default-config.jsonc")!;
         using var reader = new StreamReader(stream);
         var template = reader.ReadToEnd();
-
-        var config = new Config();
 
         return template
             .Replace("{gitStatusTtl}", config.Cache.GitStatusTtl.TotalSeconds.ToString(CultureInfo.InvariantCulture))
@@ -116,5 +119,86 @@ internal static class ConfigInitializer
     private static string JsonValue(string? value)
     {
         return value is null ? "null" : $"\"{value}\"";
+    }
+
+    internal static void MigrateConfigIfNeeded(string configPath)
+    {
+        string fileContent;
+        try
+        {
+            fileContent = File.ReadAllText(configPath);
+        }
+        catch
+        {
+            return;
+        }
+
+        var jsonOptions = new JsonDocumentOptions
+        {
+            CommentHandling = JsonCommentHandling.Skip,
+            AllowTrailingCommas = true
+        };
+
+        JsonDocument userDoc;
+        try
+        {
+            userDoc = JsonDocument.Parse(fileContent, jsonOptions);
+        }
+        catch
+        {
+            return;
+        }
+
+        using (userDoc)
+        {
+            var defaultContent = BuildDefaultConfigContent();
+            using var defaultDoc = JsonDocument.Parse(defaultContent, jsonOptions);
+
+            if (!HasMissingKeys(defaultDoc.RootElement, userDoc.RootElement))
+            {
+                return;
+            }
+        }
+
+        Config userConfig;
+        try
+        {
+            userConfig = JsonSerializer.Deserialize(fileContent, ConfigJsonContext.Default.Config) ?? new Config();
+            userConfig = userConfig with
+            {
+                Cache = userConfig.Cache,
+                Icons = userConfig.Icons,
+                Colors = userConfig.Colors
+            };
+        }
+        catch
+        {
+            return;
+        }
+
+        File.WriteAllText(configPath, BuildConfigContent(userConfig));
+    }
+
+    private static bool HasMissingKeys(JsonElement expected, JsonElement actual)
+    {
+        if (expected.ValueKind != JsonValueKind.Object || actual.ValueKind != JsonValueKind.Object)
+        {
+            return false;
+        }
+
+        foreach (var expectedProp in expected.EnumerateObject())
+        {
+            if (!actual.TryGetProperty(expectedProp.Name, out var actualValue))
+            {
+                return true;
+            }
+
+            if (HasMissingKeys(expectedProp.Value, actualValue))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
