@@ -335,6 +335,17 @@ alias gcge="git config --global --edit" # Opens the global Git configuration fil
 alias gcfd="git clean -fd" # Remove untracked files and directories
 alias gcfdn="git clean -fdn" # Show which untracked files and directories would be removed
 
+function gcdroot() {
+    local root
+    root=$(git rev-parse --show-toplevel 2>/dev/null)
+    if [[ -n root ]]; then
+        cd $root || return
+    else
+        echo "Not inside a Git repository"
+        return 1
+    fi
+}
+
 # Execute a Git command on a file matched by partial name from modified/untracked files
 # Usage: __git_match_and_execute <description> <partial-file-name> <git-command-words...>
 # - If exactly one match is found, the command is run with that file.
