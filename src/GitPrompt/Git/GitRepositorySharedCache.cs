@@ -198,27 +198,11 @@ internal static class GitRepositorySharedCache
 
     private static string HashPath(string value)
     {
-        const int stackAllocThreshold = 512;
-        var byteCount = Encoding.UTF8.GetByteCount(value);
-        ulong hash;
-
-        if (byteCount <= stackAllocThreshold)
-        {
-            Span<byte> bytes = stackalloc byte[stackAllocThreshold];
-            var written = Encoding.UTF8.GetBytes(value.AsSpan(), bytes);
-            hash = Fnv1A64(bytes[..written]);
-        }
-        else
-        {
-            hash = Fnv1A64(Encoding.UTF8.GetBytes(value));
-        }
-
-        Span<char> chars = stackalloc char[16];
-        hash.TryFormat(chars, out _, "x16");
-        return new string(chars);
+        var hash = Fnv1A64(Encoding.UTF8.GetBytes(value));
+        return hash.ToString("x16");
     }
 
-    private static ulong Fnv1A64(ReadOnlySpan<byte> data)
+    private static ulong Fnv1A64(byte[] data)
     {
         const ulong offsetBasis = 14695981039346656037UL;
         const ulong prime = 1099511628211UL;
@@ -252,28 +236,22 @@ internal static class GitRepositorySharedCache
     private static bool TryParseRecord(string fileContent, out RepositorySharedCacheRecord cacheRecord)
     {
         cacheRecord = default;
-        var span = fileContent.AsSpan();
+        var lines = fileContent.Split('\n');
+        var i = 0;
 
-        if (!TryReadLine(ref span, out var versionLine) || !versionLine.Equals("v1", StringComparison.Ordinal))
-        {
-            return false;
-        }
+        string? NextLine() => i < lines.Length ? lines[i++].TrimEnd('\r') : null;
 
-        if (!TryReadLine(ref span, out var ticksLine) || !long.TryParse(ticksLine, out var cachedAtUtcTicks))
-        {
-            return false;
-        }
+        if (NextLine() is not "v1") return false;
+        if (NextLine() is not { } ticksText || !long.TryParse(ticksText, out var cachedAtUtcTicks)) return false;
 
-        if (!TryReadLine(ref span, out var startDirLine) ||
-            !TryReadLine(ref span, out var workingTreeLine) ||
-            !TryReadLine(ref span, out var gitDirLine))
-        {
-            return false;
-        }
+        var startDirEncoded = NextLine();
+        var workingTreeEncoded = NextLine();
+        var gitDirEncoded = NextLine();
+        if (startDirEncoded is null || workingTreeEncoded is null || gitDirEncoded is null) return false;
 
-        var startDirectoryPath = Decode(startDirLine);
-        var workingTreePath = Decode(workingTreeLine);
-        var gitDirectoryPath = Decode(gitDirLine);
+        var startDirectoryPath = Decode(startDirEncoded);
+        var workingTreePath = Decode(workingTreeEncoded);
+        var gitDirectoryPath = Decode(gitDirEncoded);
         if (string.IsNullOrEmpty(startDirectoryPath) || string.IsNullOrEmpty(workingTreePath) || string.IsNullOrEmpty(gitDirectoryPath))
         {
             return false;
@@ -288,62 +266,16 @@ internal static class GitRepositorySharedCache
         return true;
     }
 
-    private static bool TryReadLine(ref ReadOnlySpan<char> span, out ReadOnlySpan<char> line)
-    {
-        if (span.IsEmpty)
-        {
-            line = default;
-            return false;
-        }
-
-        var newlineIndex = span.IndexOfAny('\r', '\n');
-        if (newlineIndex < 0)
-        {
-            line = span;
-            span = default;
-            return true;
-        }
-
-        line = span[..newlineIndex];
-        var next = span[(newlineIndex + 1)..];
-        if (!next.IsEmpty && span[newlineIndex] == '\r' && next[0] == '\n')
-        {
-            next = next[1..];
-        }
-
-        span = next;
-        return true;
-    }
-
     private static string Encode(string value)
     {
         return Convert.ToBase64String(Encoding.UTF8.GetBytes(value));
     }
 
-    private static string Decode(ReadOnlySpan<char> encoded)
+    private static string Decode(string encoded)
     {
         try
         {
-            const int stackAllocThreshold = 512;
-            var maxByteCount = (encoded.Length + 3) / 4 * 3;
-            if (maxByteCount <= stackAllocThreshold)
-            {
-                Span<byte> buffer = stackalloc byte[stackAllocThreshold];
-                if (!Convert.TryFromBase64Chars(encoded, buffer, out var bytesWritten))
-                {
-                    return string.Empty;
-                }
-
-                return Encoding.UTF8.GetString(buffer[..bytesWritten]);
-            }
-
-            var bytes = new byte[maxByteCount];
-            if (!Convert.TryFromBase64Chars(encoded, bytes, out var written))
-            {
-                return string.Empty;
-            }
-
-            return Encoding.UTF8.GetString(bytes, 0, written);
+            return Encoding.UTF8.GetString(Convert.FromBase64String(encoded));
         }
         catch
         {

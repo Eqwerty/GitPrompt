@@ -36,8 +36,6 @@ internal static class GitStatusSegmentBuilder
             return cachedSegment;
         }
 
-        var isCompactMode = ConfigReader.Config.Compact;
-
         var statusOutput = RunGitCommand(
             repositoryRootPath,
             "status",
@@ -51,179 +49,69 @@ internal static class GitStatusSegmentBuilder
             return string.Empty;
         }
 
-        if (isCompactMode)
-        {
-            return BuildCoreCompact(repositoryRootPath, gitDirectoryPath, statusOutput);
-        }
-
-        return BuildCoreVerbose(repositoryRootPath, gitDirectoryPath, statusOutput);
-    }
-
-    private static string BuildCoreCompact(string repositoryRootPath, string gitDirectoryPath, string statusOutput)
-    {
-        var snapshot = GitStatusParser.ParseCompact(statusOutput);
-
-        var branchHeadName = snapshot.BranchHeadName;
-        var headObjectId = snapshot.HeadObjectId;
-        var commitsAhead = snapshot.CommitsAhead;
-        var commitsBehind = snapshot.CommitsBehind;
-        var stashEntryCount = snapshot.StashEntryCount;
-        var upstreamReference = snapshot.UpstreamReference;
-        var hasUpstream = snapshot.HasUpstream;
-        var hasAheadBehindCounts = snapshot.HasAheadBehindCounts;
-        var isDirty = snapshot.IsDirty;
-
-        var operationName = GitOperationDetector.ReadGitOperationMarker(gitDirectoryPath);
-
-        if (branchHeadName is "(detached)" || string.IsNullOrEmpty(branchHeadName))
-        {
-            var rebaseBranchName = GitOperationDetector.ResolveRebaseBranchName(gitDirectoryPath);
-            if (!string.IsNullOrEmpty(rebaseBranchName))
-            {
-                var rebaseBranchLabel = GitStatusDisplayFormatter.BuildBranchLabel(rebaseBranchName);
-                
-                return CacheAndReturn(GitStatusDisplayFormatter.BuildDisplayCompact(rebaseBranchLabel,
-                    commitsAhead,
-                    commitsBehind,
-                    stashEntryCount,
-                    isDirty,
-                    operationName));
-            }
-
-            var shortObjectId = ShortenCommitHash(headObjectId);
-            if (string.IsNullOrEmpty(shortObjectId))
-            {
-                return string.Empty;
-            }
-
-            var matchingRemoteReferences = GitOperationDetector.FindMatchingRemoteReferences(gitDirectoryPath, headObjectId);
-            var detachedBranchLabel = GitStatusDisplayFormatter.BuildBranchLabel($"{shortObjectId}...");
-            if (matchingRemoteReferences.Count is 1)
-            {
-                detachedBranchLabel = GitStatusDisplayFormatter.BuildBranchLabel($"{matchingRemoteReferences[0]} {shortObjectId}...");
-            }
-
-            return CacheAndReturn(GitStatusDisplayFormatter.BuildDisplayCompact(detachedBranchLabel,
-                commitsAhead,
-                commitsBehind,
-                stashEntryCount,
-                isDirty,
-                operationName));
-        }
-
-        if (hasUpstream && !hasAheadBehindCounts && !string.IsNullOrEmpty(upstreamReference))
-        {
-            var (computedAheadCount, computedBehindCount) =
-                GitHistoryCalculator.ComputeAheadBehindAgainstUpstream(repositoryRootPath, upstreamReference);
-
-            commitsAhead = computedAheadCount;
-            commitsBehind = computedBehindCount;
-        }
-        else if (!hasUpstream)
-        {
-            commitsAhead = GitHistoryCalculator.ComputeLocalAheadCommitCount(repositoryRootPath);
-            commitsBehind = 0;
-        }
-
-        var isInOperation = !string.IsNullOrEmpty(operationName);
-        var branchLabel = GitStatusDisplayFormatter.BuildBranchLabel(branchHeadName, hasUpstream || isInOperation);
-
-        return CacheAndReturn(GitStatusDisplayFormatter.BuildDisplayCompact(branchLabel,
-            commitsAhead,
-            commitsBehind,
-            stashEntryCount,
-            isDirty,
-            operationName));
-
-        string CacheAndReturn(string segment)
-        {
-            GitStatusSharedCache.Set(repositoryRootPath, gitDirectoryPath, segment);
-            
-            return segment;
-        }
-    }
-
-    private static string BuildCoreVerbose(string repositoryRootPath, string gitDirectoryPath, string statusOutput)
-    {
         var snapshot = GitStatusParser.Parse(statusOutput);
-
-        var branchHeadName = snapshot.BranchHeadName;
-        var headObjectId = snapshot.HeadObjectId;
-        var commitsAhead = snapshot.CommitsAhead;
-        var commitsBehind = snapshot.CommitsBehind;
-        var stashEntryCount = snapshot.StashEntryCount;
-        var upstreamReference = snapshot.UpstreamReference;
-        var hasUpstream = snapshot.HasUpstream;
-        var hasAheadBehindCounts = snapshot.HasAheadBehindCounts;
-        var statusCounts = snapshot.GitStatusCounts;
-
         var operationName = GitOperationDetector.ReadGitOperationMarker(gitDirectoryPath);
 
-        if (branchHeadName is "(detached)" || string.IsNullOrEmpty(branchHeadName))
+        string branchLabel;
+        if (snapshot.BranchHeadName is "(detached)" || string.IsNullOrEmpty(snapshot.BranchHeadName))
         {
-            var rebaseBranchName = GitOperationDetector.ResolveRebaseBranchName(gitDirectoryPath);
-            if (!string.IsNullOrEmpty(rebaseBranchName))
-            {
-                var rebaseBranchLabel = GitStatusDisplayFormatter.BuildBranchLabel(rebaseBranchName);
-                
-                return CacheAndReturn(GitStatusDisplayFormatter.BuildDisplay(rebaseBranchLabel,
-                    commitsAhead,
-                    commitsBehind,
-                    stashEntryCount,
-                    statusCounts,
-                    operationName));
-            }
-
-            var shortObjectId = ShortenCommitHash(headObjectId);
-            if (string.IsNullOrEmpty(shortObjectId))
+            branchLabel = ResolveDetachedHeadBranchLabel(gitDirectoryPath, snapshot.HeadObjectId);
+            if (string.IsNullOrEmpty(branchLabel))
             {
                 return string.Empty;
             }
-
-            var matchingRemoteReferences = GitOperationDetector.FindMatchingRemoteReferences(gitDirectoryPath, headObjectId);
-            var detachedBranchLabel = GitStatusDisplayFormatter.BuildBranchLabel($"{shortObjectId}...");
-            if (matchingRemoteReferences.Count is 1)
-            {
-                detachedBranchLabel = GitStatusDisplayFormatter.BuildBranchLabel($"{matchingRemoteReferences[0]} {shortObjectId}...");
-            }
-
-            return CacheAndReturn(GitStatusDisplayFormatter.BuildDisplay(detachedBranchLabel,
-                commitsAhead,
-                commitsBehind,
-                stashEntryCount,
-                statusCounts,
-                operationName));
         }
-
-        if (hasUpstream && !hasAheadBehindCounts && !string.IsNullOrEmpty(upstreamReference))
+        else
         {
-            var (computedAheadCount, computedBehindCount) =
-                GitHistoryCalculator.ComputeAheadBehindAgainstUpstream(repositoryRootPath, upstreamReference);
+            var (commitsAhead, commitsBehind) = ResolveAheadBehindCounts(repositoryRootPath, snapshot);
+            snapshot = snapshot with { CommitsAhead = commitsAhead, CommitsBehind = commitsBehind };
 
-            commitsAhead = computedAheadCount;
-            commitsBehind = computedBehindCount;
+            var isInOperation = !string.IsNullOrEmpty(operationName);
+            branchLabel = GitStatusDisplayFormatter.BuildBranchLabel(snapshot.BranchHeadName, snapshot.HasUpstream || isInOperation);
         }
-        else if (!hasUpstream)
+
+        var segment = ConfigReader.Config.Compact
+            ? GitStatusDisplayFormatter.BuildDisplayCompact(branchLabel, snapshot.CommitsAhead, snapshot.CommitsBehind, snapshot.StashEntryCount, snapshot.GitStatusCounts.IsDirty, operationName)
+            : GitStatusDisplayFormatter.BuildDisplay(branchLabel, snapshot.CommitsAhead, snapshot.CommitsBehind, snapshot.StashEntryCount, snapshot.GitStatusCounts, operationName);
+
+        GitStatusSharedCache.Set(repositoryRootPath, gitDirectoryPath, segment);
+        return segment;
+    }
+
+    private static string ResolveDetachedHeadBranchLabel(string gitDirectoryPath, string headObjectId)
+    {
+        var rebaseBranchName = GitOperationDetector.ResolveRebaseBranchName(gitDirectoryPath);
+        if (!string.IsNullOrEmpty(rebaseBranchName))
         {
-            commitsAhead = GitHistoryCalculator.ComputeLocalAheadCommitCount(repositoryRootPath);
-            commitsBehind = 0;
+            return GitStatusDisplayFormatter.BuildBranchLabel(rebaseBranchName);
         }
 
-        var isInOperation = !string.IsNullOrEmpty(operationName);
-        var branchLabel = GitStatusDisplayFormatter.BuildBranchLabel(branchHeadName, hasUpstream || isInOperation);
-
-        return CacheAndReturn(GitStatusDisplayFormatter.BuildDisplay(branchLabel,
-            commitsAhead,
-            commitsBehind,
-            stashEntryCount,
-            statusCounts,
-            operationName));
-
-        string CacheAndReturn(string segment)
+        var shortObjectId = ShortenCommitHash(headObjectId);
+        if (string.IsNullOrEmpty(shortObjectId))
         {
-            GitStatusSharedCache.Set(repositoryRootPath, gitDirectoryPath, segment);
-
-            return segment;
+            return string.Empty;
         }
+
+        var matchingRemoteReferences = GitOperationDetector.FindMatchingRemoteReferences(gitDirectoryPath, headObjectId);
+        var label = matchingRemoteReferences.Count is 1
+            ? $"{matchingRemoteReferences[0]} {shortObjectId}..."
+            : $"{shortObjectId}...";
+
+        return GitStatusDisplayFormatter.BuildBranchLabel(label);
+    }
+
+    private static (int Ahead, int Behind) ResolveAheadBehindCounts(string repositoryRootPath, GitStatusSnapshot snapshot)
+    {
+        if (snapshot.HasUpstream && !snapshot.HasAheadBehindCounts && !string.IsNullOrEmpty(snapshot.UpstreamReference))
+        {
+            return GitHistoryCalculator.ComputeAheadBehindAgainstUpstream(repositoryRootPath, snapshot.UpstreamReference);
+        }
+
+        if (!snapshot.HasUpstream)
+        {
+            return (GitHistoryCalculator.ComputeLocalAheadCommitCount(repositoryRootPath), 0);
+        }
+
+        return (snapshot.CommitsAhead, snapshot.CommitsBehind);
     }
 }

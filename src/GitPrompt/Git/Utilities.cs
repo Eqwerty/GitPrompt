@@ -57,7 +57,7 @@ internal static class Utilities
             return "\"\"";
         }
 
-        if (!argument.Any(static c => char.IsWhiteSpace(c) || c is '"'))
+        if (argument.IndexOfAny([' ', '\t', '\n', '\r', '"']) < 0)
         {
             return argument;
         }

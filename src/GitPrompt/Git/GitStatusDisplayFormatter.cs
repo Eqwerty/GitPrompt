@@ -163,7 +163,7 @@ internal static class GitStatusDisplayFormatter
         return branchLabel + separator + operationName;
     }
 
-    private static void AppendCountIndicators(StringBuilder sb, params ReadOnlySpan<CountStyle> items)
+    private static void AppendCountIndicators(StringBuilder sb, params CountStyle[] items)
     {
         foreach (var item in items)
         {

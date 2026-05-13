@@ -110,11 +110,11 @@ public sealed class PromptDiagnosticsTests
     }
 
     [Fact]
-    public void GetReport_WhenRepoCacheL1Hit_ShouldShowInProcessHit()
+    public void GetReport_WhenRepoCacheL2Hit_ShouldShowDiskHit()
     {
         // Arrange
         using var scope = PromptDiagnostics.EnableForTesting();
-        PromptDiagnostics.RecordRepoCacheL1Hit();
+        PromptDiagnostics.RecordRepoCacheL2Hit();
         PromptDiagnostics.RecordStatusCacheHit(age: TimeSpan.FromSeconds(1), ttl: TimeSpan.FromSeconds(5));
         var result = new PromptResult("user host ~/repo", string.Empty, "(main)", "$",
             TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(2), TimeSpan.FromMilliseconds(3));
@@ -123,7 +123,7 @@ public sealed class PromptDiagnosticsTests
         var report = PromptDiagnostics.GetReport("/home/user/repo", result);
 
         // Assert
-        report.Should().Contain("Repository  hit (in-process)");
+        report.Should().Contain("Repository  hit (disk)");
     }
 
     [Fact]
@@ -155,7 +155,6 @@ public sealed class PromptDiagnosticsTests
         var act = () =>
         {
             PromptDiagnostics.RecordStatusCacheHit(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(5));
-            PromptDiagnostics.RecordRepoCacheL1Hit();
         };
         act.Should().NotThrow();
     }

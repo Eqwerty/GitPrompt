@@ -14,10 +14,10 @@ public sealed class GitStatusParserCompactTests
         """;
 
     [Fact]
-    public void ParseCompact_WhenInputIsEmpty_ShouldReturnDefaultSnapshot()
+    public void Parse_WhenInputIsEmpty_ShouldReturnDefaultSnapshotWithIsDirtyFalse()
     {
         // Act
-        var snapshot = GitStatusParser.ParseCompact(string.Empty);
+        var snapshot = GitStatusParser.Parse(string.Empty);
 
         // Assert
         snapshot.BranchHeadName.Should().BeEmpty();
@@ -28,14 +28,14 @@ public sealed class GitStatusParserCompactTests
         snapshot.CommitsAhead.Should().Be(0);
         snapshot.CommitsBehind.Should().Be(0);
         snapshot.StashEntryCount.Should().Be(0);
-        snapshot.IsDirty.Should().BeFalse();
+        snapshot.GitStatusCounts.IsDirty.Should().BeFalse();
     }
 
     [Fact]
-    public void ParseCompact_WhenRepoIsClean_ShouldReturnAllHeaderFieldsAndIsDirtyFalse()
+    public void Parse_WhenRepoIsClean_ShouldReturnAllHeaderFieldsAndIsDirtyFalse()
     {
         // Act
-        var snapshot = GitStatusParser.ParseCompact(CleanStatusOutput);
+        var snapshot = GitStatusParser.Parse(CleanStatusOutput);
 
         // Assert
         snapshot.BranchHeadName.Should().Be("main");
@@ -46,7 +46,7 @@ public sealed class GitStatusParserCompactTests
         snapshot.CommitsAhead.Should().Be(2);
         snapshot.CommitsBehind.Should().Be(1);
         snapshot.StashEntryCount.Should().Be(3);
-        snapshot.IsDirty.Should().BeFalse();
+        snapshot.GitStatusCounts.IsDirty.Should().BeFalse();
     }
 
     [Theory]
@@ -55,20 +55,20 @@ public sealed class GitStatusParserCompactTests
     [InlineData("2 R. old.txt new.txt")]
     [InlineData("? untracked.txt")]
     [InlineData("u UU file.txt")]
-    public void ParseCompact_WhenRepoHasAnyFileEntry_ShouldReturnIsDirtyTrue(string fileEntry)
+    public void Parse_WhenRepoHasAnyFileEntry_ShouldReturnIsDirtyTrue(string fileEntry)
     {
         // Arrange
         var statusOutput = CleanStatusOutput + "\n" + fileEntry;
 
         // Act
-        var snapshot = GitStatusParser.ParseCompact(statusOutput);
+        var snapshot = GitStatusParser.Parse(statusOutput);
 
         // Assert
-        snapshot.IsDirty.Should().BeTrue();
+        snapshot.GitStatusCounts.IsDirty.Should().BeTrue();
     }
 
     [Fact]
-    public void ParseCompact_WhenRepoIsDirty_ShouldStillParseAllHeaderFields()
+    public void Parse_WhenRepoIsDirty_ShouldStillParseAllHeaderFields()
     {
         // Arrange
         const string statusOutput = """
@@ -83,20 +83,20 @@ public sealed class GitStatusParserCompactTests
             """;
 
         // Act
-        var snapshot = GitStatusParser.ParseCompact(statusOutput);
+        var snapshot = GitStatusParser.Parse(statusOutput);
 
         // Assert
         snapshot.BranchHeadName.Should().Be("feature");
         snapshot.CommitsAhead.Should().Be(1);
         snapshot.CommitsBehind.Should().Be(0);
         snapshot.StashEntryCount.Should().Be(2);
-        snapshot.IsDirty.Should().BeTrue();
+        snapshot.GitStatusCounts.IsDirty.Should().BeTrue();
     }
 
     [Fact]
-    public void ParseCompact_WhenRepoIsDirty_ShouldBreakAfterFirstFileEntry()
+    public void Parse_WhenRepoHasMultipleFileEntries_ShouldReturnIsDirtyTrue()
     {
-        // Arrange — three file entries; we verify all header data is still intact
+        // Arrange
         const string statusOutput = """
             # branch.oid 0000000000000000000000000000000000000000
             # branch.head main
@@ -107,11 +107,10 @@ public sealed class GitStatusParserCompactTests
             """;
 
         // Act
-        var snapshot = GitStatusParser.ParseCompact(statusOutput);
+        var snapshot = GitStatusParser.Parse(statusOutput);
 
-        // Assert — IsDirty is true but we stopped after the first entry (behavior indistinguishable
-        // from counting all, but the key assertion is the result is correct)
-        snapshot.IsDirty.Should().BeTrue();
+        // Assert
+        snapshot.GitStatusCounts.IsDirty.Should().BeTrue();
         snapshot.BranchHeadName.Should().Be("main");
     }
 }

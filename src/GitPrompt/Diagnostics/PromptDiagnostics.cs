@@ -10,7 +10,6 @@ namespace GitPrompt.Diagnostics;
 internal static class PromptDiagnostics
 {
     private static bool _repoCacheHit;
-    private static bool _repoCacheL1Hit;
     private static bool _repoCacheMissRecorded;
     private static RepoCacheMissReason _repoCacheMissReason;
     private static bool _repoCacheWalkRecorded;
@@ -37,7 +36,6 @@ internal static class PromptDiagnostics
     internal static void Reset()
     {
         _repoCacheHit = false;
-        _repoCacheL1Hit = false;
         _repoCacheMissRecorded = false;
         _repoCacheMissReason = default;
         _repoCacheWalkRecorded = false;
@@ -75,18 +73,6 @@ internal static class PromptDiagnostics
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void RecordRepoCacheL1Hit()
-    {
-        if (!IsEnabled)
-        {
-            return;
-        }
-
-        _repoCacheHit = true;
-        _repoCacheL1Hit = true;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void RecordRepoCacheL2Hit()
     {
         if (!IsEnabled)
@@ -95,7 +81,6 @@ internal static class PromptDiagnostics
         }
 
         _repoCacheHit = true;
-        _repoCacheL1Hit = false;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -257,7 +242,7 @@ internal static class PromptDiagnostics
     {
         if (_repoCacheHit)
         {
-            return _repoCacheL1Hit ? "hit (in-process)" : "hit (disk)";
+            return "hit (disk)";
         }
 
         if (_repoCacheWalkRecorded)

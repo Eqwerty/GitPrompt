@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using GitPrompt.Diagnostics;
 using static GitPrompt.Git.Utilities;
 
@@ -7,8 +6,6 @@ namespace GitPrompt.Git;
 internal static class GitRepositoryLocator
 {
     internal readonly record struct RepositoryContext(string WorkingTreePath, string GitDirectoryPath);
-
-    private static readonly ConcurrentDictionary<string, RepositoryContext> RepositoryContextCache = new(FileSystemPathComparer);
 
     internal static RepositoryContext? FindRepositoryContext()
     {
@@ -38,17 +35,9 @@ internal static class GitRepositoryLocator
             {
                 scannedPaths.Add(current);
 
-                if (TryGetValidCachedRepositoryContext(current, out var cachedContext))
-                {
-                    CacheRepositoryContext(scannedPaths, cachedContext);
-                    PromptDiagnostics.RecordRepoCacheL1Hit();
-
-                    return cachedContext;
-                }
-
                 if (TryGetValidSharedCachedRepositoryContext(current, out var sharedCachedContext))
                 {
-                    CacheRepositoryContext(scannedPaths, sharedCachedContext);
+                    GitRepositorySharedCache.Set(scannedPaths, sharedCachedContext);
                     PromptDiagnostics.RecordRepoCacheL2Hit();
 
                     return sharedCachedContext;
@@ -59,7 +48,7 @@ internal static class GitRepositoryLocator
                 if (!string.IsNullOrEmpty(resolvedGitDirectoryPath))
                 {
                     var repositoryContext = new RepositoryContext(current, resolvedGitDirectoryPath);
-                    CacheRepositoryContext(scannedPaths, repositoryContext);
+                    GitRepositorySharedCache.Set(scannedPaths, repositoryContext);
                     PromptDiagnostics.RecordRepoCacheWalk(scannedPaths.Count, repoFound: true);
 
                     return repositoryContext;
@@ -132,21 +121,6 @@ internal static class GitRepositoryLocator
         }
     }
 
-    private static bool TryGetValidCachedRepositoryContext(string path, out RepositoryContext repositoryContext)
-    {
-        if (RepositoryContextCache.TryGetValue(path, out repositoryContext))
-        {
-            if (IsRepositoryContextValid(path, repositoryContext))
-            {
-                return true;
-            }
-
-            RepositoryContextCache.TryRemove(path, out _);
-        }
-
-        return false;
-    }
-
     private static bool TryGetValidSharedCachedRepositoryContext(string path, out RepositoryContext repositoryContext)
     {
         if (GitRepositorySharedCache.TryGet(path, out repositoryContext) && IsRepositoryContextValid(path, repositoryContext))
@@ -194,18 +168,5 @@ internal static class GitRepositoryLocator
     private static string TrimEndingDirectorySeparator(string path)
     {
         return path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-    }
-
-    private static void CacheRepositoryContext(IEnumerable<string> paths, RepositoryContext repositoryContext)
-    {
-        var normalizedPaths = new List<string>();
-        foreach (var path in paths)
-        {
-            var normalizedPath = Path.GetFullPath(path);
-            RepositoryContextCache[normalizedPath] = repositoryContext;
-            normalizedPaths.Add(normalizedPath);
-        }
-
-        GitRepositorySharedCache.Set(normalizedPaths, repositoryContext);
     }
 }
