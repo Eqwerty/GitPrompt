@@ -52,6 +52,7 @@ internal static class ConfigInitializer
             .Replace("{maxPathDepth}", config.MaxPathDepth.ToString(CultureInfo.InvariantCulture))
             .Replace("{multilinePrompt}", config.MultilinePrompt.ToString().ToLowerInvariant())
             .Replace("{newlineBeforePrompt}", config.NewlineBeforePrompt.ToString().ToLowerInvariant())
+            .Replace("{promptStartOfLine}", config.PromptStartOfLine.ToString().ToLowerInvariant())
             .Replace("{promptSymbol}", JsonValue(config.PromptSymbol))
             .Replace("{compact}", config.Compact.ToString().ToLowerInvariant())
             .Replace("{showStashInCompactMode}", config.ShowStashInCompactMode.ToString().ToLowerInvariant())
@@ -200,7 +201,7 @@ internal static class ConfigInitializer
     //
     // Nested objects (Cache, Icons, Colors) are null-coalesced separately because their
     // nullable scalar/string members all use null as the "no override" sentinel.
-    private static Config MergeWithDefaults(Config userConfig, JsonElement root)
+    internal static Config MergeWithDefaults(Config userConfig, JsonElement root)
     {
         var defaults = new Config();
 
@@ -211,6 +212,7 @@ internal static class ConfigInitializer
             MultilinePrompt     = root.TryGetProperty("multilinePrompt", out _)     ? userConfig.MultilinePrompt     : defaults.MultilinePrompt,
             ShowCommandDuration = root.TryGetProperty("showCommandDuration", out _) ? userConfig.ShowCommandDuration : defaults.ShowCommandDuration,
             ShowStashInCompactMode = root.TryGetProperty("showStashInCompactMode", out _) ? userConfig.ShowStashInCompactMode : defaults.ShowStashInCompactMode,
+            PromptStartOfLine   = root.TryGetProperty("promptStartOfLine", out _)   ? userConfig.PromptStartOfLine   : defaults.PromptStartOfLine,
             Cache  = userConfig.Cache  ?? defaults.Cache,
             Icons  = userConfig.Icons  ?? defaults.Icons,
             Colors = userConfig.Colors ?? defaults.Colors,

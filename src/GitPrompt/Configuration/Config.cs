@@ -29,6 +29,10 @@ internal sealed record Config
     internal bool NewlineBeforePrompt { get; init; } = false;
 
     [JsonInclude]
+    [JsonPropertyName("promptStartOfLine")]
+    internal bool PromptStartOfLine { get; init; } = true;
+
+    [JsonInclude]
     [JsonPropertyName("showCommandDuration")]
     internal bool ShowCommandDuration { get; init; } = true;
 

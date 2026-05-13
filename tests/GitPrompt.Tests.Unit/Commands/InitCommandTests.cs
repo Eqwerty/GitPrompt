@@ -78,7 +78,31 @@ public sealed class InitCommandTests
         updatePs1Start.Should().BeGreaterThan(-1, "the script must contain _gitprompt_update_ps1");
         var updatePs1Body = string.Join('\n', lines[updatePs1Start..updatePs1End]);
         updatePs1Body.Should().Contain("__gitprompt_prompt_sp",
-            because: "_gitprompt_update_ps1 must call __gitprompt_prompt_sp so the partial-line check runs on every prompt render");
+            because: "_gitprompt_update_ps1 must reference __gitprompt_prompt_sp so the partial-line check can run on prompt render");
+    }
+
+    [Fact]
+    public void GenerateBashInit_WhenPromptStartOfLineIsTrue_ShouldSetVariableTo1()
+    {
+        // Arrange — default config has PromptStartOfLine = true
+
+        // Act
+        var script = InitCommand.GenerateBashInit();
+
+        // Assert
+        script.Should().Contain("_GITPROMPT_PROMPT_START_OF_LINE=1",
+            because: "when promptStartOfLine is true the generated variable must be 1");
+    }
+
+    [Fact]
+    public void GenerateBashInit_ShouldNotContainUnresolvedPromptStartOfLinePlaceholder()
+    {
+        // Act
+        var script = InitCommand.GenerateBashInit();
+
+        // Assert
+        script.Should().NotContain("{{GITPROMPT_PROMPT_START_OF_LINE}}",
+            because: "the placeholder must be replaced with a concrete value at init time");
     }
 
     [Fact]

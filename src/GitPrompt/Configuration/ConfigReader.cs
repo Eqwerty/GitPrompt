@@ -42,12 +42,20 @@ internal static class ConfigReader
         try
         {
             var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
-            var resolved = config is null ? new Config() : config with
+            if (config is null)
             {
-                Cache = config.Cache ?? new(),
-                Icons = config.Icons ?? new(),
-                Colors = config.Colors ?? new()
-            };
+                return new ConfigLoadResult(filePath, ConfigLoadStatus.Loaded, new Config());
+            }
+
+            using var doc = JsonDocument.Parse(json,
+                new JsonDocumentOptions
+                {
+                    CommentHandling = JsonCommentHandling.Skip,
+                    AllowTrailingCommas = true
+                });
+
+            var resolved = ConfigInitializer.MergeWithDefaults(config, doc.RootElement);
+
             return new ConfigLoadResult(filePath, ConfigLoadStatus.Loaded, resolved);
         }
         catch

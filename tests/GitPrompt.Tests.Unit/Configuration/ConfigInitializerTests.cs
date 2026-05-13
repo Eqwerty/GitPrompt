@@ -163,6 +163,7 @@ public sealed class ConfigInitializerTests
         result.Should().Contain("\"multilinePrompt\": true");
         result.Should().Contain("\"showCommandDuration\": true");
         result.Should().Contain("\"showStashInCompactMode\": true");
+        result.Should().Contain("\"promptStartOfLine\": true");
 
         // Existing explicit value must be preserved
         result.Should().Contain("\"compact\": false");
@@ -382,6 +383,19 @@ public sealed class ConfigInitializerTests
 
         // Assert
         content.Should().Contain($"\"newlineBeforePrompt\": {expectedValue}");
+    }
+
+    [Fact]
+    public void BuildDefaultConfigContent_ShouldRenderPromptStartOfLineAsDefaultValue()
+    {
+        // Arrange
+        var expectedValue = new Config().PromptStartOfLine ? "true" : "false";
+
+        // Act
+        var content = ConfigInitializer.BuildDefaultConfigContent();
+
+        // Assert
+        content.Should().Contain($"\"promptStartOfLine\": {expectedValue}");
     }
 
     [Fact]

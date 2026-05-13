@@ -56,6 +56,7 @@ When `maxPathDepth` is set, paths deeper than the limit are truncated with `…`
 |---|---|---|
 | `multilinePrompt` | `true` | Put the prompt symbol (`$`, `#`, `>`) on its own line |
 | `newlineBeforePrompt` | `false` | Add a blank line before the prompt |
+| `promptStartOfLine` | `true` | Move to column 0 if the cursor is not there when the prompt renders (e.g. after `printf text`) |
 | `promptSymbol` | *(auto)* | Override the prompt symbol. Omit (or set to `null`) to keep automatic: `$` for regular users, `#` for root, `>` on Windows. |
 
 When `multilinePrompt: false`, the symbol appears at the end of the status line:

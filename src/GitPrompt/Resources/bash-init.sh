@@ -16,6 +16,8 @@ if [ -z "${_GITPROMPT_ORIGINAL_PS1+x}" ]; then
   _GITPROMPT_ORIGINAL_PS1="$PS1"
 fi
 
+_GITPROMPT_PROMPT_START_OF_LINE={{GITPROMPT_PROMPT_START_OF_LINE}}
+
 if [ -z "${__gitprompt_cmd_start_us+x}" ]; then
   __gitprompt_preexec_flag=0
   __gitprompt_running=0
@@ -51,7 +53,7 @@ _gitprompt_update_ps1() {
   elif [ -n "${EPOCHREALTIME+x}" ]; then
     _last_cmd_ms="0"
   fi
-  __gitprompt_prompt_sp
+  [ "${_GITPROMPT_PROMPT_START_OF_LINE:-1}" = "1" ] && __gitprompt_prompt_sp
   if [ "$__gitprompt_preexec_flag" -eq 1 ]; then
     __gitprompt_preexec_flag=0
     "$_GITPROMPT_BIN" --invalidate-status-cache >/dev/null 2>&1 || true
