@@ -7,11 +7,15 @@ internal static class PromptColors
     private const string ReadLineStart = "\u0001";
     private const string ReadLineEnd = "\u0002";
 
-    private static string PromptColor(string ansiColor) => $"{ReadLineStart}{ansiColor}{ReadLineEnd}";
+    private static string PromptColor(string ansiColor)
+    {
+        return $"{ReadLineStart}{ansiColor}{ReadLineEnd}";
+    }
 
     private static string ResolveColor(string? configColor, string defaultColor)
     {
         var color = configColor ?? defaultColor;
+
         try
         {
             return PromptColor(AnsiColorConverter.ToAnsi(color));
