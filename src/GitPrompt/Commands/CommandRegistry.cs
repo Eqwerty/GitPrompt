@@ -1,3 +1,4 @@
+using GitPrompt.Configuration;
 using GitPrompt.Git;
 
 namespace GitPrompt.Commands;
@@ -60,6 +61,12 @@ internal static class CommandRegistry
             Usage: "gitprompt --invalidate-status-cache",
             Description: "Invalidate the shared Git status cache",
             Execute: _ => GitStatusSharedCache.Invalidate(),
+            IsHidden: true),
+
+        new(Verb: "--migrate-config",
+            Usage: "gitprompt --migrate-config",
+            Description: "Migrate config.jsonc to the latest schema, preserving existing values",
+            Execute: _ => ConfigInitializer.InitializeDefaultConfig(),
             IsHidden: true)
     ];
 

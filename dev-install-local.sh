@@ -104,6 +104,8 @@ chmod +x "$STAGED_BINARY_PATH" 2>/dev/null || true
 run_step "Installing to $FINAL_BINARY_PATH" "$TEMPORARY_DIRECTORY/install.log" \
   install_binary
 
+"$FINAL_BINARY_PATH" --migrate-config 2>/dev/null || true
+
 if [ "$INSTALL_ALIASES" = "1" ]; then
   mkdir -p "$ALIASES_DIR"
   run_step "Installing git aliases" "$TEMPORARY_DIRECTORY/aliases.log" \
