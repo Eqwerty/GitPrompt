@@ -1,3 +1,5 @@
+// ReSharper disable RedundantDefaultMemberInitializer
+
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -152,6 +154,7 @@ internal sealed record Config
         [JsonPropertyName("branchOperationSeparator")]
         internal string? BranchOperationSeparator { get; init; }
     }
+
     internal sealed record ColorsConfig
     {
         [JsonInclude]
