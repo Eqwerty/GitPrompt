@@ -54,6 +54,18 @@ in
 .B $EDITOR
 (if installed).
 .TP
+.B gitprompt aliases enable
+Load the git aliases into the current shell session.
+Must be invoked through the shell wrapper (set up by
+.BR "gitprompt init bash" )
+so the aliases take effect in the current shell.
+.TP
+.B gitprompt aliases disable
+Remove the git aliases from the current shell session.
+Must be invoked through the shell wrapper (set up by
+.BR "gitprompt init bash" )
+so the changes take effect in the current shell.
+.TP
 .B gitprompt update
 Update
 .B gitprompt

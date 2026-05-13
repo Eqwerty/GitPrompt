@@ -32,6 +32,16 @@ internal static class CommandRegistry
             Description: "Open git_aliases.sh in $EDITOR (if installed)",
             Execute: _ => AliasesCommand.Run()),
 
+        new(Verb: "aliases enable",
+            Usage: "gitprompt aliases enable",
+            Description: "Load git aliases into the current shell session",
+            Execute: _ => AliasesCommand.RunEnable()),
+
+        new(Verb: "aliases disable",
+            Usage: "gitprompt aliases disable",
+            Description: "Remove git aliases from the current shell session",
+            Execute: _ => AliasesCommand.RunDisable()),
+
         new(Verb: "update",
             Usage: "gitprompt update",
             Description: "Update to the latest release",

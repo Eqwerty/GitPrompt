@@ -87,6 +87,13 @@ To get the latest validated aliases without reinstalling:
 gitprompt update aliases
 ```
 
+To temporarily disable or re-enable aliases in the current shell session:
+
+```sh
+gitprompt aliases disable
+gitprompt aliases enable
+```
+
 To install the binary only, without aliases:
 
 ```sh

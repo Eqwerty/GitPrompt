@@ -129,4 +129,19 @@ public sealed class InitCommandTests
             because: "timing variables must only be initialized on first eval so re-sourcing does not " +
                      "clear __gitprompt_cmd_start_us while the DEBUG trap is active");
     }
+
+    [Fact]
+    public void GenerateBashInit_ShouldContainAliasesEnableDisableCompletion()
+    {
+        // Act
+        var script = InitCommand.GenerateBashInit();
+
+        // Assert
+        script.Should().Contain("aliases)",
+            because: "the completion handler must have a case for 'aliases' to offer subcommand completions");
+        script.Should().Contain("enable",
+            because: "the aliases completion must include 'enable'");
+        script.Should().Contain("disable",
+            because: "the aliases completion must include 'disable'");
+    }
 }

@@ -9,7 +9,16 @@ else
 fi
 
 gitprompt() {
-  "$_GITPROMPT_BIN" "$@"
+  case "${1:-} ${2:-}" in
+    "aliases enable"|"aliases disable")
+      local _script
+      _script="$("$_GITPROMPT_BIN" "$@")"
+      [ -n "$_script" ] && eval "$_script"
+      ;;
+    *)
+      "$_GITPROMPT_BIN" "$@"
+      ;;
+  esac
 }
 
 if [ -z "${_GITPROMPT_ORIGINAL_PS1+x}" ]; then
@@ -82,6 +91,7 @@ _gitprompt_complete() {
     init)                    COMPREPLY=($(compgen -W "bash" -- "$cur")) ;;
     config)                  COMPREPLY=($(compgen -W "reset" -- "$cur")) ;;
     update)                  COMPREPLY=($(compgen -W "aliases" -- "$cur")) ;;
+    aliases)                 COMPREPLY=($(compgen -W "enable disable" -- "$cur")) ;;
   esac
 }
 complete -F _gitprompt_complete gitprompt
@@ -96,5 +106,10 @@ fi
 
 _gitprompt_aliases="$HOME/.local/share/gitprompt/git_aliases.sh"
 # shellcheck disable=SC1090
-[ -f "$_gitprompt_aliases" ] && . "$_gitprompt_aliases"
+if [ -f "$_gitprompt_aliases" ]; then
+  . "$_gitprompt_aliases"
+  _GITPROMPT_ALIASES_ENABLED=1
+else
+  _GITPROMPT_ALIASES_ENABLED=0
+fi
 unset _gitprompt_aliases
