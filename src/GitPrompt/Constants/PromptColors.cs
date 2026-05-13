@@ -46,13 +46,13 @@ internal static class PromptColors
 
     internal static string ColorStash => ResolveColor(ConfigReader.Config.Colors.Stash, AnsiColors.Magenta);
 
-    internal static string ColorConflict => ResolveColor(ConfigReader.Config.Colors.Conflict, AnsiColors.BoldRed);
+    internal static string ColorConflict => ResolveColor(ConfigReader.Config.Colors.Conflict, AnsiColors.Red);
 
     internal static string ColorDirty => ResolveColor(ConfigReader.Config.Colors.Dirty, AnsiColors.Orange);
 
     internal static string ColorClean => ResolveColor(ConfigReader.Config.Colors.Clean, AnsiColors.Green);
 
-    internal static string ColorMissingPath => ResolveColor(ConfigReader.Config.Colors.MissingPath, AnsiColors.BoldRed);
+    internal static string ColorMissingPath => ResolveColor(ConfigReader.Config.Colors.MissingPath, AnsiColors.Red);
 
     internal static string ColorTimeout => ResolveColor(ConfigReader.Config.Colors.Timeout, AnsiColors.Yellow);
 
