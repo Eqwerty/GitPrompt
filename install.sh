@@ -145,14 +145,6 @@ download_aliases() {
     || die "Failed to download: $ALIASES_URL"
 }
 
-INSTALL_ALIASES=1
-for _arg in "$@"; do
-  case "$_arg" in
-    --no-aliases) INSTALL_ALIASES=0 ;;
-  esac
-done
-unset _arg
-
 OPERATING_SYSTEM="$(uname -s | tr '[:upper:]' '[:lower:]')"
 CPU_ARCHITECTURE="$(uname -m)"
 
@@ -235,22 +227,20 @@ if [ -z "${_INSTALL_SOURCED:-}" ]; then
 
   add_to_shell_config
 
-  if [ "$INSTALL_ALIASES" = "1" ]; then
-    if _run_animated_step "Installing git aliases" "$TEMPORARY_DIRECTORY/aliases.log" \
-        download_aliases; then
-      printf "\r${GREEN}✓${R} Installing git aliases...\n"
-    else
-      printf '\n'
-      printf "${YELLOW}warning:${R} Git aliases install failed. Run 'gitprompt update aliases' later.\n" >&2
-    fi
+  if _run_animated_step "Installing git aliases" "$TEMPORARY_DIRECTORY/aliases.log" \
+      download_aliases; then
+    printf "\r${GREEN}✓${R} Installing git aliases...\n"
+  else
+    printf '\n'
+    printf "${YELLOW}warning:${R} Git aliases install failed. Run 'gitprompt update aliases' later.\n" >&2
+  fi
 
-    if _run_animated_step "Installing git completions" "$TEMPORARY_DIRECTORY/completions.log" \
-        download_git_completion; then
-      printf "\r${GREEN}✓${R} Installing git completions...\n"
-    else
-      printf '\n'
-      printf "${YELLOW}warning:${R} Git completions install failed. Alias tab completion may not work.\n" >&2
-    fi
+  if _run_animated_step "Installing git completions" "$TEMPORARY_DIRECTORY/completions.log" \
+      download_git_completion; then
+    printf "\r${GREEN}✓${R} Installing git completions...\n"
+  else
+    printf '\n'
+    printf "${YELLOW}warning:${R} Git completions install failed. Alias tab completion may not work.\n" >&2
   fi
 
   printf '\nRestart your terminal to apply changes.\n'

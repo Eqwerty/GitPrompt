@@ -94,12 +94,6 @@ gitprompt aliases disable
 gitprompt aliases enable
 ```
 
-To install the binary only, without aliases:
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/Eqwerty/GitPrompt/master/install.sh | sh -s -- --no-aliases
-```
-
 ## Configuration
 
 See [Configuration](docs/configuration.md) for all settings (cache TTLs, timeout, command duration, path depth, prompt layout).
