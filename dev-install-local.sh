@@ -64,7 +64,7 @@ PUBLISH_DIRECTORY="$TEMPORARY_DIRECTORY/publish"
 mkdir -p "$PUBLISH_DIRECTORY"
 
 run_step "Restoring packages" "$TEMPORARY_DIRECTORY/restore.log" \
-  dotnet restore "$REPOSITORY_ROOT/GitPrompt.slnx" --nologo
+  dotnet restore "$REPOSITORY_ROOT/GitPrompt.slnx" --runtime "$RUNTIME_IDENTIFIER" --nologo
 
 run_step "Building" "$TEMPORARY_DIRECTORY/build.log" \
   dotnet build "$REPOSITORY_ROOT/GitPrompt.slnx" --configuration Release --nologo --no-restore
