@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Text;
 using GitPrompt.Configuration;
-using GitPrompt.Constants;
 using GitPrompt.Prompting;
 using GitPrompt.Terminal;
 
@@ -193,7 +192,7 @@ internal static class PromptDiagnostics
             AddConfigLines(lines);
         }
 
-        return BoxRenderer.Render("GitPrompt diagnostic", lines, AnsiColors.White) + BuildSummary();
+        return BoxRenderer.Render("GitPrompt diagnostic", lines) + BuildSummary();
     }
 
     private static void AddConfigLines(List<string?> lines)
@@ -214,20 +213,24 @@ internal static class PromptDiagnostics
             ConfigLoadStatus.ReadFailed => "read error (using defaults)",
             _ => "unknown"
         };
+
         lines.Add($"    {"Status",-10}  {statusText}");
 
         var config = _configLoadResult.Config;
         var gitStatusTtlText = config.Cache.GitStatusTtl == TimeSpan.Zero
             ? "0s (disabled)"
             : FormatSeconds(config.Cache.GitStatusTtl);
+
         var repoTtlText = config.Cache.RepositoryTtl == TimeSpan.Zero
             ? "0s (disabled)"
             : FormatSeconds(config.Cache.RepositoryTtl);
+
         lines.Add($"    {"TTL",-10}  gitStatus {gitStatusTtlText} · repo {repoTtlText}");
 
         var timeoutText = config.CommandTimeout.HasValue
             ? FormatMs(config.CommandTimeout.Value)
             : "disabled";
+
         lines.Add($"    {"Timeout",-10}  {timeoutText}");
 
         var durationText = config.ShowCommandDuration
@@ -235,6 +238,7 @@ internal static class PromptDiagnostics
                 ? $"enabled · min {config.CommandDurationMinMs}ms"
                 : "enabled · always show"
             : "disabled";
+
         lines.Add($"    {"Duration",-10}  {durationText}");
     }
 

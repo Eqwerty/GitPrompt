@@ -1,4 +1,3 @@
-using GitPrompt.Constants;
 using GitPrompt.Platform;
 using GitPrompt.Terminal;
 
@@ -36,10 +35,10 @@ internal static class PathsCommand
             BuildRow("config", configPath),
             BuildRow("aliases", aliasesPath),
             BuildRow("cache dir", cacheDirPath),
-            BuildRow("shell config", shellConfigPath),
+            BuildRow("shell config", shellConfigPath)
         };
 
-        return BoxRenderer.Render("GitPrompt paths", lines, AnsiColors.White);
+        return BoxRenderer.Render("GitPrompt paths", lines);
     }
 
     private static string BuildRow(string label, string? path)

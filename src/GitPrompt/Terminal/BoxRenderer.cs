@@ -3,10 +3,6 @@ using GitPrompt.Constants;
 
 namespace GitPrompt.Terminal;
 
-/// <summary>
-/// Renders a list of content lines inside a Unicode box with optional section separators.
-/// Pass <see langword="null"/> as a line to insert a section separator (├──┤).
-/// </summary>
 internal static class BoxRenderer
 {
     private const char TopLeft = '╭';
@@ -18,15 +14,11 @@ internal static class BoxRenderer
     private const char SeparatorLeft = '├';
     private const char SeparatorRight = '┤';
 
-    /// <summary>
-    /// Renders <paramref name="lines"/> inside a box.
-    /// <see langword="null"/> entries produce section separator lines.
-    /// </summary>
-    internal static string Render(string title, IReadOnlyList<string?> lines, string borderColor)
+    internal static string Render(string title, IReadOnlyList<string?> lines)
     {
         var innerWidth = ComputeInnerWidth(title, lines);
-        var ansiColor = string.IsNullOrEmpty(borderColor) ? string.Empty : AnsiColorConverter.ToAnsi(borderColor);
-        var reset = string.IsNullOrEmpty(borderColor) ? string.Empty : AnsiColors.Reset;
+        var ansiColor = AnsiColors.White;
+        var reset = AnsiColors.Reset;
 
         var sb = new StringBuilder();
 
@@ -51,7 +43,6 @@ internal static class BoxRenderer
 
     private static int ComputeInnerWidth(string title, IReadOnlyList<string?> lines)
     {
-        // Title needs "─ " prefix and " ─" suffix inside the border, so minimum = title.Length + 4
         var minForTitle = title.Length + 4;
 
         var maxLineLength = 0;
@@ -63,7 +54,6 @@ internal static class BoxRenderer
             }
         }
 
-        // Add 2 for the space padding on each side of the content ("│ content │")
         var minForContent = maxLineLength + 2;
 
         return Math.Max(minForTitle, minForContent);
@@ -71,9 +61,8 @@ internal static class BoxRenderer
 
     private static void AppendTopBorder(StringBuilder sb, string title, int innerWidth, string borderColor, string reset)
     {
-        // ╭─ Title ──────────╮
         var dashesBeforeTitle = 2;
-        var totalDashesAfterTitle = innerWidth - title.Length - dashesBeforeTitle - 2; // -2 for space before and after title
+        var totalDashesAfterTitle = innerWidth - title.Length - dashesBeforeTitle - 2;
 
         sb.Append(borderColor);
         sb.Append(TopLeft);
@@ -90,8 +79,7 @@ internal static class BoxRenderer
 
     private static void AppendContentLine(StringBuilder sb, string line, int innerWidth, string borderColor, string reset)
     {
-        // │ line + padding │
-        var padding = innerWidth - line.Length - 2; // -2 for leading space + trailing space
+        var padding = innerWidth - line.Length - 2;
 
         sb.Append(borderColor);
         sb.Append(Vertical);
@@ -107,7 +95,6 @@ internal static class BoxRenderer
 
     private static void AppendSeparator(StringBuilder sb, int innerWidth, string borderColor, string reset)
     {
-        // ├──────────────────┤
         sb.Append(borderColor);
         sb.Append(SeparatorLeft);
         sb.Append(Horizontal, innerWidth);
@@ -117,7 +104,6 @@ internal static class BoxRenderer
 
     private static void AppendBottomBorder(StringBuilder sb, int innerWidth, string borderColor, string reset)
     {
-        // ╰──────────────────╯
         sb.Append(borderColor);
         sb.Append(BottomLeft);
         sb.Append(Horizontal, innerWidth);
