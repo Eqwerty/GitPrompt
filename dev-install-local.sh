@@ -104,6 +104,12 @@ chmod +x "$STAGED_BINARY_PATH" 2>/dev/null || true
 run_step "Installing to $FINAL_BINARY_PATH" "$TEMPORARY_DIRECTORY/install.log" \
   install_binary
 
+if [ "$TARGET_OS" != "windows" ]; then
+  MAN_DIR="$HOME/.local/share/man/man1"
+  mkdir -p "$MAN_DIR"
+  cp "$REPOSITORY_ROOT/docs/gitprompt.1" "$MAN_DIR/gitprompt.1"
+fi
+
 "$FINAL_BINARY_PATH" --migrate-config 2>/dev/null || true
 
 if [ "$INSTALL_ALIASES" = "1" ]; then

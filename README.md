@@ -25,6 +25,12 @@ gitprompt update      # update to the latest release
 gitprompt uninstall   # remove binary, config, and cache files
 ```
 
+A man page is installed alongside the binary on Linux and macOS:
+
+```sh
+man gitprompt
+```
+
 See [Commands](docs/commands.md) for the full reference.
 
 ## Git Status

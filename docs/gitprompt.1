@@ -1,0 +1,339 @@
+.TH GITPROMPT 1 "" "" "User Commands"
+.SH NAME
+gitprompt \- fast Git\-aware shell prompt
+.SH SYNOPSIS
+.B gitprompt
+.RI [ command ]
+.RI [ options ]
+.SH DESCRIPTION
+.B gitprompt
+is a fast, cross-platform binary that replaces the default shell prompt
+with an informative one that shows the current Git repository state.
+.PP
+Integrate it with Bash by adding the following to your shell startup file
+.RI ( ~/.bashrc
+or
+.IR ~/.bash_profile ):
+.PP
+.RS
+.EX
+eval "$(gitprompt init bash)"
+.EE
+.RE
+.PP
+When run without arguments,
+.B gitprompt
+writes the prompt string to standard output and exits.
+.SH COMMANDS
+.TP
+.B gitprompt init bash
+Print the Bash shell integration script.
+.TP
+.B gitprompt config
+Open
+.I config.jsonc
+in
+.B $EDITOR
+or
+.B $VISUAL
+(fallback:
+.BR vim ).
+.TP
+.B gitprompt config reset [-y]
+Reset
+.I config.jsonc
+to defaults.
+Use
+.B \-y
+to skip the confirmation prompt.
+.TP
+.B gitprompt aliases
+Open
+.I git_aliases.sh
+in
+.B $EDITOR
+(if installed).
+.TP
+.B gitprompt update
+Update
+.B gitprompt
+to the latest release.
+.TP
+.B gitprompt update aliases
+Update the git aliases file to the latest version.
+.TP
+.B gitprompt uninstall
+Remove the binary, config, cache, and data files.
+.TP
+.B gitprompt debug
+Show a diagnostic report for the current directory.
+.TP
+.B gitprompt paths
+Show the paths to the binary, config, aliases, cache, and shell config files.
+.TP
+.B gitprompt \-\-help
+Show help.
+.SH CONFIGURATION
+.B gitprompt
+reads an optional
+.I config.jsonc
+file from the platform config directory:
+.TP
+Linux/macOS
+.I $XDG_CONFIG_HOME/gitprompt/config.jsonc
+(default:
+.IR ~/.config/gitprompt/config.jsonc )
+.TP
+Windows (Git Bash)
+.I %APPDATA%/gitprompt/config.jsonc
+.PP
+If the file is absent or cannot be parsed, all settings fall back to their
+defaults.
+Open it with
+.BR "gitprompt config" .
+.SS Cache
+Controls how long
+.B gitprompt
+reuses cached results (in seconds; 0 disables caching).
+.TP
+.B cache.gitStatusTtl
+Git status results. Default:
+.BR 5 .
+.TP
+.B cache.repositoryTtl
+Repository detection results. Default:
+.BR 60 .
+.SS Timeout
+.TP
+.B commandTimeoutMs
+Milliseconds to wait for a Git subprocess before killing it and showing
+.I [timeout]
+in the prompt. Set to
+.B 0
+to disable. Default:
+.BR 2000 .
+.SS Command Duration
+.TP
+.B showCommandDuration
+Show the elapsed time of the last command in the prompt (requires Bash 5+).
+Default:
+.BR false .
+.TP
+.B commandDurationMinMs
+Minimum duration in milliseconds before the value is shown.
+.B null
+means always show. Default: none.
+.SS Context Segment
+.TP
+.B showUser
+Show the username in the prompt. Default:
+.BR true .
+.TP
+.B showHost
+Show the hostname in the prompt. Default:
+.BR true .
+.TP
+.B maxPathDepth
+Maximum directory segments shown in the path.
+.B 0
+means full path. Default:
+.BR 0 .
+.SS Prompt Layout
+.TP
+.B multilinePrompt
+Put the prompt symbol
+.RB ( $ ,
+.BR # ,
+.BR > )
+on its own line. Default:
+.BR true .
+.TP
+.B newlineBeforePrompt
+Add a blank line before the prompt. Default:
+.BR false .
+.TP
+.B promptStartOfLine
+Move to column 0 if the cursor is not there when the prompt renders.
+Default:
+.BR true .
+.TP
+.B promptSymbol
+Override the prompt symbol. Omit or set to
+.B null
+for automatic:
+.B $
+for regular users,
+.B #
+for root,
+.B >
+on Windows.
+.SS Git Status Icons
+Set any key to a string to override the icon; set to
+.B null
+to restore the default.
+.TP
+.B icons.ahead
+Commits ahead of upstream. Default:
+.BR \(ua .
+.TP
+.B icons.behind
+Commits behind upstream. Default:
+.BR \(da .
+.TP
+.B icons.added
+Added files. Default:
+.BR + .
+.TP
+.B icons.modified
+Modified files. Default:
+.BR ~ .
+.TP
+.B icons.renamed
+Renamed files. Default:
+.BR \(-> .
+.TP
+.B icons.deleted
+Deleted files. Default:
+.BR \- .
+.TP
+.B icons.untracked
+Untracked files. Default:
+.BR ? .
+.TP
+.B icons.conflicts
+Merge conflicts. Default:
+.BR ! .
+.TP
+.B icons.stash
+Stash entries. Default:
+.BR @ .
+.TP
+.B icons.noUpstreamMarker
+Prefix on branch name when there is no upstream. Default:
+.BR * .
+.TP
+.B icons.branchLabelOpen
+Opening bracket around the branch name. Default:
+.BR ( .
+.TP
+.B icons.branchLabelClose
+Closing bracket around the branch name. Default:
+.BR ) .
+.TP
+.B icons.branchOperationSeparator
+Separator between branch name and in-progress operation. Default:
+.BR | .
+.SS Colors
+Customize prompt segment colors using
+.B #RRGGBB
+hex strings. Set to
+.B null
+to restore the default.
+.TP
+.B colors.user
+Username. Default:
+.BR #00BB00 .
+.TP
+.B colors.host
+Hostname. Default:
+.BR #CB06B2 .
+.TP
+.B colors.path
+Working directory. Default:
+.BR #D78700 .
+.TP
+.B colors.commandDuration
+Last command duration. Default:
+.BR #CB06B2 .
+.TP
+.B colors.branch
+Branch name (tracked). Default:
+.BR #48A8CD .
+.TP
+.B colors.branchNoUpstream
+Branch name (no upstream). Default:
+.BR #48A8CD .
+.TP
+.B colors.ahead
+Commits-ahead indicator. Default:
+.BR #48A8CD .
+.TP
+.B colors.behind
+Commits-behind indicator. Default:
+.BR #48A8CD .
+.TP
+.B colors.staged
+Staged changes. Default:
+.BR #00BB00 .
+.TP
+.B colors.unstaged
+Unstaged changes. Default:
+.BR #CC0000 .
+.TP
+.B colors.untracked
+Untracked files. Default:
+.BR #CC0000 .
+.TP
+.B colors.stash
+Stash entries. Default:
+.BR #CB06B2 .
+.TP
+.B colors.conflict
+Merge conflicts. Default:
+.BR #FF5555 .
+.TP
+.B colors.missingPath
+Missing working directory. Default:
+.BR #FF5555 .
+.TP
+.B colors.timeout
+Git timeout indicator. Default:
+.BR #FFA002 .
+.TP
+.B colors.promptSymbol
+Prompt symbol color. Default:
+.BR #AAAAAA .
+.SH FILES
+.TP
+.I ~/.local/bin/gitprompt
+Binary (Linux/macOS).
+.TP
+.I ~/.config/gitprompt/config.jsonc
+Configuration file (Linux/macOS).
+.TP
+.I ~/.local/share/gitprompt/git_aliases.sh
+Git aliases file.
+.TP
+.I ~/.local/share/man/man1/gitprompt.1
+This man page.
+.SH EXAMPLES
+.PP
+Add to
+.I ~/.bashrc
+or
+.IR ~/.bash_profile :
+.PP
+.RS
+.EX
+eval "$(gitprompt init bash)"
+.EE
+.RE
+.PP
+Open the config file:
+.PP
+.RS
+.EX
+gitprompt config
+.EE
+.RE
+.PP
+Update to the latest release:
+.PP
+.RS
+.EX
+gitprompt update
+.EE
+.RE
+.SH SEE ALSO
+.BR git (1),
+.BR bash (1)

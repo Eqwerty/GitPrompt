@@ -21,4 +21,16 @@ internal static class AppPaths
     {
         return XdgPaths.GetCacheDirectory();
     }
+
+    internal static string? GetManPagePath()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return null;
+        }
+
+        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
+        return Path.Combine(home, ".local", "share", "man", "man1", "gitprompt.1");
+    }
 }

@@ -24,6 +24,7 @@ internal static class UninstallCommand
         TryDeleteDirectory(configDir);
         TryDeleteDirectory(cacheDir);
         TryDeleteDirectory(dataDir);
+        TryDeleteFile(AppPaths.GetManPagePath());
 
         if (binaryPath is not null)
         {
@@ -74,6 +75,23 @@ internal static class UninstallCommand
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             Console.Error.WriteLine($"warn: Could not delete {path} — it may be your current directory. Navigate away and try again.");
+        }
+    }
+
+    private static void TryDeleteFile(string? path)
+    {
+        if (path is null || !File.Exists(path))
+        {
+            return;
+        }
+
+        try
+        {
+            File.Delete(path);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            Console.Error.WriteLine($"warn: Could not delete {path}.");
         }
     }
 
