@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text.Json;
 using GitPrompt.Constants;
@@ -142,6 +143,7 @@ internal static class ConfigInitializer
     internal static void MigrateConfigIfNeeded(string configPath)
     {
         string fileContent;
+
         try
         {
             fileContent = File.ReadAllText(configPath);
@@ -158,6 +160,7 @@ internal static class ConfigInitializer
         };
 
         JsonDocument userDoc;
+
         try
         {
             userDoc = JsonDocument.Parse(fileContent, jsonOptions);
@@ -200,17 +203,7 @@ internal static class ConfigInitializer
         }
     }
 
-    // Merges a deserialized user Config with application defaults.
-    //
-    // System.Text.Json source generation ignores record `init` defaults: absent JSON keys
-    // get the CLR default (false for bool, null for nullable) instead of the declared
-    // default (e.g. ShowCommandDuration = true). For nullable types this does not matter
-    // because null already means "use built-in default". For the five bool properties that
-    // default to true, we must check whether the key was actually present in the user's
-    // JSON and fall back to the application default when it was absent.
-    //
-    // Nested objects (Cache, Icons, Colors) are null-coalesced separately because their
-    // nullable scalar/string members all use null as the "no override" sentinel.
+    [SuppressMessage("ReSharper", "NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract")]
     internal static Config MergeWithDefaults(Config userConfig, JsonElement root)
     {
         var defaults = new Config();
@@ -231,7 +224,7 @@ internal static class ConfigInitializer
 
     private static bool HasMissingKeys(JsonElement expected, JsonElement actual)
     {
-        if (expected.ValueKind != JsonValueKind.Object || actual.ValueKind != JsonValueKind.Object)
+        if (expected.ValueKind is not JsonValueKind.Object || actual.ValueKind is not JsonValueKind.Object)
         {
             return false;
         }
