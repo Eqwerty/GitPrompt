@@ -87,46 +87,56 @@ internal static class ConfigInitializer
             .Replace("{iconBranchOperationSeparator}", JsonValue(config.Icons.BranchOperationSeparator))
             .Replace("{iconBranchOperationSeparatorDefault}", BranchLabelTokens.BranchOperationSeparator)
             .Replace("{colorUser}", JsonValue(config.Colors.User))
-            .Replace("{colorUserDefault}", AnsiColors.Green)
+            .Replace("{colorUserDefault}", ColorDisplayValue(AnsiColors.Green))
             .Replace("{colorHost}", JsonValue(config.Colors.Host))
-            .Replace("{colorHostDefault}", AnsiColors.Magenta)
+            .Replace("{colorHostDefault}", ColorDisplayValue(AnsiColors.Magenta))
             .Replace("{colorPath}", JsonValue(config.Colors.Path))
-            .Replace("{colorPathDefault}", AnsiColors.Orange)
+            .Replace("{colorPathDefault}", ColorDisplayValue(AnsiColors.Orange))
             .Replace("{colorCommandDuration}", JsonValue(config.Colors.CommandDuration))
-            .Replace("{colorCommandDurationDefault}", AnsiColors.Magenta)
+            .Replace("{colorCommandDurationDefault}", ColorDisplayValue(AnsiColors.Magenta))
             .Replace("{colorBranch}", JsonValue(config.Colors.Branch))
-            .Replace("{colorBranchDefault}", AnsiColors.Blue)
+            .Replace("{colorBranchDefault}", ColorDisplayValue(AnsiColors.BoldCyan))
             .Replace("{colorBranchNoUpstream}", JsonValue(config.Colors.BranchNoUpstream))
-            .Replace("{colorBranchNoUpstreamDefault}", AnsiColors.Blue)
+            .Replace("{colorBranchNoUpstreamDefault}", ColorDisplayValue(AnsiColors.BoldCyan))
             .Replace("{colorAhead}", JsonValue(config.Colors.Ahead))
-            .Replace("{colorAheadDefault}", AnsiColors.Blue)
+            .Replace("{colorAheadDefault}", ColorDisplayValue(AnsiColors.BoldCyan))
             .Replace("{colorBehind}", JsonValue(config.Colors.Behind))
-            .Replace("{colorBehindDefault}", AnsiColors.Blue)
+            .Replace("{colorBehindDefault}", ColorDisplayValue(AnsiColors.BoldCyan))
             .Replace("{colorStaged}", JsonValue(config.Colors.Staged))
-            .Replace("{colorStagedDefault}", AnsiColors.Green)
+            .Replace("{colorStagedDefault}", ColorDisplayValue(AnsiColors.Green))
             .Replace("{colorUnstaged}", JsonValue(config.Colors.Unstaged))
-            .Replace("{colorUnstagedDefault}", AnsiColors.Red)
+            .Replace("{colorUnstagedDefault}", ColorDisplayValue(AnsiColors.Red))
             .Replace("{colorUntracked}", JsonValue(config.Colors.Untracked))
-            .Replace("{colorUntrackedDefault}", AnsiColors.Red)
+            .Replace("{colorUntrackedDefault}", ColorDisplayValue(AnsiColors.Red))
             .Replace("{colorStash}", JsonValue(config.Colors.Stash))
-            .Replace("{colorStashDefault}", AnsiColors.Magenta)
+            .Replace("{colorStashDefault}", ColorDisplayValue(AnsiColors.Magenta))
             .Replace("{colorConflict}", JsonValue(config.Colors.Conflict))
-            .Replace("{colorConflictDefault}", AnsiColors.BoldRed)
+            .Replace("{colorConflictDefault}", ColorDisplayValue(AnsiColors.BoldRed))
             .Replace("{colorDirty}", JsonValue(config.Colors.Dirty))
-            .Replace("{colorDirtyDefault}", AnsiColors.Orange)
+            .Replace("{colorDirtyDefault}", ColorDisplayValue(AnsiColors.Orange))
             .Replace("{colorClean}", JsonValue(config.Colors.Clean))
-            .Replace("{colorCleanDefault}", AnsiColors.Green)
+            .Replace("{colorCleanDefault}", ColorDisplayValue(AnsiColors.Green))
             .Replace("{colorMissingPath}", JsonValue(config.Colors.MissingPath))
-            .Replace("{colorMissingPathDefault}", AnsiColors.BoldRed)
+            .Replace("{colorMissingPathDefault}", ColorDisplayValue(AnsiColors.BoldRed))
             .Replace("{colorTimeout}", JsonValue(config.Colors.Timeout))
-            .Replace("{colorTimeoutDefault}", AnsiColors.Yellow)
+            .Replace("{colorTimeoutDefault}", ColorDisplayValue(AnsiColors.Yellow))
             .Replace("{colorPromptSymbol}", JsonValue(config.Colors.PromptSymbol))
-            .Replace("{colorPromptSymbolDefault}", AnsiColors.LightGray);
+            .Replace("{colorPromptSymbolDefault}", ColorDisplayValue(AnsiColors.White));
     }
 
     private static string JsonValue(string? value)
     {
         return value is null ? "null" : $"\"{value}\"";
+    }
+
+    private static string ColorDisplayValue(string ansiColor)
+    {
+        if (ansiColor.Length > 0 && ansiColor[0] is '\e')
+        {
+            return ansiColor[1..];
+        }
+
+        return ansiColor;
     }
 
     internal static void MigrateConfigIfNeeded(string configPath)
@@ -207,15 +217,15 @@ internal static class ConfigInitializer
 
         return userConfig with
         {
-            ShowUser            = root.TryGetProperty("showUser", out _)            ? userConfig.ShowUser            : defaults.ShowUser,
-            ShowHost            = root.TryGetProperty("showHost", out _)            ? userConfig.ShowHost            : defaults.ShowHost,
-            MultilinePrompt     = root.TryGetProperty("multilinePrompt", out _)     ? userConfig.MultilinePrompt     : defaults.MultilinePrompt,
+            ShowUser = root.TryGetProperty("showUser", out _) ? userConfig.ShowUser : defaults.ShowUser,
+            ShowHost = root.TryGetProperty("showHost", out _) ? userConfig.ShowHost : defaults.ShowHost,
+            MultilinePrompt = root.TryGetProperty("multilinePrompt", out _) ? userConfig.MultilinePrompt : defaults.MultilinePrompt,
             ShowCommandDuration = root.TryGetProperty("showCommandDuration", out _) ? userConfig.ShowCommandDuration : defaults.ShowCommandDuration,
             ShowStashInCompactMode = root.TryGetProperty("showStashInCompactMode", out _) ? userConfig.ShowStashInCompactMode : defaults.ShowStashInCompactMode,
-            PromptStartOfLine   = root.TryGetProperty("promptStartOfLine", out _)   ? userConfig.PromptStartOfLine   : defaults.PromptStartOfLine,
-            Cache  = userConfig.Cache  ?? defaults.Cache,
-            Icons  = userConfig.Icons  ?? defaults.Icons,
-            Colors = userConfig.Colors ?? defaults.Colors,
+            PromptStartOfLine = root.TryGetProperty("promptStartOfLine", out _) ? userConfig.PromptStartOfLine : defaults.PromptStartOfLine,
+            Cache = userConfig.Cache ?? defaults.Cache,
+            Icons = userConfig.Icons ?? defaults.Icons,
+            Colors = userConfig.Colors ?? defaults.Colors
         };
     }
 

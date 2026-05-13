@@ -117,10 +117,10 @@ public sealed class BoxRendererTests
         var lines = new List<string?> { "  content" };
 
         // Act
-        var result = BoxRenderer.Render("Title", lines, AnsiColors.LightGray);
+        var result = BoxRenderer.Render("Title", lines, AnsiColors.White);
 
         // Assert
-        result.Should().Contain(AnsiColorConverter.ToAnsi(AnsiColors.LightGray));
+        result.Should().Contain(AnsiColorConverter.ToAnsi(AnsiColors.White));
         result.Should().Contain(AnsiColors.Reset);
     }
 

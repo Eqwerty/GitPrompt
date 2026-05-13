@@ -39,7 +39,7 @@ internal static class PathsCommand
             BuildRow("shell config", shellConfigPath),
         };
 
-        return BoxRenderer.Render("GitPrompt paths", lines, AnsiColors.LightGray);
+        return BoxRenderer.Render("GitPrompt paths", lines, AnsiColors.White);
     }
 
     private static string BuildRow(string label, string? path)

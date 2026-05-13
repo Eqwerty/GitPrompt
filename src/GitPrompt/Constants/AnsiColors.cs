@@ -2,14 +2,14 @@ namespace GitPrompt.Constants;
 
 internal static class AnsiColors
 {
-    internal const string Green = "#278c5f";
-    internal const string Magenta = "#B20F9D";
-    internal const string Orange = "#D78700";
-    internal const string Red = "#CC0000";
-    internal const string BoldRed = "#FF5555";
-    internal const string LightGray = "#DCD7DA";
-    internal const string Yellow = "#FFA002";
-    internal const string Blue = "#48A8CD";
+    internal const string Green = "\e[32m";
+    internal const string Magenta = "\e[95m";
+    internal const string Orange = "\e[38;5;172m";
+    internal const string Red = "\e[31m";
+    internal const string BoldRed = "\e[1;31m";
+    internal const string White = "\e[37m";
+    internal const string Yellow = "\e[33m";
+    internal const string BoldCyan = "\e[1;36m";
 
     internal const string Reset = "\e[0m";
 }

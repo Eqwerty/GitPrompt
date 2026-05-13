@@ -501,13 +501,13 @@ public sealed class ConfigInitializerTests
         var content = ConfigInitializer.BuildDefaultConfigContent();
 
         // Assert — comment hex values come from AnsiColors constants
-        content.Should().Contain($"null = default: {AnsiColors.Green}");
-        content.Should().Contain($"null = default: {AnsiColors.Magenta}");
-        content.Should().Contain($"null = default: {AnsiColors.Orange}");
-        content.Should().Contain($"null = default: {AnsiColors.Blue}");
-        content.Should().Contain($"null = default: {AnsiColors.Red}");
-        content.Should().Contain($"null = default: {AnsiColors.BoldRed}");
-        content.Should().Contain($"null = default: {AnsiColors.Yellow}");
-        content.Should().Contain($"null = default: {AnsiColors.LightGray}");
+        content.Should().Contain($"null = default: [32m");
+        content.Should().Contain($"null = default: [35m");
+        content.Should().Contain($"null = default: [38;5;208m");
+        content.Should().Contain($"null = default: [1;36m");
+        content.Should().Contain($"null = default: [31m");
+        content.Should().Contain($"null = default: [1;31m");
+        content.Should().Contain($"null = default: [33m");
+        content.Should().Contain($"null = default: [37m");
     }
 }

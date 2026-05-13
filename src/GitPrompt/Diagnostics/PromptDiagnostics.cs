@@ -208,7 +208,7 @@ internal static class PromptDiagnostics
             AddConfigLines(lines);
         }
 
-        return BoxRenderer.Render("GitPrompt diagnostic", lines, AnsiColors.LightGray) + BuildSummary();
+        return BoxRenderer.Render("GitPrompt diagnostic", lines, AnsiColors.White) + BuildSummary();
     }
 
     private static void AddConfigLines(List<string?> lines)
