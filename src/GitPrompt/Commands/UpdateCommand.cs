@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using GitPrompt.Configuration;
 using GitPrompt.Platform;
 using GitPrompt.Terminal;
 
@@ -37,6 +38,8 @@ internal static class UpdateCommand
             {
                 Environment.Exit(process.ExitCode);
             }
+
+            ConfigInitializer.InitializeDefaultConfig();
         }
         catch (Exception exception)
         {
