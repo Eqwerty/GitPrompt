@@ -44,45 +44,4 @@ public sealed class UtilitiesTests
         // Assert
         escapedValue.Should().Be("\"C:\\\\Program Files\\\\My \\\"App\\\"\"");
     }
-
-    [Fact]
-    public void EnumerateLines_WhenTextContainsMultipleLines_ShouldYieldEachLine()
-    {
-        // Arrange
-        const string text = "line1\nline2\nline3";
-
-        // Act
-        var lines = Utilities.EnumerateLines(text).ToList();
-
-        // Assert
-        lines.Should().HaveCount(3);
-        lines.Should().ContainInOrder("line1", "line2", "line3");
-    }
-
-    [Fact]
-    public void EnumerateLines_WhenTextIsEmpty_ShouldYieldNoLines()
-    {
-        // Arrange
-        const string text = "";
-
-        // Act
-        var lines = Utilities.EnumerateLines(text).ToList();
-
-        // Assert
-        lines.Should().BeEmpty();
-    }
-
-    [Fact]
-    public void EnumerateLines_WhenTextContainsSingleLine_ShouldYieldOneLine()
-    {
-        // Arrange
-        const string text = "single line";
-
-        // Act
-        var lines = Utilities.EnumerateLines(text).ToList();
-
-        // Assert
-        lines.Should().HaveCount(1);
-        lines[0].Should().Be("single line");
-    }
 }

@@ -25,7 +25,7 @@ internal static class Utilities
         return new RestoreAction(() => _processStartInfoTransformerOverride = previous);
     }
 
-    private sealed class RestoreAction(Action restore) : IDisposable
+    internal sealed class RestoreAction(Action restore) : IDisposable
     {
         private readonly Action _restore = restore;
 
@@ -39,15 +39,6 @@ internal static class Utilities
     internal static string NormalizePath(string path)
     {
         return Path.GetFullPath(path);
-    }
-
-    internal static IEnumerable<string> EnumerateLines(string text)
-    {
-        using var reader = new StringReader(text);
-        while (reader.ReadLine() is string line)
-        {
-            yield return line;
-        }
     }
 
     internal static string EscapeCommandLineArgument(string argument)

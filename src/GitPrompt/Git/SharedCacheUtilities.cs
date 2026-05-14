@@ -91,16 +91,6 @@ internal static class SharedCacheUtilities
         }
     }
 
-    internal sealed class TimeProviderOverride(Action restore) : IDisposable
-    {
-        private readonly Action _restore = restore;
-
-        public void Dispose()
-        {
-            _restore();
-        }
-    }
-
     internal struct FingerprintHasher()
     {
         private const ulong OffsetBasis = 14695981039346656037UL;

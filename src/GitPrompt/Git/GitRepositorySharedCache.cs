@@ -118,14 +118,14 @@ internal static class GitRepositorySharedCache
         var previousTimeProvider = _timeProvider;
         _timeProvider = timeProvider;
 
-        return new SharedCacheUtilities.TimeProviderOverride(() => _timeProvider = previousTimeProvider);
+        return new Utilities.RestoreAction(() => _timeProvider = previousTimeProvider);
     }
 
     internal static IDisposable OverrideCacheDirectoryForTesting(string cacheDirectoryPath)
     {
         _cacheDirectoryOverride = cacheDirectoryPath;
 
-        return new SharedCacheUtilities.TimeProviderOverride(() => _cacheDirectoryOverride = null);
+        return new Utilities.RestoreAction(() => _cacheDirectoryOverride = null);
     }
 
     private static TimeSpan GetCacheTtl()
