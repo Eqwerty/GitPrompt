@@ -15,6 +15,10 @@ internal sealed record Config
     internal bool ShowUser { get; init; } = true;
 
     [JsonInclude]
+    [JsonPropertyName("showDomain")]
+    internal bool ShowDomain { get; init; } = false;
+
+    [JsonInclude]
     [JsonPropertyName("showHost")]
     internal bool ShowHost { get; init; } = true;
 

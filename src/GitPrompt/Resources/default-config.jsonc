@@ -7,6 +7,7 @@
   "commandDurationMinMs": {commandDurationMinMs},  // minimum duration in ms before showing command duration (null = always show)
   "showCommandDuration": {showCommandDuration},  // show last command duration in the prompt (true/false)
   "showUser": {showUser},  // show username in the prompt (true/false)
+  "showDomain": {showDomain},  // show Windows domain before username, e.g. DOMAIN\user (true/false)
   "showHost": {showHost},  // show hostname in the prompt (true/false)
   "maxPathDepth": {maxPathDepth},  // max path segments shown (0 = full path)
   "multilinePrompt": {multilinePrompt},  // put the prompt symbol on its own line (true/false)

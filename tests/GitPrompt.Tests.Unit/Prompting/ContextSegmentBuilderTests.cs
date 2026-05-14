@@ -44,6 +44,78 @@ public sealed class ContextSegmentBuilderTests
         segment.Should().Be($"{ColorUser}windows-user{ColorReset} {ColorHost}workstation{ColorReset} {ColorPath}/repo{ColorReset}");
     }
 
+    [Fact]
+    public void Build_WhenShowDomainIsTrueAndDomainExists_ShouldPrependDomainToWindowsUser()
+    {
+        // Arrange
+        using var _ = ConfigReader.OverrideForTesting(new Config { ShowDomain = true });
+        var platformProvider = new TestPlatformProvider(
+            windowsUserName: "EduardoQuintana",
+            windowsUserDomain: "AzureAD",
+            host: "machine",
+            workingDirectoryPath: "/repo");
+
+        // Act
+        var segment = ContextSegmentBuilder.Build(platformProvider);
+
+        // Assert
+        segment.Should().Be($"{ColorUser}AzureAD+EduardoQuintana{ColorReset} {ColorHost}machine{ColorReset} {ColorPath}/repo{ColorReset}");
+    }
+
+    [Fact]
+    public void Build_WhenShowDomainIsTrueButDomainIsAbsent_ShouldShowUsernameOnly()
+    {
+        // Arrange
+        using var _ = ConfigReader.OverrideForTesting(new Config { ShowDomain = true });
+        var platformProvider = new TestPlatformProvider(
+            windowsUserName: "EduardoQuintana",
+            windowsUserDomain: null,
+            host: "machine",
+            workingDirectoryPath: "/repo");
+
+        // Act
+        var segment = ContextSegmentBuilder.Build(platformProvider);
+
+        // Assert
+        segment.Should().Be($"{ColorUser}EduardoQuintana{ColorReset} {ColorHost}machine{ColorReset} {ColorPath}/repo{ColorReset}");
+    }
+
+    [Fact]
+    public void Build_WhenShowDomainIsTrueButUserIsUnixUser_ShouldNotPrependDomain()
+    {
+        // Arrange
+        using var _ = ConfigReader.OverrideForTesting(new Config { ShowDomain = true });
+        var platformProvider = new TestPlatformProvider(
+            user: "unix-user",
+            windowsUserDomain: "AzureAD",
+            host: "machine",
+            workingDirectoryPath: "/repo");
+
+        // Act
+        var segment = ContextSegmentBuilder.Build(platformProvider);
+
+        // Assert
+        segment.Should().Be($"{ColorUser}unix-user{ColorReset} {ColorHost}machine{ColorReset} {ColorPath}/repo{ColorReset}");
+    }
+
+    [Fact]
+    public void Build_WhenShowDomainIsFalseAndDomainExists_ShouldShowUsernameOnly()
+    {
+        // Arrange
+        using var _ = ConfigReader.OverrideForTesting(new Config { ShowDomain = false });
+        var platformProvider = new TestPlatformProvider(
+            windowsUserName: "EduardoQuintana",
+            windowsUserDomain: "AzureAD",
+            host: "machine",
+            workingDirectoryPath: "/repo");
+
+        // Act
+        var segment = ContextSegmentBuilder.Build(platformProvider);
+
+        // Assert
+        segment.Should().Be($"{ColorUser}EduardoQuintana{ColorReset} {ColorHost}machine{ColorReset} {ColorPath}/repo{ColorReset}");
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]

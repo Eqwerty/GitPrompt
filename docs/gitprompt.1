@@ -141,6 +141,16 @@ means always show. Default: none.
 Show the username in the prompt. Default:
 .BR true .
 .TP
+.B showDomain
+Prepend the Windows domain to the username (e.g.
+.BR DOMAIN+user ).
+Only applies when the username comes from
+.B USERNAME
+(Windows); has no effect when the
+.B USER
+environment variable is set. Default:
+.BR false .
+.TP
 .B showHost
 Show the hostname in the prompt. Default:
 .BR true .

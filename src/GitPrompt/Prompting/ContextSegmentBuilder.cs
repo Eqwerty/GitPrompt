@@ -48,6 +48,16 @@ internal static class ContextSegmentBuilder
 
         if (!string.IsNullOrEmpty(windowsUserName))
         {
+            if (ConfigReader.Config.ShowDomain)
+            {
+                var domain = platformProvider.WindowsUserDomain;
+
+                if (!string.IsNullOrEmpty(domain))
+                {
+                    return $"{domain}+{windowsUserName}";
+                }
+            }
+
             return windowsUserName;
         }
 

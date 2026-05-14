@@ -42,6 +42,7 @@ Shows the elapsed time of the last command in the prompt, rendered in pink betwe
 | Key | Default | Description |
 |---|---|---|
 | `showUser` | `true` | Show the username in the prompt |
+| `showDomain` | `false` | Prepend the Windows domain to the username, e.g. `DOMAIN+user` (Windows only; no effect when `USER` env var is set) |
 | `showHost` | `true` | Show the hostname in the prompt |
 | `maxPathDepth` | `0` | Max directory segments shown in the path (`0` = full path) |
 

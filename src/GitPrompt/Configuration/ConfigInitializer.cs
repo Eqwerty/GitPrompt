@@ -49,6 +49,7 @@ internal static class ConfigInitializer
             .Replace("{commandDurationMinMs}", config.CommandDurationMinMs?.ToString(CultureInfo.InvariantCulture) ?? "null")
             .Replace("{showCommandDuration}", config.ShowCommandDuration.ToString().ToLowerInvariant())
             .Replace("{showUser}", config.ShowUser.ToString().ToLowerInvariant())
+            .Replace("{showDomain}", config.ShowDomain.ToString().ToLowerInvariant())
             .Replace("{showHost}", config.ShowHost.ToString().ToLowerInvariant())
             .Replace("{maxPathDepth}", config.MaxPathDepth.ToString(CultureInfo.InvariantCulture))
             .Replace("{multilinePrompt}", config.MultilinePrompt.ToString().ToLowerInvariant())
@@ -211,6 +212,7 @@ internal static class ConfigInitializer
         return userConfig with
         {
             ShowUser = root.TryGetProperty("showUser", out _) ? userConfig.ShowUser : defaults.ShowUser,
+            ShowDomain = root.TryGetProperty("showDomain", out _) ? userConfig.ShowDomain : defaults.ShowDomain,
             ShowHost = root.TryGetProperty("showHost", out _) ? userConfig.ShowHost : defaults.ShowHost,
             MultilinePrompt = root.TryGetProperty("multilinePrompt", out _) ? userConfig.MultilinePrompt : defaults.MultilinePrompt,
             ShowCommandDuration = root.TryGetProperty("showCommandDuration", out _) ? userConfig.ShowCommandDuration : defaults.ShowCommandDuration,

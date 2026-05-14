@@ -12,6 +12,8 @@ internal abstract class PlatformProvider
 
     internal abstract string? WindowsUserName { get; }
 
+    internal abstract string? WindowsUserDomain { get; }
+
     internal abstract string? Host { get; }
 
     internal abstract WorkingDirectoryContext WorkingDirectory { get; }
@@ -27,6 +29,8 @@ internal abstract class PlatformProvider
         internal override string? User => Environment.GetEnvironmentVariable("USER");
 
         internal override string? WindowsUserName => Environment.GetEnvironmentVariable("USERNAME");
+
+        internal override string? WindowsUserDomain => Environment.GetEnvironmentVariable("USERDOMAIN");
 
         internal override string Host => Environment.MachineName;
 

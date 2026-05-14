@@ -7,6 +7,7 @@ internal sealed class TestPlatformProvider(
     bool isWorkingDirectoryFromFallback = false,
     string? user = null,
     string? windowsUserName = null,
+    string? windowsUserDomain = null,
     string? host = null,
     string? workingDirectoryPath = null,
     string? homeDirectoryPath = null,
@@ -19,6 +20,8 @@ internal sealed class TestPlatformProvider(
     internal override string? User { get; } = user;
 
     internal override string? WindowsUserName { get; } = windowsUserName;
+
+    internal override string? WindowsUserDomain { get; } = windowsUserDomain;
 
     internal override string? Host { get; } = host;
 
