@@ -159,7 +159,6 @@ internal static class GitRepositorySharedCache
     {
         return
         [
-            "v1",
             cacheRecord.CachedAtUtcTicks.ToString(),
             Encode(cacheRecord.StartDirectoryPath),
             Encode(cacheRecord.WorkingTreePath),
@@ -172,11 +171,6 @@ internal static class GitRepositorySharedCache
         cacheRecord = default;
         var lines = fileContent.Split('\n');
         var i = 0;
-
-        if (NextLine() is not "v1")
-        {
-            return false;
-        }
 
         if (NextLine() is not { } ticksText || !long.TryParse(ticksText, out var cachedAtUtcTicks)) { return false; }
 

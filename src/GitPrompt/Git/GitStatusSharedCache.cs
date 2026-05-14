@@ -488,7 +488,6 @@ internal static class GitStatusSharedCache
     {
         return
         [
-            "v3",
             cacheRecord.CachedAtUtcTicks.ToString(),
             Encode(cacheRecord.RepositoryRootPath),
             Encode(cacheRecord.Fingerprint),
@@ -502,11 +501,6 @@ internal static class GitStatusSharedCache
         cacheRecord = default;
         var lines = fileContent.Split('\n');
         var i = 0;
-
-        if (NextLine() is not "v3")
-        {
-            return false;
-        }
 
         if (NextLine() is not { } ticksText || !long.TryParse(ticksText, out var cachedAtUtcTicks))
         {
