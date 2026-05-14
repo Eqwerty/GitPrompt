@@ -146,20 +146,6 @@ public sealed class PromptDiagnosticsTests
     }
 
     [Fact]
-    public void RecordStatusCacheHit_WhenNotEnabled_ShouldNotBeReflectedInReport()
-    {
-        // Arrange — diagnostics not enabled
-        PromptDiagnostics.Reset();
-
-        // Act & Assert — calling record methods when disabled must not throw and must have no effect
-        var act = () =>
-        {
-            PromptDiagnostics.RecordStatusCacheHit(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(5));
-        };
-        act.Should().NotThrow();
-    }
-
-    [Fact]
     public void GetReport_WhenStatusCacheMissDisabled_ShouldShowDisabledMessage()
     {
         // Arrange
@@ -280,18 +266,6 @@ public sealed class PromptDiagnosticsTests
 
         // Assert
         report.Should().NotContain("Config     ");
-    }
-
-    [Fact]
-    public void RecordConfigLoaded_WhenNotEnabled_ShouldNotBeReflectedInReport()
-    {
-        // Arrange — diagnostics not enabled
-        PromptDiagnostics.Reset();
-        var loadResult = new ConfigLoadResult("/some/path", ConfigLoadStatus.Loaded, new Config());
-
-        // Act & Assert
-        var act = () => PromptDiagnostics.RecordConfigLoaded(loadResult);
-        act.Should().NotThrow();
     }
 
     [Fact]

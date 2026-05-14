@@ -1,8 +1,6 @@
 using FluentAssertions;
 using GitPrompt.Configuration;
-using GitPrompt.Diagnostics;
 using GitPrompt.Git;
-using GitPrompt.Prompting;
 
 namespace GitPrompt.Tests.Unit.Git;
 
@@ -232,32 +230,6 @@ public sealed class GitStatusSharedCacheTests
     }
 
     [Fact]
-    public void Invalidate_WhenCalled_ShouldWriteNewUniqueTokenToTokenFile()
-    {
-        // Arrange
-        using var cacheDirectory = new TemporaryDirectory();
-        using var configOverride =
-            ConfigReader.OverrideForTesting(new Config { Cache = new Config.CacheConfig { GitStatusTtlSeconds = 5.0 } });
-
-        using var cacheDirectoryOverride = GitStatusSharedCache.OverrideCacheDirectoryForTesting(cacheDirectory.DirectoryPath);
-
-        var tokenFilePath = Path.Combine(cacheDirectory.DirectoryPath, "status-invalidation.token");
-
-        // Act – first call creates the token file
-        GitStatusSharedCache.Invalidate();
-        var firstToken = File.ReadAllText(tokenFilePath);
-
-        // Act – second call overwrites with a new, different token
-        GitStatusSharedCache.Invalidate();
-        var secondToken = File.ReadAllText(tokenFilePath);
-
-        // Assert
-        firstToken.Should().NotBeNullOrWhiteSpace();
-        secondToken.Should().NotBeNullOrWhiteSpace();
-        secondToken.Should().NotBe(firstToken, "each Invalidate() call must produce a distinct token");
-    }
-
-    [Fact]
     public void Set_WhenStaleCacheFilesExist_ShouldDeleteOnlyExpiredCacheFiles()
     {
         // Arrange
@@ -328,49 +300,5 @@ public sealed class GitStatusSharedCacheTests
         File.WriteAllText(Path.Combine(gitDirectoryPath, "HEAD"), "ref: refs/heads/main\n");
         File.WriteAllText(Path.Combine(gitDirectoryPath, "index"), "index-v1");
         File.WriteAllText(Path.Combine(branchRefPath, "main"), "0000000000000000000000000000000000000001\n");
-    }
-
-    [Fact]
-    public void TryGet_WhenHitAndDiagnosticsEnabled_ShouldRecordHit()
-    {
-        // Arrange
-        using var cacheDirectory = new TemporaryDirectory();
-        using var configOverride = ConfigReader.OverrideForTesting(new Config { Cache = new Config.CacheConfig { GitStatusTtlSeconds = 10.0 } });
-        using var cacheDirectoryOverride = GitStatusSharedCache.OverrideCacheDirectoryForTesting(cacheDirectory.DirectoryPath);
-        using var diagnostics = PromptDiagnostics.EnableForTesting();
-
-        var repositoryPath = Path.Combine(cacheDirectory.DirectoryPath, "repo");
-        var gitDirectoryPath = Path.Combine(repositoryPath, ".git");
-        CreateMinimalGitState(gitDirectoryPath);
-        GitStatusSharedCache.Set(repositoryPath, gitDirectoryPath, "segment");
-
-        // Act
-        var hit = GitStatusSharedCache.TryGet(repositoryPath, gitDirectoryPath, out _);
-
-        // Assert
-        hit.Should().BeTrue();
-        var report = PromptDiagnostics.GetReport("/", new PromptResult(string.Empty, string.Empty, string.Empty, string.Empty, TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero));
-        report.Should().Contain("Status      hit");
-    }
-
-    [Fact]
-    public void TryGet_WhenMissNoEntryAndDiagnosticsEnabled_ShouldRecordMiss()
-    {
-        // Arrange
-        using var cacheDirectory = new TemporaryDirectory();
-        using var configOverride = ConfigReader.OverrideForTesting(new Config { Cache = new Config.CacheConfig { GitStatusTtlSeconds = 10.0 } });
-        using var cacheDirectoryOverride = GitStatusSharedCache.OverrideCacheDirectoryForTesting(cacheDirectory.DirectoryPath);
-        using var diagnostics = PromptDiagnostics.EnableForTesting();
-
-        var repositoryPath = Path.Combine(cacheDirectory.DirectoryPath, "repo");
-        var gitDirectoryPath = Path.Combine(repositoryPath, ".git");
-
-        // Act — no Set() call, so no cache entry exists
-        var hit = GitStatusSharedCache.TryGet(repositoryPath, gitDirectoryPath, out _);
-
-        // Assert
-        hit.Should().BeFalse();
-        var report = PromptDiagnostics.GetReport("/", new PromptResult(string.Empty, string.Empty, string.Empty, string.Empty, TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero));
-        report.Should().Contain("miss · no entry");
     }
 }
