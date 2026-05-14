@@ -1,4 +1,3 @@
-using System.Text;
 using GitPrompt.Configuration;
 using GitPrompt.Diagnostics;
 using GitPrompt.Platform;
@@ -116,37 +115,12 @@ internal static class GitStatusSharedCache
                 ReadInvalidationTokenValue());
 
             var cacheFilePath = GetCacheFilePath(normalizedRepositoryRootPath);
-            WriteAtomically(cacheFilePath, SerializeRecord(cacheRecord));
+            SharedCacheUtilities.WriteAtomically(cacheFilePath, SerializeRecord(cacheRecord));
             TryCleanupStaleEntries(cacheDirectoryPath);
         }
         catch
         {
             // Keep cache as a best-effort optimization.
-        }
-    }
-
-    private static void WriteAtomically(string targetFilePath, string[] lines)
-    {
-        var tempFilePath = targetFilePath + "." + Path.GetRandomFileName() + ".tmp";
-        try
-        {
-            File.WriteAllLines(tempFilePath, lines);
-            File.Move(tempFilePath, targetFilePath, overwrite: true);
-            tempFilePath = null;
-        }
-        finally
-        {
-            if (tempFilePath is not null)
-            {
-                try
-                {
-                    File.Delete(tempFilePath);
-                }
-                catch (Exception)
-                {
-                    /* best-effort temp file cleanup */
-                }
-            }
         }
     }
 
@@ -188,25 +162,7 @@ internal static class GitStatusSharedCache
         }
 
         Interlocked.Exchange(ref _nextCleanupUtcTicks, utcNow.Add(CleanupInterval).UtcTicks);
-        CleanupStaleEntries(cacheDirectoryPath, utcNow.UtcDateTime - StaleCacheEntryThreshold);
-    }
-
-    private static void CleanupStaleEntries(string cacheDirectoryPath, DateTime staleBeforeUtc)
-    {
-        foreach (var cacheFilePath in Directory.EnumerateFiles(cacheDirectoryPath, "*.cache"))
-        {
-            try
-            {
-                if (File.GetLastWriteTimeUtc(cacheFilePath) < staleBeforeUtc)
-                {
-                    File.Delete(cacheFilePath);
-                }
-            }
-            catch
-            {
-                // Keep cleanup as best-effort and never fail prompt rendering.
-            }
-        }
+        SharedCacheUtilities.CleanupStaleEntries(cacheDirectoryPath, utcNow.UtcDateTime - StaleCacheEntryThreshold);
     }
 
     internal static IDisposable OverrideTimeProviderForTesting(TimeProvider timeProvider)
@@ -214,14 +170,14 @@ internal static class GitStatusSharedCache
         var previousTimeProvider = _timeProvider;
         _timeProvider = timeProvider;
 
-        return new TimeProviderOverride(() => _timeProvider = previousTimeProvider);
+        return new SharedCacheUtilities.TimeProviderOverride(() => _timeProvider = previousTimeProvider);
     }
 
     internal static IDisposable OverrideCacheDirectoryForTesting(string cacheDirectoryPath)
     {
         _cacheDirectoryOverride = cacheDirectoryPath;
 
-        return new TimeProviderOverride(() => _cacheDirectoryOverride = null);
+        return new SharedCacheUtilities.TimeProviderOverride(() => _cacheDirectoryOverride = null);
     }
 
     internal static void ResetCleanupScheduleForTesting()
@@ -234,16 +190,6 @@ internal static class GitStatusSharedCache
         return _timeProvider.GetUtcNow();
     }
 
-    private sealed class TimeProviderOverride(Action restore) : IDisposable
-    {
-        private readonly Action _restore = restore;
-
-        public void Dispose()
-        {
-            _restore();
-        }
-    }
-
     private static string GetCacheDirectoryPath()
     {
         return _cacheDirectoryOverride ?? Path.Combine(XdgPaths.GetCacheDirectory(), CacheDirectoryName);
@@ -251,7 +197,7 @@ internal static class GitStatusSharedCache
 
     private static string GetCacheFilePath(string normalizedRepositoryRootPath)
     {
-        return Path.Combine(GetCacheDirectoryPath(), HashPath(normalizedRepositoryRootPath) + ".cache");
+        return Path.Combine(GetCacheDirectoryPath(), SharedCacheUtilities.HashPath(normalizedRepositoryRootPath) + ".cache");
     }
 
     private static string GetInvalidationTokenPath()
@@ -275,7 +221,7 @@ internal static class GitStatusSharedCache
     private static string BuildFingerprint(string normalizedGitDirectoryPath)
     {
         var commonGitDirectoryPath = ResolveCommonGitDirectoryPath(normalizedGitDirectoryPath);
-        var hasher = new FingerprintHasher();
+        var hasher = new SharedCacheUtilities.FingerprintHasher();
 
         hasher.AppendString("COMMON_GIT_DIR");
         hasher.AppendString(commonGitDirectoryPath);
@@ -452,7 +398,7 @@ internal static class GitStatusSharedCache
         while (configReader.ReadLine() is { } rawLine)
         {
             var line = rawLine.Trim();
-            if (line.Length == 0 || line.StartsWith('#') || line.StartsWith(';'))
+            if (line.Length is 0 || line.StartsWith('#') || line.StartsWith(';'))
             {
                 continue;
             }
@@ -512,13 +458,13 @@ internal static class GitStatusSharedCache
         return section[(firstQuoteIndex + 1)..lastQuoteIndex];
     }
 
-    private static void AppendStamp(ref FingerprintHasher hasher, string gitDirectoryPath, string relativePath)
+    private static void AppendStamp(ref SharedCacheUtilities.FingerprintHasher hasher, string gitDirectoryPath, string relativePath)
     {
         var absolutePath = Path.Combine(gitDirectoryPath, relativePath);
         AppendAbsoluteFileStamp(ref hasher, absolutePath, relativePath);
     }
 
-    private static void AppendAbsoluteFileStamp(ref FingerprintHasher hasher, string filePath, string label)
+    private static void AppendAbsoluteFileStamp(ref SharedCacheUtilities.FingerprintHasher hasher, string filePath, string label)
     {
         hasher.AppendString(label);
         var fileInfo = new FileInfo(filePath);
@@ -535,7 +481,7 @@ internal static class GitStatusSharedCache
 
     private static string NormalizePathOrEmpty(string path)
     {
-        return string.IsNullOrWhiteSpace(path) ? string.Empty : Utilities.NormalizePath(path);
+        return SharedCacheUtilities.NormalizePathOrEmpty(path);
     }
 
     private static string[] SerializeRecord(GitStatusSharedCacheRecord cacheRecord)
@@ -557,16 +503,24 @@ internal static class GitStatusSharedCache
         var lines = fileContent.Split('\n');
         var i = 0;
 
-        string? NextLine() => i < lines.Length ? lines[i++].TrimEnd('\r') : null;
+        if (NextLine() is not "v3")
+        {
+            return false;
+        }
 
-        if (NextLine() is not "v3") return false;
-        if (NextLine() is not { } ticksText || !long.TryParse(ticksText, out var cachedAtUtcTicks)) return false;
+        if (NextLine() is not { } ticksText || !long.TryParse(ticksText, out var cachedAtUtcTicks))
+        {
+            return false;
+        }
 
         var repoEncoded = NextLine();
         var fingerprintEncoded = NextLine();
         var segmentEncoded = NextLine();
         var tokenEncoded = NextLine();
-        if (repoEncoded is null || fingerprintEncoded is null || segmentEncoded is null || tokenEncoded is null) return false;
+        if (repoEncoded is null || fingerprintEncoded is null || segmentEncoded is null || tokenEncoded is null)
+        {
+            return false;
+        }
 
         var repositoryRootPath = Decode(repoEncoded);
         var fingerprint = Decode(fingerprintEncoded);
@@ -579,42 +533,18 @@ internal static class GitStatusSharedCache
 
         cacheRecord = new GitStatusSharedCacheRecord(repositoryRootPath, fingerprint, segment, cachedAtUtcTicks, invalidationTokenValue);
         return true;
+
+        string? NextLine() => i < lines.Length ? lines[i++].TrimEnd('\r') : null;
     }
 
     private static string Encode(string value)
     {
-        return Convert.ToBase64String(Encoding.UTF8.GetBytes(value));
+        return SharedCacheUtilities.Encode(value);
     }
 
     private static string Decode(string encoded)
     {
-        try
-        {
-            return Encoding.UTF8.GetString(Convert.FromBase64String(encoded));
-        }
-        catch
-        {
-            return string.Empty;
-        }
-    }
-
-    private static string HashPath(string value)
-    {
-        return Fnv1A64(Encoding.UTF8.GetBytes(value)).ToString("x16");
-    }
-
-    private static ulong Fnv1A64(byte[] data)
-    {
-        const ulong offsetBasis = 14695981039346656037UL;
-        const ulong prime = 1099511628211UL;
-        var hash = offsetBasis;
-        foreach (var b in data)
-        {
-            hash ^= b;
-            hash *= prime;
-        }
-
-        return hash;
+        return SharedCacheUtilities.Decode(encoded);
     }
 
     private readonly record struct GitStatusSharedCacheRecord(
@@ -623,39 +553,4 @@ internal static class GitStatusSharedCache
         string Segment,
         long CachedAtUtcTicks,
         string InvalidationTokenValue);
-
-    private struct FingerprintHasher()
-    {
-        private const ulong OffsetBasis = 14695981039346656037UL;
-        private const ulong Prime = 1099511628211UL;
-
-        private ulong _hash = OffsetBasis;
-
-        public void AppendString(string value)
-        {
-            AppendBytes(Encoding.UTF8.GetBytes(value));
-        }
-
-        public void AppendByte(byte value)
-        {
-            _hash ^= value;
-            _hash *= Prime;
-        }
-
-        public void AppendInt64(long value)
-        {
-            AppendBytes(BitConverter.GetBytes(value));
-        }
-
-        private void AppendBytes(byte[] bytes)
-        {
-            foreach (var b in bytes)
-            {
-                _hash ^= b;
-                _hash *= Prime;
-            }
-        }
-
-        public string GetHexString() => _hash.ToString("x16");
-    }
 }

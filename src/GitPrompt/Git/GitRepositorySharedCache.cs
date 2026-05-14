@@ -1,4 +1,3 @@
-using System.Text;
 using GitPrompt.Configuration;
 using GitPrompt.Diagnostics;
 using GitPrompt.Platform;
@@ -85,7 +84,7 @@ internal static class GitRepositorySharedCache
                     cachedAtUtcTicks);
 
                 var cacheFilePath = GetCacheFilePath(normalizedStartDirectoryPath);
-                WriteAtomically(cacheFilePath, SerializeRecord(cacheRecord));
+                SharedCacheUtilities.WriteAtomically(cacheFilePath, SerializeRecord(cacheRecord));
             }
 
             TryCleanupStaleEntries(cacheDirectoryPath);
@@ -93,32 +92,6 @@ internal static class GitRepositorySharedCache
         catch
         {
             // Keep cache as a best-effort optimization.
-        }
-    }
-
-    private static void WriteAtomically(string targetFilePath, string[] lines)
-    {
-        var tempFilePath = targetFilePath + "." + Path.GetRandomFileName() + ".tmp";
-
-        try
-        {
-            File.WriteAllLines(tempFilePath, lines);
-            File.Move(tempFilePath, targetFilePath, overwrite: true);
-            tempFilePath = null;
-        }
-        finally
-        {
-            if (tempFilePath is not null)
-            {
-                try
-                {
-                    File.Delete(tempFilePath);
-                }
-                catch (Exception)
-                {
-                    /* best-effort temp file cleanup */
-                }
-            }
         }
     }
 
@@ -132,25 +105,7 @@ internal static class GitRepositorySharedCache
         }
 
         Interlocked.Exchange(ref _nextCleanupUtcTicks, utcNow.Add(CleanupInterval).UtcTicks);
-        CleanupStaleEntries(cacheDirectoryPath, utcNow.UtcDateTime - StaleCacheEntryThreshold);
-    }
-
-    private static void CleanupStaleEntries(string cacheDirectoryPath, DateTime staleBeforeUtc)
-    {
-        foreach (var cacheFilePath in Directory.EnumerateFiles(cacheDirectoryPath, "*.cache"))
-        {
-            try
-            {
-                if (File.GetLastWriteTimeUtc(cacheFilePath) < staleBeforeUtc)
-                {
-                    File.Delete(cacheFilePath);
-                }
-            }
-            catch
-            {
-                // Keep cleanup as best-effort and never fail prompt rendering.
-            }
-        }
+        SharedCacheUtilities.CleanupStaleEntries(cacheDirectoryPath, utcNow.UtcDateTime - StaleCacheEntryThreshold);
     }
 
     internal static void ResetCleanupScheduleForTesting()
@@ -163,14 +118,14 @@ internal static class GitRepositorySharedCache
         var previousTimeProvider = _timeProvider;
         _timeProvider = timeProvider;
 
-        return new TimeProviderOverride(() => _timeProvider = previousTimeProvider);
+        return new SharedCacheUtilities.TimeProviderOverride(() => _timeProvider = previousTimeProvider);
     }
 
     internal static IDisposable OverrideCacheDirectoryForTesting(string cacheDirectoryPath)
     {
         _cacheDirectoryOverride = cacheDirectoryPath;
 
-        return new TimeProviderOverride(() => _cacheDirectoryOverride = null);
+        return new SharedCacheUtilities.TimeProviderOverride(() => _cacheDirectoryOverride = null);
     }
 
     private static TimeSpan GetCacheTtl()
@@ -191,34 +146,12 @@ internal static class GitRepositorySharedCache
 
     private static string GetCacheFilePath(string normalizedStartDirectoryPath)
     {
-        var pathHash = HashPath(normalizedStartDirectoryPath);
-
-        return Path.Combine(GetCacheDirectoryPath(), pathHash + ".cache");
-    }
-
-    private static string HashPath(string value)
-    {
-        var hash = Fnv1A64(Encoding.UTF8.GetBytes(value));
-        return hash.ToString("x16");
-    }
-
-    private static ulong Fnv1A64(byte[] data)
-    {
-        const ulong offsetBasis = 14695981039346656037UL;
-        const ulong prime = 1099511628211UL;
-        var hash = offsetBasis;
-        foreach (var b in data)
-        {
-            hash ^= b;
-            hash *= prime;
-        }
-
-        return hash;
+        return Path.Combine(GetCacheDirectoryPath(), SharedCacheUtilities.HashPath(normalizedStartDirectoryPath) + ".cache");
     }
 
     private static string NormalizePathOrEmpty(string path)
     {
-        return string.IsNullOrWhiteSpace(path) ? string.Empty : Utilities.NormalizePath(path);
+        return SharedCacheUtilities.NormalizePathOrEmpty(path);
     }
 
     private static string[] SerializeRecord(RepositorySharedCacheRecord cacheRecord)
@@ -239,15 +172,20 @@ internal static class GitRepositorySharedCache
         var lines = fileContent.Split('\n');
         var i = 0;
 
-        string? NextLine() => i < lines.Length ? lines[i++].TrimEnd('\r') : null;
+        if (NextLine() is not "v1")
+        {
+            return false;
+        }
 
-        if (NextLine() is not "v1") return false;
-        if (NextLine() is not { } ticksText || !long.TryParse(ticksText, out var cachedAtUtcTicks)) return false;
+        if (NextLine() is not { } ticksText || !long.TryParse(ticksText, out var cachedAtUtcTicks)) { return false; }
 
         var startDirEncoded = NextLine();
         var workingTreeEncoded = NextLine();
         var gitDirEncoded = NextLine();
-        if (startDirEncoded is null || workingTreeEncoded is null || gitDirEncoded is null) return false;
+        if (startDirEncoded is null || workingTreeEncoded is null || gitDirEncoded is null)
+        {
+            return false;
+        }
 
         var startDirectoryPath = Decode(startDirEncoded);
         var workingTreePath = Decode(workingTreeEncoded);
@@ -264,23 +202,18 @@ internal static class GitRepositorySharedCache
             cachedAtUtcTicks);
 
         return true;
+
+        string? NextLine() => i < lines.Length ? lines[i++].TrimEnd('\r') : null;
     }
 
     private static string Encode(string value)
     {
-        return Convert.ToBase64String(Encoding.UTF8.GetBytes(value));
+        return SharedCacheUtilities.Encode(value);
     }
 
     private static string Decode(string encoded)
     {
-        try
-        {
-            return Encoding.UTF8.GetString(Convert.FromBase64String(encoded));
-        }
-        catch
-        {
-            return string.Empty;
-        }
+        return SharedCacheUtilities.Decode(encoded);
     }
 
     private readonly record struct RepositorySharedCacheRecord(
@@ -288,14 +221,4 @@ internal static class GitRepositorySharedCache
         string WorkingTreePath,
         string GitDirectoryPath,
         long CachedAtUtcTicks);
-
-    private sealed class TimeProviderOverride(Action restore) : IDisposable
-    {
-        private readonly Action _restore = restore;
-
-        public void Dispose()
-        {
-            _restore();
-        }
-    }
 }
