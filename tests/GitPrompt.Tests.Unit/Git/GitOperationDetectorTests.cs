@@ -163,6 +163,20 @@ public sealed class GitOperationDetectorTests
     }
 
     [Fact]
+    public async Task ReadGitOperationMarker_WhenMergeHeadExists_ShouldReturnMerge()
+    {
+        // Arrange
+        using var gitDirectory = new TemporaryDirectory();
+        await File.WriteAllTextAsync(Path.Combine(gitDirectory.DirectoryPath, "MERGE_HEAD"), "head\n");
+
+        // Act
+        var operationMarker = GitOperationDetector.ReadGitOperationMarker(gitDirectory.DirectoryPath);
+
+        // Assert
+        operationMarker.Should().Be("MERGE");
+    }
+
+    [Fact]
     public async Task ReadGitOperationMarker_WhenCherryPickHeadExists_ShouldReturnCherryPick()
     {
         // Arrange

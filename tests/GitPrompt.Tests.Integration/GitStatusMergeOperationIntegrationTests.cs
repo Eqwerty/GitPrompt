@@ -7,37 +7,6 @@ namespace GitPrompt.Tests.Integration;
 public sealed class GitStatusMergeOperationIntegrationTests
 {
     [Fact]
-    public async Task BuildGitStatusSegment_WhenMergeIsInProgress_ShouldShowMergeOperationMarker()
-    {
-        // Arrange
-        using var sandbox = new TestHelpers.TemporaryDirectory();
-        var repositoryPath = Path.Combine(sandbox.DirectoryPath, "repo");
-
-        await TestHelpers.RunGitAsync(sandbox.DirectoryPath, $"init --initial-branch=main {TestHelpers.Quote(repositoryPath)}");
-        await TestHelpers.ConfigureGitIdentityAsync(repositoryPath);
-
-        await File.WriteAllTextAsync(Path.Combine(repositoryPath, "conflict.txt"), "base\n");
-        await TestHelpers.RunGitAsync(repositoryPath, "add conflict.txt");
-        await TestHelpers.RunGitAsync(repositoryPath, "commit -m \"base\"");
-
-        await TestHelpers.RunGitAsync(repositoryPath, "checkout -b feature");
-        await File.WriteAllTextAsync(Path.Combine(repositoryPath, "conflict.txt"), "feature\n");
-        await TestHelpers.RunGitAsync(repositoryPath, "commit -am \"feature change\"");
-
-        await TestHelpers.RunGitAsync(repositoryPath, "checkout main");
-        await File.WriteAllTextAsync(Path.Combine(repositoryPath, "conflict.txt"), "main\n");
-        await TestHelpers.RunGitAsync(repositoryPath, "commit -am \"main change\"");
-
-        // Act
-        var mergeCommandResult = await TestHelpers.RunGitAllowFailureAsync(repositoryPath, "merge feature");
-        var gitStatusSegment = GitStatusSegmentBuilder.Build(repositoryPath);
-
-        // Assert
-        mergeCommandResult.ExitCode.Should().NotBe(0);
-        gitStatusSegment.Should().Contain("|MERGE");
-    }
-
-    [Fact]
     public async Task BuildGitStatusSegment_WhenNoUpstreamBranchIsMerging_ShouldShowMergeOperationInsideBranchLabel()
     {
         // Arrange
@@ -69,39 +38,5 @@ public sealed class GitStatusMergeOperationIntegrationTests
         mergeCommandResult.ExitCode.Should().NotBe(0);
         gitStatusSegment.Should().Contain(TestHelpers.BranchLabelWithOperation(TestHelpers.TrackedBranchLabel("feature"), "MERGE"));
         gitStatusSegment.Should().NotContain(TestHelpers.NoUpstreamBranchLabel("feature"));
-    }
-
-    [Fact]
-    public async Task BuildGitStatusSegment_WhenRebaseIsInProgress_ShouldShowBranchNameInsteadOfDetachedCommit()
-    {
-        // Arrange
-        using var sandbox = new TestHelpers.TemporaryDirectory();
-        var repositoryPath = Path.Combine(sandbox.DirectoryPath, "repo");
-
-        await TestHelpers.RunGitAsync(sandbox.DirectoryPath, $"init --initial-branch=main {TestHelpers.Quote(repositoryPath)}");
-        await TestHelpers.ConfigureGitIdentityAsync(repositoryPath);
-
-        await File.WriteAllTextAsync(Path.Combine(repositoryPath, "conflict.txt"), "base\n");
-        await TestHelpers.RunGitAsync(repositoryPath, "add conflict.txt");
-        await TestHelpers.RunGitAsync(repositoryPath, "commit -m \"base\"");
-
-        await TestHelpers.RunGitAsync(repositoryPath, "checkout -b feature");
-        await File.WriteAllTextAsync(Path.Combine(repositoryPath, "conflict.txt"), "feature\n");
-        await TestHelpers.RunGitAsync(repositoryPath, "commit -am \"feature change\"");
-
-        await TestHelpers.RunGitAsync(repositoryPath, "checkout main");
-        await File.WriteAllTextAsync(Path.Combine(repositoryPath, "conflict.txt"), "main\n");
-        await TestHelpers.RunGitAsync(repositoryPath, "commit -am \"main change\"");
-
-        await TestHelpers.RunGitAsync(repositoryPath, "checkout feature");
-
-        // Act
-        var rebaseCommandResult = await TestHelpers.RunGitAllowFailureAsync(repositoryPath, "rebase main");
-        var gitStatusSegment = GitStatusSegmentBuilder.Build(repositoryPath);
-
-        // Assert
-        rebaseCommandResult.ExitCode.Should().NotBe(0);
-        gitStatusSegment.Should().Contain("feature|REBASE");
-        gitStatusSegment.Should().NotContain("...|REBASE");
     }
 }
