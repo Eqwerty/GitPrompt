@@ -4,7 +4,7 @@ internal static class ShellConfigScanner
 {
     private static readonly string[] SearchFileNames =
     [
-        ".bashrc", ".bash_aliases", ".bash_profile", ".bash_login", ".profile", ".zshenv", ".zshrc", ".zprofile"
+        ".bashrc", ".bash_aliases", ".bash_profile", ".bash_login", ".profile"
     ];
 
     internal static string[] GetSearchPaths()

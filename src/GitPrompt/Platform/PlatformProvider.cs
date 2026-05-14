@@ -52,6 +52,7 @@ internal abstract class PlatformProvider
             get
             {
                 var raw = Environment.GetEnvironmentVariable("GITPROMPT_LAST_CMD_MS");
+
                 return long.TryParse(raw, out var ms) && ms >= 0 ? ms : null;
             }
         }
