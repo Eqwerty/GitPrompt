@@ -123,7 +123,6 @@ internal static class ContextSegmentBuilder
             return displayPath;
         }
 
-        // Determine anchor ("~", "", or "") and content segments.
         string anchor;
         string[] segments;
 
@@ -136,7 +135,7 @@ internal static class ContextSegmentBuilder
         }
         else if (displayPath.StartsWith('/'))
         {
-            anchor = string.Empty; // represents the leading "/"
+            anchor = string.Empty;
             var withoutLeadingSlash = displayPath[1..];
             segments = withoutLeadingSlash.Length > 0
                 ? withoutLeadingSlash.Split('/')
@@ -158,9 +157,9 @@ internal static class ContextSegmentBuilder
 
         return anchor switch
         {
-            "~" => $"~/\u2026/{joined}",
-            "" => $"/\u2026/{joined}",
-            _ => $"\u2026/{joined}"
+            "~" => $"~/.../{joined}",
+            "" => $"/.../{joined}",
+            _ => $".../{joined}"
         };
     }
 }
