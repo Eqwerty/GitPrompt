@@ -127,7 +127,7 @@ internal static class ContextSegmentBuilder
         string anchor;
         string[] segments;
 
-        if (displayPath.StartsWith("~/", StringComparison.Ordinal) || displayPath == "~")
+        if (displayPath.StartsWith("~/", StringComparison.Ordinal) || displayPath is "~")
         {
             anchor = "~";
             segments = displayPath.Length > 2

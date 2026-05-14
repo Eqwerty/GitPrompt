@@ -1,5 +1,4 @@
 using System.Text;
-using GitPrompt.Platform;
 
 namespace GitPrompt.Git;
 
@@ -52,6 +51,7 @@ internal static class SharedCacheUtilities
     internal static string HashPath(string value)
     {
         var hash = Fnv1A64(Encoding.UTF8.GetBytes(value));
+        
         return hash.ToString("x16");
     }
 

@@ -32,7 +32,10 @@ internal static class GitStatusParser
         using var reader = new StringReader(statusOutput);
         while (reader.ReadLine() is { } line)
         {
-            if (line.Length == 0) continue;
+            if (line.Length is 0)
+            {
+                continue;
+            }
 
             if (line.StartsWith(BranchHeadPrefix, StringComparison.Ordinal))
             {
@@ -67,8 +70,17 @@ internal static class GitStatusParser
                 continue;
             }
 
-            if (line.Length >= 2 && line[0] == '?' && line[1] == ' ') { untracked++; continue; }
-            if (line.Length >= 2 && line[0] == 'u' && line[1] == ' ') { conflicts++; continue; }
+            if (line.Length >= 2 && line[0] is '?' && line[1] is ' ')
+            {
+                untracked++;
+                continue;
+            }
+
+            if (line.Length >= 2 && line[0] is 'u' && line[1] is ' ')
+            {
+                conflicts++;
+                continue;
+            }
 
             if (line.Length >= 4 && line[0] is '1' or '2')
             {
@@ -80,6 +92,7 @@ internal static class GitStatusParser
                     case 'R' or 'C': stagedRenamed++; break;
                     case 'U': conflicts++; break;
                 }
+
                 switch (line[3])
                 {
                     case 'A': unstagedAdded++; break;
@@ -101,9 +114,16 @@ internal static class GitStatusParser
             hasUpstream,
             hasAheadBehindCounts,
             new GitStatusCounts(
-                stagedAdded, stagedModified, stagedDeleted, stagedRenamed,
-                unstagedAdded, unstagedModified, unstagedDeleted, unstagedRenamed,
-                untracked, conflicts));
+                stagedAdded,
+                stagedModified,
+                stagedDeleted,
+                stagedRenamed,
+                unstagedAdded,
+                unstagedModified,
+                unstagedDeleted,
+                unstagedRenamed,
+                untracked,
+                conflicts));
     }
 
     private static void ParseAheadBehind(string value, out int commitsAhead, out int commitsBehind)
@@ -112,7 +132,10 @@ internal static class GitStatusParser
         commitsBehind = 0;
 
         var parts = value.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length < 2) return;
+        if (parts.Length < 2)
+        {
+            return;
+        }
 
         _ = int.TryParse(parts[0].TrimStart('+'), out commitsAhead);
         _ = int.TryParse(parts[1].TrimStart('-'), out commitsBehind);
