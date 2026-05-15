@@ -60,6 +60,8 @@ When `maxPathDepth` is set, paths deeper than the limit are truncated with `…`
 | `promptStartOfLine` | `true` | Move to column 0 if the cursor is not there when the prompt renders (e.g. after `printf text`) |
 | `promptSymbol` | *(auto)* | Override the prompt symbol. Omit (or set to `null`) to keep automatic: `$` for regular users, `#` for root, `❯` on Windows. |
 
+> **Note:** `promptStartOfLine` is baked into the bash integration script at `eval` time, not re-read on every render. Changing it in `config.jsonc` has no effect until you start a new shell or re-run `eval "$(gitprompt init bash)"`.
+
 When `multilinePrompt: false`, the symbol appears at the end of the status line:
 
 ```
