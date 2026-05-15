@@ -2,7 +2,7 @@
 # Add to ~/.bashrc: eval "$($HOME/.local/bin/gitprompt.exe init bash)"
 if [[ "$OSTYPE" == msys || "$OSTYPE" == cygwin ]]; then
   _GITPROMPT_BIN="$HOME/.local/bin/gitprompt.exe"
-  _GITPROMPT_FALLBACK_PS1='\w > '
+  _GITPROMPT_FALLBACK_PS1='\w ❯ '
 else
   _GITPROMPT_BIN="$HOME/.local/bin/gitprompt"
   _GITPROMPT_FALLBACK_PS1='\w \$ '

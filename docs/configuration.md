@@ -55,10 +55,10 @@ When `maxPathDepth` is set, paths deeper than the limit are truncated with `…`
 
 | Key | Default | Description |
 |---|---|---|
-| `multilinePrompt` | `true` | Put the prompt symbol (`$`, `#`, `>`) on its own line |
+| `multilinePrompt` | `true` | Put the prompt symbol (`$`, `#`, `❯`) on its own line |
 | `newlineBeforePrompt` | `false` | Add a blank line before the prompt |
 | `promptStartOfLine` | `true` | Move to column 0 if the cursor is not there when the prompt renders (e.g. after `printf text`) |
-| `promptSymbol` | *(auto)* | Override the prompt symbol. Omit (or set to `null`) to keep automatic: `$` for regular users, `#` for root, `>` on Windows. |
+| `promptSymbol` | *(auto)* | Override the prompt symbol. Omit (or set to `null`) to keep automatic: `$` for regular users, `#` for root, `❯` on Windows. |
 
 When `multilinePrompt: false`, the symbol appears at the end of the status line:
 
@@ -112,7 +112,7 @@ Customise the color of each prompt segment using `#RRGGBB` hex strings. Set any 
 | `colors.conflict` | `#FF5555` | Merge conflicts |
 | `colors.missingPath` | `#FF5555` | Missing working directory |
 | `colors.timeout` | `#FFA002` | Git timeout indicator |
-| `colors.promptSymbol` | `#AAAAAA` | Prompt symbol (`$`, `#`, `>`) |
+| `colors.promptSymbol` | `#AAAAAA` | Prompt symbol (`$`, `#`, `❯`) |
 
 > **Note:** `colors.promptSymbol` controls the *color* of the prompt symbol. To change the symbol character itself, use [`promptSymbol`](#prompt-layout).
 
