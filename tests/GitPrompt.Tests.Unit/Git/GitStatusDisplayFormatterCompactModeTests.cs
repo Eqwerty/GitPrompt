@@ -84,7 +84,7 @@ public sealed class GitStatusDisplayFormatterCompactModeTests : IDisposable
     public void BuildDisplayCompact_WhenStashExistsAndShowStashIsTrue_ShouldShowStashCount()
     {
         // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { ShowStashInCompactMode = true });
+        using var _ = ConfigReader.OverrideForTesting(new Config { ShowStash = true });
 
         // Act
         var display = GitStatusDisplayFormatter.BuildDisplayCompact(
@@ -103,7 +103,7 @@ public sealed class GitStatusDisplayFormatterCompactModeTests : IDisposable
     public void BuildDisplayCompact_WhenStashExistsAndShowStashIsFalse_ShouldOmitStashCount()
     {
         // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { ShowStashInCompactMode = false });
+        using var _ = ConfigReader.OverrideForTesting(new Config { ShowStash = false });
 
         // Act
         var display = GitStatusDisplayFormatter.BuildDisplayCompact(
@@ -143,7 +143,7 @@ public sealed class GitStatusDisplayFormatterCompactModeTests : IDisposable
     public void BuildDisplayCompact_WhenAllIndicatorsPresent_ShouldRenderInExpectedOrder()
     {
         // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { ShowStashInCompactMode = true });
+        using var _ = ConfigReader.OverrideForTesting(new Config { ShowStash = true });
 
         // Act
         var display = GitStatusDisplayFormatter.BuildDisplayCompact(

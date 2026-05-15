@@ -57,7 +57,7 @@ internal static class ConfigInitializer
             .Replace("{promptStartOfLine}", config.PromptStartOfLine.ToString().ToLowerInvariant())
             .Replace("{promptSymbol}", JsonValue(config.PromptSymbol))
             .Replace("{compact}", config.Compact.ToString().ToLowerInvariant())
-            .Replace("{showStashInCompactMode}", config.ShowStashInCompactMode.ToString().ToLowerInvariant())
+            .Replace("{showStash}", config.ShowStash.ToString().ToLowerInvariant())
             .Replace("{iconAhead}", JsonValue(config.Icons.Ahead))
             .Replace("{iconAheadDefault}", PromptIcons.IconAhead.ToString())
             .Replace("{iconBehind}", JsonValue(config.Icons.Behind))
@@ -216,7 +216,7 @@ internal static class ConfigInitializer
             ShowHost = root.TryGetProperty("showHost", out _) ? userConfig.ShowHost : defaults.ShowHost,
             MultilinePrompt = root.TryGetProperty("multilinePrompt", out _) ? userConfig.MultilinePrompt : defaults.MultilinePrompt,
             ShowCommandDuration = root.TryGetProperty("showCommandDuration", out _) ? userConfig.ShowCommandDuration : defaults.ShowCommandDuration,
-            ShowStashInCompactMode = root.TryGetProperty("showStashInCompactMode", out _) ? userConfig.ShowStashInCompactMode : defaults.ShowStashInCompactMode,
+            ShowStash = root.TryGetProperty("showStash", out _) ? userConfig.ShowStash : defaults.ShowStash,
             PromptStartOfLine = root.TryGetProperty("promptStartOfLine", out _) ? userConfig.PromptStartOfLine : defaults.PromptStartOfLine,
             Cache = userConfig.Cache ?? defaults.Cache,
             Icons = userConfig.Icons ?? defaults.Icons,

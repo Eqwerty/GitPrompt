@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GitPrompt.Configuration;
 using GitPrompt.Constants;
 using GitPrompt.Git;
 using static GitPrompt.Constants.PromptColors;
@@ -6,6 +7,7 @@ using static GitPrompt.Tests.Unit.Git.TestHelpers;
 
 namespace GitPrompt.Tests.Unit.Git;
 
+[Collection(ConfigIsolationCollection.Name)]
 public sealed class GitStatusDisplayFormatterTests
 {
     [Fact]
@@ -216,5 +218,45 @@ public sealed class GitStatusDisplayFormatterTests
 
         // Assert
         label.Should().Be(TrackedBranchLabel("main"));
+    }
+
+    [Fact]
+    public void BuildDisplay_WhenStashExistsAndShowStashIsTrue_ShouldShowStashCount()
+    {
+        // Arrange
+        using var _ = ConfigReader.OverrideForTesting(new Config { ShowStash = true });
+        var statusCounts = new GitStatusCounts();
+
+        // Act
+        var display = GitStatusDisplayFormatter.BuildDisplay(
+            TrackedBranchLabel("main"),
+            commitsAhead: 0,
+            commitsBehind: 0,
+            stashEntryCount: 3,
+            statusCounts,
+            operationName: string.Empty);
+
+        // Assert
+        display.Should().Contain(Indicator(PromptIcons.IconStash, 3));
+    }
+
+    [Fact]
+    public void BuildDisplay_WhenStashExistsAndShowStashIsFalse_ShouldOmitStashCount()
+    {
+        // Arrange
+        using var _ = ConfigReader.OverrideForTesting(new Config { ShowStash = false });
+        var statusCounts = new GitStatusCounts();
+
+        // Act
+        var display = GitStatusDisplayFormatter.BuildDisplay(
+            TrackedBranchLabel("main"),
+            commitsAhead: 0,
+            commitsBehind: 0,
+            stashEntryCount: 3,
+            statusCounts,
+            operationName: string.Empty);
+
+        // Assert
+        display.Should().NotContain(Indicator(PromptIcons.IconStash, 3));
     }
 }

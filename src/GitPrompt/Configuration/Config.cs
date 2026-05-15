@@ -51,8 +51,8 @@ internal sealed record Config
     internal bool Compact { get; init; } = false;
 
     [JsonInclude]
-    [JsonPropertyName("showStashInCompactMode")]
-    internal bool ShowStashInCompactMode { get; init; } = true;
+    [JsonPropertyName("showStash")]
+    internal bool ShowStash { get; init; } = true;
 
     [JsonInclude]
     internal IconsConfig Icons { get; init; } = new();

@@ -73,7 +73,7 @@ internal static class GitStatusDisplayFormatter
             statusBuilder.Append(' ').Append(ColorConflict).Append(conflictsIcon).Append(gitStatusCounts.Conflicts).Append(ColorReset);
         }
 
-        if (stashEntryCount > 0)
+        if (stashEntryCount > 0 && ConfigReader.Config.ShowStash)
         {
             statusBuilder.Append(' ').Append(ColorStash).Append(stashIcon).Append(stashEntryCount).Append(ColorReset);
         }
@@ -126,7 +126,7 @@ internal static class GitStatusDisplayFormatter
             statusBuilder.Append(' ').Append(ColorClean).Append(cleanIcon).Append(ColorReset);
         }
 
-        if (stashEntryCount > 0 && ConfigReader.Config.ShowStashInCompactMode)
+        if (stashEntryCount > 0 && ConfigReader.Config.ShowStash)
         {
             statusBuilder.Append(' ').Append(ColorStash).Append(stashIcon).Append(stashEntryCount).Append(ColorReset);
         }

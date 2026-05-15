@@ -162,7 +162,7 @@ public sealed class ConfigInitializerTests
         result.Should().Contain("\"showHost\": true");
         result.Should().Contain("\"multilinePrompt\": true");
         result.Should().Contain("\"showCommandDuration\": true");
-        result.Should().Contain("\"showStashInCompactMode\": true");
+        result.Should().Contain("\"showStash\": true");
         result.Should().Contain("\"promptStartOfLine\": true");
 
         // Existing explicit value must be preserved
