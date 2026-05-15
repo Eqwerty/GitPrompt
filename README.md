@@ -75,6 +75,14 @@ In-progress operations appear inside the branch label: `(main|MERGE)`, `*(featur
 
 Supported: `REBASE`, `MERGE`, `CHERRY-PICK`, `REVERT`, `BISECT`.
 
+### Compact Mode
+
+Enable `"compact": true` in config to show a minimal status instead of full counts:
+
+`(main) ↑2 •` — dirty repo, 2 commits ahead. Clean: `(main) ✓`.
+
+Only the dirty/clean state is shown; the full breakdown is hidden. Ahead/behind and stash entries are still shown.
+
 ## Git Aliases
 
 The installer sets up a collection of Git aliases and shell functions (e.g. `gs`, `gco`, `gc`, `gpl`, `gr`, `glog`). They are loaded automatically by the `eval "$(gitprompt init bash)"` line — no extra config needed.

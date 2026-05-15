@@ -86,6 +86,8 @@ Customise the icon characters shown in the git status segment. Set any key to a 
 | `icons.untracked` | `?` | Untracked files |
 | `icons.conflicts` | `!` | Merge conflicts |
 | `icons.stash` | `@` | Stash entries |
+| `icons.dirty` | `•` | Dirty indicator (compact mode only) |
+| `icons.clean` | `✓` | Clean indicator (compact mode only) |
 | `icons.noUpstreamMarker` | `*` | Prefix on branch name when there is no upstream |
 | `icons.branchLabelOpen` | `(` | Opening bracket around the branch name |
 | `icons.branchLabelClose` | `)` | Closing bracket around the branch name |
@@ -110,11 +112,26 @@ Customise the color of each prompt segment using `#RRGGBB` hex strings. Set any 
 | `colors.untracked` | `#CC0000` | Untracked files |
 | `colors.stash` | `#CB06B2` | Stash entries |
 | `colors.conflict` | `#FF5555` | Merge conflicts |
+| `colors.dirty` | `#D78700` | Dirty indicator (compact mode only) |
+| `colors.clean` | `#00BB00` | Clean indicator (compact mode only) |
 | `colors.missingPath` | `#FF5555` | Missing working directory |
 | `colors.timeout` | `#FFA002` | Git timeout indicator |
 | `colors.promptSymbol` | `#AAAAAA` | Prompt symbol (`$`, `#`, `❯`) |
 
 > **Note:** `colors.promptSymbol` controls the *color* of the prompt symbol. To change the symbol character itself, use [`promptSymbol`](#prompt-layout).
+
+## Compact Mode
+
+When `compact: true`, the git status segment shows only the branch name, ahead/behind counts, and a single dirty/clean indicator instead of the full breakdown of file counts.
+
+| Key | Default | Description |
+|---|---|---|
+| `compact` | `false` | Show dirty/clean icon only instead of full staged/unstaged counts |
+| `showStash` | `true` | Show stash entry count in the prompt (applies to both full and compact mode) |
+
+Example compact output: `(main) ↑2 •` — dirty repo, 2 commits ahead. Clean: `(main) ✓`.
+
+The dirty/clean icons and their colors can be customised with `icons.dirty`, `icons.clean`, `colors.dirty`, and `colors.clean`.
 
 ## Example
 
