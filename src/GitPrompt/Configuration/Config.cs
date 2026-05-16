@@ -147,6 +147,10 @@ internal sealed record Config
         internal string? NoUpstreamMarker { get; init; }
 
         [JsonInclude]
+        [JsonPropertyName("detachedHeadMarker")]
+        internal string? DetachedHeadMarker { get; init; }
+
+        [JsonInclude]
         [JsonPropertyName("branchLabelOpen")]
         internal string? BranchLabelOpen { get; init; }
 
@@ -184,6 +188,10 @@ internal sealed record Config
         [JsonInclude]
         [JsonPropertyName("branchNoUpstream")]
         internal string? BranchNoUpstream { get; init; }
+
+        [JsonInclude]
+        [JsonPropertyName("branchDetached")]
+        internal string? BranchDetached { get; init; }
 
         [JsonInclude]
         [JsonPropertyName("ahead")]
