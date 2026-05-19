@@ -10,7 +10,7 @@ fi
 
 gitprompt() {
   case "${1:-} ${2:-}" in
-    "aliases enable"|"aliases disable")
+    "aliases enable"|"aliases disable"|"update aliases")
       local _script
       _script="$("$_GITPROMPT_BIN" "$@")"
       [ -n "$_script" ] && eval "$_script"

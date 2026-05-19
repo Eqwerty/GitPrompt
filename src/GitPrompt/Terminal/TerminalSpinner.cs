@@ -11,11 +11,11 @@ internal sealed class TerminalSpinner : IDisposable
     private TerminalSpinner(string message)
     {
         _message = message;
-        _interactive = !Console.IsOutputRedirected;
+        _interactive = !Console.IsErrorRedirected;
 
         if (_interactive)
         {
-            Console.Write($"{AnsiTerminal.HideCursor}{AnsiTerminal.Yellow}•{AnsiTerminal.Reset} {message}{".",-3}");
+            Console.Error.Write($"{AnsiTerminal.HideCursor}{AnsiTerminal.Yellow}•{AnsiTerminal.Reset} {message}{".",-3}");
         }
 
         _thread = new Thread(SpinLoop) { IsBackground = true };
@@ -32,11 +32,11 @@ internal sealed class TerminalSpinner : IDisposable
 
         if (_interactive)
         {
-            Console.WriteLine($"\r{AnsiTerminal.ShowCursor}{AnsiTerminal.Green}✓{AnsiTerminal.Reset} {_message}...");
+            Console.Error.WriteLine($"\r{AnsiTerminal.ShowCursor}{AnsiTerminal.Green}✓{AnsiTerminal.Reset} {_message}...");
         }
         else
         {
-            Console.WriteLine($"✓ {_message}...");
+            Console.Error.WriteLine($"✓ {_message}...");
         }
     }
 
@@ -49,7 +49,7 @@ internal sealed class TerminalSpinner : IDisposable
 
             if (_interactive)
             {
-                Console.WriteLine(AnsiTerminal.ShowCursor);
+                Console.Error.WriteLine(AnsiTerminal.ShowCursor);
             }
         }
 
@@ -80,7 +80,7 @@ internal sealed class TerminalSpinner : IDisposable
                 _ => "."
             };
 
-            Console.Write($"\r{AnsiTerminal.Yellow}•{AnsiTerminal.Reset} {_message}{dots,-3}");
+            Console.Error.Write($"\r{AnsiTerminal.Yellow}•{AnsiTerminal.Reset} {_message}{dots,-3}");
         }
     }
 }

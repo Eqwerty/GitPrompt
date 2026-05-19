@@ -134,7 +134,8 @@ internal static class UpdateCommand
             Console.CancelKeyPress -= cancelHandler;
         }
 
-        Console.Write("\nRestart your terminal to apply changes.");
+        var escapedPath = aliasesPath.Replace("'", "'\\''");
+        Console.WriteLine($". '{escapedPath}'");
     }
 
     private static bool DownloadFile(string url, string outputPath, string[] curlSslArgs)
