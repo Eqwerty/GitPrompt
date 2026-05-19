@@ -15,12 +15,12 @@
     "maxPathDepth": {maxPathDepth}  // 0 = full path
   },
   "layout": {
-    "multiline": {multiline},
-    "newlineBefore": {newlineBefore},
+    "multiline": {multiline},  // info line and symbol on separate lines
+    "newlineBefore": {newlineBefore},  // blank line above the prompt
     "startOfLine": {startOfLine},  // requires shell restart
     "symbol": {symbol}  // null = automatic: $ / # for root / ❯ on Windows
   },
-  "compact": {compact},
+  "compact": {compact},  // single dirty/clean icon instead of individual file-type counts
   "showStash": {showStash},
   "icons": {
     "ahead": {iconAhead},
@@ -34,11 +34,11 @@
     "stash": {iconStash},
     "dirty": {iconDirty},  // compact mode only
     "clean": {iconClean},  // compact mode only
-    "noUpstreamMarker": {iconNoUpstreamMarker},
-    "detachedHeadMarker": {iconDetachedHeadMarker},
+    "noUpstreamMarker": {iconNoUpstreamMarker},  // prefix before the branch label when no upstream is set
+    "detachedHeadMarker": {iconDetachedHeadMarker},  // prefix before the branch label when HEAD is detached
     "branchLabelOpen": {iconBranchLabelOpen},
     "branchLabelClose": {iconBranchLabelClose},
-    "branchOperationSeparator": {iconBranchOperationSeparator},
+    "branchOperationSeparator": {iconBranchOperationSeparator},  // between branch name and active operation (e.g., rebase)
     "branchLabelOpenNormal": {iconBranchLabelOpenNormal},
     "branchLabelCloseNormal": {iconBranchLabelCloseNormal},
     "branchLabelOpenNoUpstream": {iconBranchLabelOpenNoUpstream},
@@ -63,8 +63,8 @@
     "conflict": {colorConflict},
     "dirty": {colorDirty},  // compact mode only
     "clean": {colorClean},  // compact mode only
-    "missingPath": {colorMissingPath},
-    "timeout": {colorTimeout},
+    "missingPath": {colorMissingPath},  // when the working directory no longer exists
+    "timeout": {colorTimeout},  // when the git command times out
     "promptSymbol": {colorPromptSymbol}
   }
 }
