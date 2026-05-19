@@ -88,13 +88,14 @@ internal static class GitStatusDisplayFormatter
         int commitsAhead,
         int commitsBehind,
         int stashEntryCount,
-        bool isDirty,
+        GitStatusCounts gitStatusCounts,
         string operationName)
     {
         var icons = ConfigReader.Config.Icons!;
         var aheadIcon = icons.Ahead ?? IconAhead.ToString();
         var behindIcon = icons.Behind ?? IconBehind.ToString();
         var dirtyIcon = icons.Dirty ?? IconDirty.ToString();
+        var dirtyStagedIcon = icons.DirtyStaged ?? icons.Dirty ?? IconDirty.ToString();
         var cleanIcon = icons.Clean ?? IconClean.ToString();
         var stashIcon = icons.Stash ?? IconStash.ToString();
 
@@ -121,7 +122,11 @@ internal static class GitStatusDisplayFormatter
             statusBuilder.Append(' ').Append(ColorBehind).Append(behindIcon).Append(commitsBehind).Append(ColorReset);
         }
 
-        if (isDirty)
+        if (gitStatusCounts.IsDirtyStaged)
+        {
+            statusBuilder.Append(' ').Append(ColorDirtyStaged).Append(dirtyStagedIcon).Append(ColorReset);
+        }
+        else if (gitStatusCounts.IsDirty)
         {
             statusBuilder.Append(' ').Append(ColorDirty).Append(dirtyIcon).Append(ColorReset);
         }

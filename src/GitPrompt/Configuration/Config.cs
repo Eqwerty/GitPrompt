@@ -176,6 +176,10 @@ internal sealed record Config
         internal string? Dirty { get; init; }
 
         [JsonInclude]
+        [JsonPropertyName("dirtyStaged")]
+        internal string? DirtyStaged { get; init; }
+
+        [JsonInclude]
         [JsonPropertyName("clean")]
         internal string? Clean { get; init; }
 
@@ -285,6 +289,10 @@ internal sealed record Config
         [JsonInclude]
         [JsonPropertyName("dirty")]
         internal string? Dirty { get; init; }
+
+        [JsonInclude]
+        [JsonPropertyName("dirtyStaged")]
+        internal string? DirtyStaged { get; init; }
 
         [JsonInclude]
         [JsonPropertyName("clean")]

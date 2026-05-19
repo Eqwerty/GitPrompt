@@ -14,6 +14,10 @@ public sealed class GitStatusDisplayFormatterCompactModeTests : IDisposable
 
     public void Dispose() => _configOverride.Dispose();
 
+    private static GitStatusCounts Dirty() => new(UnstagedModified: 1);
+    private static GitStatusCounts DirtyStaged() => new(StagedModified: 1);
+    private static GitStatusCounts Clean() => new();
+
     [Fact]
     public void BuildDisplayCompact_WhenRepoIsDirty_ShouldShowDirtyIcon()
     {
@@ -23,7 +27,7 @@ public sealed class GitStatusDisplayFormatterCompactModeTests : IDisposable
             commitsAhead: 0,
             commitsBehind: 0,
             stashEntryCount: 0,
-            isDirty: true,
+            gitStatusCounts: Dirty(),
             operationName: string.Empty);
 
         // Assert
@@ -40,12 +44,29 @@ public sealed class GitStatusDisplayFormatterCompactModeTests : IDisposable
             commitsAhead: 0,
             commitsBehind: 0,
             stashEntryCount: 0,
-            isDirty: false,
+            gitStatusCounts: Clean(),
             operationName: string.Empty);
 
         // Assert
         display.Should().Contain(PromptIcons.IconClean.ToString());
         display.Should().NotContain(PromptIcons.IconDirty.ToString());
+    }
+
+    [Fact]
+    public void BuildDisplayCompact_WhenRepoIsDirtyStaged_ShouldShowDirtyIcon()
+    {
+        // Act
+        var display = GitStatusDisplayFormatter.BuildDisplayCompact(
+            TrackedBranchLabel("main"),
+            commitsAhead: 0,
+            commitsBehind: 0,
+            stashEntryCount: 0,
+            gitStatusCounts: DirtyStaged(),
+            operationName: string.Empty);
+
+        // Assert
+        display.Should().Contain(PromptIcons.IconDirty.ToString());
+        display.Should().NotContain(PromptIcons.IconClean.ToString());
     }
 
     [Fact]
@@ -57,7 +78,7 @@ public sealed class GitStatusDisplayFormatterCompactModeTests : IDisposable
             commitsAhead: 0,
             commitsBehind: 0,
             stashEntryCount: 0,
-            isDirty: true,
+            gitStatusCounts: Dirty(),
             operationName: string.Empty);
 
         // Assert
@@ -73,11 +94,28 @@ public sealed class GitStatusDisplayFormatterCompactModeTests : IDisposable
             commitsAhead: 0,
             commitsBehind: 0,
             stashEntryCount: 0,
-            isDirty: false,
+            gitStatusCounts: Clean(),
             operationName: string.Empty);
 
         // Assert
         display.Should().Contain($" {Colored(ColorClean, PromptIcons.IconClean.ToString())}");
+    }
+
+    [Fact]
+    public void BuildDisplayCompact_WhenRepoIsDirtyStaged_ShouldUseDirtyStagedColor()
+    {
+        // Act
+        var display = GitStatusDisplayFormatter.BuildDisplayCompact(
+            TrackedBranchLabel("main"),
+            commitsAhead: 0,
+            commitsBehind: 0,
+            stashEntryCount: 0,
+            gitStatusCounts: DirtyStaged(),
+            operationName: string.Empty);
+
+        // Assert
+        display.Should().Contain($" {Colored(ColorDirtyStaged, PromptIcons.IconDirty.ToString())}");
+        display.Should().NotContain($" {Colored(ColorDirty, PromptIcons.IconDirty.ToString())}");
     }
 
     [Fact]
@@ -92,7 +130,7 @@ public sealed class GitStatusDisplayFormatterCompactModeTests : IDisposable
             commitsAhead: 0,
             commitsBehind: 0,
             stashEntryCount: 3,
-            isDirty: false,
+            gitStatusCounts: Clean(),
             operationName: string.Empty);
 
         // Assert
@@ -111,7 +149,7 @@ public sealed class GitStatusDisplayFormatterCompactModeTests : IDisposable
             commitsAhead: 0,
             commitsBehind: 0,
             stashEntryCount: 3,
-            isDirty: false,
+            gitStatusCounts: Clean(),
             operationName: string.Empty);
 
         // Assert
@@ -127,7 +165,7 @@ public sealed class GitStatusDisplayFormatterCompactModeTests : IDisposable
             commitsAhead: 0,
             commitsBehind: 0,
             stashEntryCount: 0,
-            isDirty: true,
+            gitStatusCounts: Dirty(),
             operationName: string.Empty);
 
         // Assert — none of the verbose-only count icons should appear (with a number)
@@ -151,7 +189,7 @@ public sealed class GitStatusDisplayFormatterCompactModeTests : IDisposable
             commitsAhead: 3,
             commitsBehind: 1,
             stashEntryCount: 2,
-            isDirty: true,
+            gitStatusCounts: Dirty(),
             operationName: string.Empty);
 
         // Assert
@@ -176,7 +214,7 @@ public sealed class GitStatusDisplayFormatterCompactModeTests : IDisposable
             commitsAhead: 0,
             commitsBehind: 0,
             stashEntryCount: 0,
-            isDirty: true,
+            gitStatusCounts: Dirty(),
             operationName: string.Empty);
 
         // Assert
@@ -196,12 +234,51 @@ public sealed class GitStatusDisplayFormatterCompactModeTests : IDisposable
             commitsAhead: 0,
             commitsBehind: 0,
             stashEntryCount: 0,
-            isDirty: false,
+            gitStatusCounts: Clean(),
             operationName: string.Empty);
 
         // Assert
         display.Should().Contain("OK");
         display.Should().NotContain(PromptIcons.IconClean.ToString());
+    }
+
+    [Fact]
+    public void BuildDisplayCompact_WhenCustomDirtyStagedIconIsConfigured_ShouldUseCustomIcon()
+    {
+        // Arrange
+        using var _ = ConfigReader.OverrideForTesting(new Config { Icons = new Config.IconsConfig { DirtyStaged = "S" } });
+
+        // Act
+        var display = GitStatusDisplayFormatter.BuildDisplayCompact(
+            TrackedBranchLabel("main"),
+            commitsAhead: 0,
+            commitsBehind: 0,
+            stashEntryCount: 0,
+            gitStatusCounts: DirtyStaged(),
+            operationName: string.Empty);
+
+        // Assert
+        display.Should().Contain("S");
+        display.Should().NotContain(PromptIcons.IconDirty.ToString());
+    }
+
+    [Fact]
+    public void BuildDisplayCompact_WhenCustomDirtyStagedColorIsConfigured_ShouldUseCustomColor()
+    {
+        // Arrange
+        using var _ = ConfigReader.OverrideForTesting(new Config { Colors = new Config.ColorsConfig { DirtyStaged = "#FF00FF" } });
+
+        // Act
+        var display = GitStatusDisplayFormatter.BuildDisplayCompact(
+            TrackedBranchLabel("main"),
+            commitsAhead: 0,
+            commitsBehind: 0,
+            stashEntryCount: 0,
+            gitStatusCounts: DirtyStaged(),
+            operationName: string.Empty);
+
+        // Assert
+        display.Should().Contain($" {Colored(ColorDirtyStaged, PromptIcons.IconDirty.ToString())}");
     }
 
     [Fact]
@@ -213,7 +290,7 @@ public sealed class GitStatusDisplayFormatterCompactModeTests : IDisposable
             commitsAhead: 0,
             commitsBehind: 0,
             stashEntryCount: 0,
-            isDirty: false,
+            gitStatusCounts: Clean(),
             operationName: string.Empty);
 
         // Assert
@@ -229,7 +306,7 @@ public sealed class GitStatusDisplayFormatterCompactModeTests : IDisposable
             commitsAhead: 0,
             commitsBehind: 0,
             stashEntryCount: 0,
-            isDirty: false,
+            gitStatusCounts: Clean(),
             operationName: string.Empty);
 
         // Assert
@@ -245,7 +322,7 @@ public sealed class GitStatusDisplayFormatterCompactModeTests : IDisposable
             commitsAhead: 0,
             commitsBehind: 0,
             stashEntryCount: 0,
-            isDirty: false,
+            gitStatusCounts: Clean(),
             operationName: "MERGE");
 
         // Assert

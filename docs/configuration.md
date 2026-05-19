@@ -88,7 +88,8 @@ Customise the icon characters shown in the git status segment. Set any key to a 
 | `icons.untracked` | `?` | Untracked files |
 | `icons.conflicts` | `!` | Merge conflicts |
 | `icons.stash` | `@` | Stash entries |
-| `icons.dirty` | `•` | Dirty indicator (compact mode only) |
+| `icons.dirty` | `•` | Dirty indicator — shown when there are unstaged, untracked, or conflict changes (compact mode only) |
+| `icons.dirtyStaged` | `•` | Dirty indicator — shown when all changes are staged but not yet committed (compact mode only) |
 | `icons.clean` | `✓` | Clean indicator (compact mode only) |
 | `icons.noUpstreamMarker` | `*` | Prefix on branch name when there is no upstream |
 | `icons.detachedHeadMarker` | `:` | Prefix on branch name when HEAD is detached |
@@ -122,7 +123,8 @@ Customise the color of each prompt segment using `#RRGGBB` hex strings. Set any 
 | `colors.untracked` | `#CC0000` | Untracked files |
 | `colors.stash` | `#CB06B2` | Stash entries |
 | `colors.conflict` | `#FF5555` | Merge conflicts |
-| `colors.dirty` | `#D78700` | Dirty indicator (compact mode only) |
+| `colors.dirty` | `#D78700` | Dirty indicator — shown when there are unstaged, untracked, or conflict changes (compact mode only) |
+| `colors.dirtyStaged` | `#00BB00` | Dirty indicator — shown when all changes are staged but not yet committed (compact mode only) |
 | `colors.clean` | `#00BB00` | Clean indicator (compact mode only) |
 | `colors.missingPath` | `#FF5555` | Missing working directory |
 | `colors.timeout` | `#FFA002` | Git timeout indicator |
@@ -132,16 +134,31 @@ Customise the color of each prompt segment using `#RRGGBB` hex strings. Set any 
 
 ## Compact Mode
 
-When `compact: true`, the git status segment shows only the branch name, ahead/behind counts, and a single dirty/clean indicator instead of the full breakdown of file counts.
+When `compact: true`, the git status segment shows only the branch name, ahead/behind counts, and a single status indicator instead of the full breakdown of file counts.
 
 | Key | Default | Description |
 |---|---|---|
 | `compact` | `false` | Show dirty/clean icon only instead of full staged/unstaged counts |
 | `showStash` | `true` | Show stash entry count in the prompt (applies to both full and compact mode) |
 
-Example compact output: `(main) ↑2 •` — dirty repo, 2 commits ahead. Clean: `(main) ✓`.
+The status indicator has three states:
 
-The dirty/clean icons and their colors can be customised with `icons.dirty`, `icons.clean`, `colors.dirty`, and `colors.clean`.
+| State | Icon | Color | Meaning |
+|---|---|---|---|
+| Clean | `✓` | `colors.clean` | Nothing to commit |
+| Dirty — staged | `•` | `colors.dirtyStaged` | Changes exist but all are staged, ready to commit |
+| Dirty — unstaged | `•` | `colors.dirty` | Unstaged, untracked, or conflict changes are present |
+
+Example compact output:
+- `(main) ✓` — clean
+- `(main) •` — all changes staged *(green dot)*
+- `(main) •` — unstaged changes *(orange dot)*
+- `(main) ↑2 •` — dirty repo, 2 commits ahead
+
+All three icons and their colors can be customised independently:
+- `icons.clean` / `colors.clean`
+- `icons.dirtyStaged` / `colors.dirtyStaged`
+- `icons.dirty` / `colors.dirty`
 
 ## Example
 

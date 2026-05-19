@@ -235,7 +235,11 @@ Stash entries. Default:
 .BR @ .
 .TP
 .B icons.dirty
-Dirty indicator (compact mode only). Default:
+Dirty indicator shown when there are unstaged, untracked, or conflict changes (compact mode only). Default:
+.BR \(bu .
+.TP
+.B icons.dirtyStaged
+Dirty indicator shown when all changes are staged but not yet committed (compact mode only). Default:
 .BR \(bu .
 .TP
 .B icons.clean
@@ -349,8 +353,12 @@ Merge conflicts. Default:
 .BR #FF5555 .
 .TP
 .B colors.dirty
-Dirty indicator (compact mode only). Default:
+Dirty indicator color — shown when there are unstaged, untracked, or conflict changes (compact mode only). Default:
 .BR #D78700 .
+.TP
+.B colors.dirtyStaged
+Dirty indicator color — shown when all changes are staged but not yet committed (compact mode only). Default:
+.BR #00BB00 .
 .TP
 .B colors.clean
 Clean indicator (compact mode only). Default:
@@ -368,10 +376,33 @@ Git timeout indicator. Default:
 Prompt symbol color. Default:
 .BR #AAAAAA .
 .SS Compact Mode
+When enabled, the git status segment shows only the branch name, ahead/behind counts,
+and a single status indicator instead of the full breakdown of file counts.
+Ahead/behind counts and stash entries are still shown.
+.PP
+The status indicator has three states:
+.TP
+Clean
+Nothing to commit. Shown with
+.B icons.clean
+in
+.BR colors.clean .
+.TP
+Dirty \(em staged
+Changes exist but all are staged, ready to commit. Shown with
+.B icons.dirtyStaged
+in
+.BR colors.dirtyStaged .
+.TP
+Dirty \(em unstaged
+Unstaged, untracked, or conflict changes are present. Shown with
+.B icons.dirty
+in
+.BR colors.dirty .
 .TP
 .B compact
 Show only a dirty/clean indicator instead of the full staged/unstaged file counts.
-Ahead/behind counts and stash entries are still shown. Default:
+Default:
 .BR false .
 .TP
 .B showStash
