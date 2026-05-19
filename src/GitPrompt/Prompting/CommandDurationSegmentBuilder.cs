@@ -9,7 +9,7 @@ internal static class CommandDurationSegmentBuilder
 {
     internal static string Build(PlatformProvider platformProvider)
     {
-        if (!(ConfigReader.Config.CommandDuration!.Show ?? true))
+        if (ConfigReader.Config.CommandDuration?.Show is null or false)
         {
             return string.Empty;
         }
@@ -58,4 +58,3 @@ internal static class CommandDurationSegmentBuilder
         return $"{hours}h{mins}m{secs}s";
     }
 }
-

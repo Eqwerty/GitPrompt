@@ -14,25 +14,20 @@ internal static class ContextSegmentBuilder
         var pathColor = isMissingPath ? ColorMissingPath : ColorPath;
         var pathSegment = $"{pathColor}{resolvedPath}{ColorReset}";
 
-        var showUser = config.Context!.ShowUser ?? true;
-        var showHost = config.Context!.ShowHost ?? true;
+        var userSegment = string.Empty;
+        var hostSegment = string.Empty;
 
-        if (showUser && showHost)
+        if (config.Context?.ShowUser is true)
         {
-            return $"{ColorUser}{ResolveUser(platformProvider)}{ColorReset} {ColorHost}{ResolveHost(platformProvider)}{ColorReset} {pathSegment}";
+            userSegment = $"{ColorUser}{ResolveUser(platformProvider)}{ColorReset} ";
         }
 
-        if (showUser)
+        if (config.Context?.ShowHost is true)
         {
-            return $"{ColorUser}{ResolveUser(platformProvider)}{ColorReset} {pathSegment}";
+            hostSegment = $"{ColorHost}{ResolveHost(platformProvider)}{ColorReset} ";
         }
 
-        if (showHost)
-        {
-            return $"{ColorHost}{ResolveHost(platformProvider)}{ColorReset} {pathSegment}";
-        }
-
-        return pathSegment;
+        return $"{userSegment}{hostSegment}{pathSegment}";
     }
 
     private static string ResolveUser(PlatformProvider platformProvider)
@@ -173,4 +168,3 @@ internal static class ContextSegmentBuilder
         };
     }
 }
-
