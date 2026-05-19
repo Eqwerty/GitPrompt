@@ -88,7 +88,7 @@ function gssh() {
     echo "Usage: gssh <stash-index>"
     return 1
   fi
-  git stash show -w -p stash@{$1}
+  git stash show -w -p "stash@{$1}"
 }
 
 # stash changes of a specific file based on a partial name match from modified files
@@ -100,7 +100,7 @@ function gsufm() {
   mapfile -t matches < <(git status --porcelain | awk '{print $2}' | grep -i "$1")
 
   case ${#matches[@]} in
-    1) git stash push -u "${matches[0]}" ;;
+    1) git stash push -u -- "${matches[0]}" ;;
     0) echo "No files found matching '$1'" ; return 3 ;;
     *) echo "Multiple matches found:"; printf "  %s\n" "${matches[@]}"; return 2 ;;
   esac
@@ -108,20 +108,24 @@ function gsufm() {
 
 # ============================ Log ============================
 alias glog="git log --graph --pretty=format:'%C(bold cyan)%h%Creset%C(auto)%d%Creset %C(white)%s %Cgreen(%cr) %C(bold cyan)<%an>%Creset' --abbrev-commit" # Show a graphical log with commit details
-alias glogm="glog --author='$(git config --get user.email)'" # Show a graphical log with commits by the current user
 alias glh="glog HEAD.." # Show commits in other branches not yet merged into HEAD
 alias gluh="glog @{u}..HEAD" # Show commits not pushed to the upstream branch
+
+# Show a graphical log filtered to commits by the current git user
+function glogm() {
+  glog --author="$(git config --get user.email)" "$@"
+}
 
 # Display a limited number of recent Git log entries (default: all)
 function gl() {
     local count=${1:--1}
-    glog -n $count
+    glog -n "$count"
 }
 
 # Display a limited number of recent Git log entries (default: all) by the author logged in
 function glm() {
     local count=${1:--1}
-    glogm -n $count
+    glogm -n "$count"
 }
 
 # Copy the short hash of the Nth most recent commit to the clipboard
@@ -182,7 +186,7 @@ function grh() {
     echo "Usage: grh <number-of-commits>"
     return 1
   fi
-  git reset HEAD~$1 --soft
+  git reset "HEAD~$1" --soft
 }
 
 # Reset the current branch to the specified commit and apply --hard
@@ -226,6 +230,12 @@ function gcofm() {
 alias gcp="git cherry-pick" # Apply the changes introduced by an existing commit
 alias gcpa="git cherry-pick --abort" # Cancel the cherry-picking operation and return to the pre-sequence state.
 alias gcpc="git cherry-pick --continue" # Continue the cherry-picking operation in progress.
+
+# ============================ Tags ============================
+alias gt="git tag" # List or create tags
+alias gta="git tag -a" # Create an annotated tag
+alias gtd="git tag -d" # Delete a local tag
+alias gtl="git tag --list --sort=-version:refname" # List tags sorted newest-first
 
 # ============================ Links ============================
 # Resolve the base web URL for the origin remote (GitHub or Azure DevOps).
@@ -286,7 +296,7 @@ function pr() {
 
   explorer.exe "$pr_url"
 }
- 
+
 # Open the current branch or the main branch in the repository
 function gh() {
   local base_url main_branch current_branch url
@@ -307,7 +317,7 @@ function gh() {
       url="$base_url/tree/$current_branch"
     fi
   fi
-  
+
   explorer.exe "$url"
 }
 
@@ -338,8 +348,8 @@ alias gcfdn="git clean -fdn" # Show which untracked files and directories would 
 function gcdroot() {
     local root
     root=$(git rev-parse --show-toplevel 2>/dev/null)
-    if [[ -n root ]]; then
-        cd $root || return
+    if [[ -n "$root" ]]; then
+        cd "$root" || return
     else
         echo "Not inside a Git repository"
         return 1
@@ -369,7 +379,7 @@ function __git_match_and_execute() {
     *) echo "Multiple matches found:"; printf "  %s\n" "${matches[@]}"; return 2 ;;
   esac
 }
- 
+
 # Enable autocomplete for aliases
 if type __git_complete >/dev/null 2>&1; then
   __git_complete ga _git_add
@@ -387,5 +397,6 @@ if type __git_complete >/dev/null 2>&1; then
   __git_complete gr _git_rebase
   __git_complete gri _git_rebase
   __git_complete gsh _git_show
+  __git_complete gtd _git_tag
 fi
 
