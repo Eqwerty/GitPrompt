@@ -150,14 +150,14 @@ internal static class GitStatusDisplayFormatter
         var (open, close) = state switch
         {
             BranchState.NoUpstream => (
-                icons.BranchLabelOpenNoUpstream ?? icons.BranchLabelOpen ?? NoUpstreamBranchLabelOpen,
-                icons.BranchLabelCloseNoUpstream ?? icons.BranchLabelClose ?? NoUpstreamBranchLabelClose),
+                icons.BranchLabelOpenNoUpstream ?? NoUpstreamBranchLabelOpen,
+                icons.BranchLabelCloseNoUpstream ?? NoUpstreamBranchLabelClose),
             BranchState.Detached => (
-                icons.BranchLabelOpenDetached ?? icons.BranchLabelOpen ?? DetachedBranchLabelOpen,
-                icons.BranchLabelCloseDetached ?? icons.BranchLabelClose ?? DetachedBranchLabelClose),
+                icons.BranchLabelOpenDetached ?? DetachedBranchLabelOpen,
+                icons.BranchLabelCloseDetached ?? DetachedBranchLabelClose),
             _ => (
-                icons.BranchLabelOpenNormal ?? icons.BranchLabelOpen ?? NormalBranchLabelOpen,
-                icons.BranchLabelCloseNormal ?? icons.BranchLabelClose ?? NormalBranchLabelClose),
+                icons.BranchLabelOpenNormal ?? NormalBranchLabelOpen,
+                icons.BranchLabelCloseNormal ?? NormalBranchLabelClose),
         };
 
         var prefix = state switch
@@ -180,9 +180,9 @@ internal static class GitStatusDisplayFormatter
         var icons = ConfigReader.Config.Icons!;
         var close = branchLabel.State switch
         {
-            BranchState.NoUpstream => icons.BranchLabelCloseNoUpstream ?? icons.BranchLabelClose ?? NoUpstreamBranchLabelClose,
-            BranchState.Detached => icons.BranchLabelCloseDetached ?? icons.BranchLabelClose ?? DetachedBranchLabelClose,
-            _ => icons.BranchLabelCloseNormal ?? icons.BranchLabelClose ?? NormalBranchLabelClose,
+            BranchState.NoUpstream => icons.BranchLabelCloseNoUpstream ?? NoUpstreamBranchLabelClose,
+            BranchState.Detached => icons.BranchLabelCloseDetached ?? DetachedBranchLabelClose,
+            _ => icons.BranchLabelCloseNormal ?? NormalBranchLabelClose,
         };
         var separator = icons.BranchOperationSeparator ?? BranchOperationSeparator;
         if (branchLabel.Label.EndsWith(close, StringComparison.Ordinal))

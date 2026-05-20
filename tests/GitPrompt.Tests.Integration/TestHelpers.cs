@@ -99,7 +99,7 @@ internal static class TestHelpers
 
     internal static string BranchLabelWithOperation(string branchLabel, string operation)
     {
-        return branchLabel.Replace(BranchLabelClose, $"|{operation}{BranchLabelClose}", StringComparison.Ordinal);
+        return branchLabel.Replace(NormalBranchLabelClose, $"|{operation}{NormalBranchLabelClose}", StringComparison.Ordinal);
     }
 
     internal static string Indicator(char icon, int count)

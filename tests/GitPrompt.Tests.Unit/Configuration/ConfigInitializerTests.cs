@@ -382,8 +382,6 @@ public sealed class ConfigInitializerTests
         content.Should().Contain($"\"stash\": \"{PromptIcons.IconStash}\"");
         content.Should().Contain($"\"noUpstreamMarker\": \"{BranchLabelTokens.NoUpstreamBranchMarker}\"");
         content.Should().Contain($"\"detachedHeadMarker\": \"{BranchLabelTokens.DetachedHeadBranchMarker}\"");
-        content.Should().Contain($"\"branchLabelOpen\": \"{BranchLabelTokens.BranchLabelOpen}\"");
-        content.Should().Contain($"\"branchLabelClose\": \"{BranchLabelTokens.BranchLabelClose}\"");
         content.Should().Contain($"\"branchOperationSeparator\": \"{BranchLabelTokens.BranchOperationSeparator}\"");
         content.Should().Contain($"\"branchLabelOpenNormal\": \"{BranchLabelTokens.NormalBranchLabelOpen}\"");
         content.Should().Contain($"\"branchLabelCloseNormal\": \"{BranchLabelTokens.NormalBranchLabelClose}\"");

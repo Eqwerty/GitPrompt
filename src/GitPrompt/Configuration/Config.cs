@@ -201,14 +201,6 @@ internal sealed record Config
         internal string? DetachedHeadMarker { get; init; }
 
         [JsonInclude]
-        [JsonPropertyName("branchLabelOpen")]
-        internal string? BranchLabelOpen { get; init; }
-
-        [JsonInclude]
-        [JsonPropertyName("branchLabelClose")]
-        internal string? BranchLabelClose { get; init; }
-
-        [JsonInclude]
         [JsonPropertyName("branchLabelOpenNormal")]
         internal string? BranchLabelOpenNormal { get; init; }
 

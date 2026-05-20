@@ -72,8 +72,6 @@ internal static class ConfigInitializer
             .Replace("{iconClean}", JsonValue(config.Icons?.Clean ?? PromptIcons.IconClean.ToString()))
             .Replace("{iconNoUpstreamMarker}", JsonValue(config.Icons?.NoUpstreamMarker ?? BranchLabelTokens.NoUpstreamBranchMarker))
             .Replace("{iconDetachedHeadMarker}", JsonValue(config.Icons?.DetachedHeadMarker ?? BranchLabelTokens.DetachedHeadBranchMarker))
-            .Replace("{iconBranchLabelOpen}", JsonValue(config.Icons?.BranchLabelOpen ?? BranchLabelTokens.BranchLabelOpen))
-            .Replace("{iconBranchLabelClose}", JsonValue(config.Icons?.BranchLabelClose ?? BranchLabelTokens.BranchLabelClose))
             .Replace("{iconBranchOperationSeparator}", JsonValue(config.Icons?.BranchOperationSeparator ?? BranchLabelTokens.BranchOperationSeparator))
             .Replace("{iconBranchLabelOpenNormal}", JsonValue(config.Icons?.BranchLabelOpenNormal ?? BranchLabelTokens.NormalBranchLabelOpen))
             .Replace("{iconBranchLabelCloseNormal}", JsonValue(config.Icons?.BranchLabelCloseNormal ?? BranchLabelTokens.NormalBranchLabelClose))

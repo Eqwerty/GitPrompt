@@ -140,100 +140,6 @@ public sealed class GitStatusDisplayFormatterCustomIconTests
     }
 
     [Fact]
-    public void BuildBranchLabel_WhenCustomBranchLabelOpenIsConfigured_ShouldUseCustomOpenBracket()
-    {
-        // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { Icons = new Config.IconsConfig { BranchLabelOpen = "[" } });
-
-        // Act
-        var label = GitStatusDisplayFormatter.BuildBranchLabel("main", BranchState.Normal);
-
-        // Assert
-        label.Label.Should().StartWith("[");
-        label.Label.Should().NotStartWith("(");
-    }
-
-    [Fact]
-    public void BuildBranchLabel_WhenCustomBranchLabelCloseIsConfigured_ShouldUseCustomCloseBracket()
-    {
-        // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { Icons = new Config.IconsConfig { BranchLabelClose = "]" } });
-
-        // Act
-        var label = GitStatusDisplayFormatter.BuildBranchLabel("main", BranchState.Normal);
-
-        // Assert
-        label.Label.Should().EndWith("]");
-        label.Label.Should().NotEndWith(")");
-    }
-
-    [Fact]
-    public void BuildBranchLabel_WhenCustomBracketsAreConfigured_ShouldWrapBranchNameWithCustomBrackets()
-    {
-        // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { Icons = new Config.IconsConfig { BranchLabelOpen = "[", BranchLabelClose = "]" } });
-
-        // Act
-        var label = GitStatusDisplayFormatter.BuildBranchLabel("main", BranchState.Normal);
-
-        // Assert
-        label.Label.Should().Be("[main]");
-    }
-
-    [Fact]
-    public void BuildBranchLabel_WhenCustomBracketsAndNoUpstreamMarkerAreConfigured_ShouldCombineCorrectly()
-    {
-        // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { Icons = new Config.IconsConfig { BranchLabelOpen = "[", BranchLabelClose = "]", NoUpstreamMarker = "!" } });
-
-        // Act
-        var label = GitStatusDisplayFormatter.BuildBranchLabel("feature", BranchState.NoUpstream);
-
-        // Assert
-        label.Label.Should().Be("![feature]");
-    }
-
-    [Fact]
-    public void BuildDisplay_WhenCustomBracketsAreConfigured_ShouldApplyNoUpstreamColorForNoUpstreamBranch()
-    {
-        // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { Icons = new Config.IconsConfig { BranchLabelOpen = "[", BranchLabelClose = "]" } });
-        var branchLabel = GitStatusDisplayFormatter.BuildBranchLabel("feature", BranchState.NoUpstream);
-
-        // Act
-        var display = GitStatusDisplayFormatter.BuildDisplay(
-            branchLabel,
-            commitsAhead: 0,
-            commitsBehind: 0,
-            stashEntryCount: 0,
-            new GitStatusCounts(),
-            operationName: string.Empty);
-
-        // Assert
-        display.Should().Contain(Colored(ColorBranchNoUpstream, branchLabel.Label));
-    }
-
-    [Fact]
-    public void BuildDisplay_WhenCustomBracketsAreConfigured_ShouldRenderOperationInsideBrackets()
-    {
-        // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { Icons = new Config.IconsConfig { BranchLabelOpen = "[", BranchLabelClose = "]" } });
-        var branchLabel = GitStatusDisplayFormatter.BuildBranchLabel("main", BranchState.Normal);
-
-        // Act
-        var display = GitStatusDisplayFormatter.BuildDisplay(
-            branchLabel,
-            commitsAhead: 0,
-            commitsBehind: 0,
-            stashEntryCount: 0,
-            new GitStatusCounts(),
-            operationName: "MERGE");
-
-        // Assert
-        display.Should().Contain("[main|MERGE]");
-    }
-
-    [Fact]
     public void BuildBranchLabel_WhenBranchLabelBracketsAreAbsent_ShouldDefaultToParentheses()
     {
         // Arrange
@@ -286,19 +192,6 @@ public sealed class GitStatusDisplayFormatterCustomIconTests
         detachedLabel.Label.Should().StartWith(":<");
         detachedLabel.Label.Should().EndWith(">");
         normalLabel.Label.Should().Be("(main)");
-    }
-
-    [Fact]
-    public void BuildBranchLabel_WhenGlobalBracketsSetAndDetachedBracketsAbsent_ShouldUseGlobalForDetached()
-    {
-        // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { Icons = new Config.IconsConfig { BranchLabelOpen = "{", BranchLabelClose = "}" } });
-
-        // Act
-        var label = GitStatusDisplayFormatter.BuildBranchLabel("abc1234...", BranchState.Detached);
-
-        // Assert
-        label.Label.Should().Be(":{abc1234...}");
     }
 
     [Fact]

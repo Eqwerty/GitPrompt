@@ -27,11 +27,16 @@ internal static class TestHelpers
     internal static BranchLabelInfo DetachedBranchLabel(string branchLabel) =>
         new($"{DetachedHeadBranchMarker}{DetachedBranchLabelOpen}{branchLabel}{DetachedBranchLabelClose}", BranchState.Detached);
 
-    internal static string BranchLabelWithOperation(BranchLabelInfo branchLabel, string operation) =>
-        BranchLabelWithOperation(branchLabel.Label, operation);
-
-    internal static string BranchLabelWithOperation(string branchLabel, string operation) =>
-        branchLabel.Replace(BranchLabelClose, $"{BranchOperationSeparator}{operation}{BranchLabelClose}", StringComparison.Ordinal);
+    internal static string BranchLabelWithOperation(BranchLabelInfo branchLabel, string operation)
+    {
+        var close = branchLabel.State switch
+        {
+            BranchState.Detached => DetachedBranchLabelClose,
+            BranchState.NoUpstream => NoUpstreamBranchLabelClose,
+            _ => NormalBranchLabelClose
+        };
+        return branchLabel.Label.Replace(close, $"{BranchOperationSeparator}{operation}{close}", StringComparison.Ordinal);
+    }
 
     internal static string Indicator(char icon, int count) => $"{icon}{count}";
 

@@ -95,8 +95,6 @@ Customise the icon characters shown in the git status segment. Set any key to a 
 | `icons.clean` | `✓` | Clean indicator (compact mode only) |
 | `icons.noUpstreamMarker` | `*` | Prefix on branch name when there is no upstream |
 | `icons.detachedHeadMarker` | `:` | Prefix on branch name when HEAD is detached |
-| `icons.branchLabelOpen` | `(` | Opening bracket around the branch name (overrides all states when set) |
-| `icons.branchLabelClose` | `)` | Closing bracket around the branch name (overrides all states when set) |
 | `icons.branchLabelOpenNormal` | `(` | Opening bracket for a normal (tracked) branch |
 | `icons.branchLabelCloseNormal` | `)` | Closing bracket for a normal (tracked) branch |
 | `icons.branchLabelOpenNoUpstream` | `(` | Opening bracket when there is no upstream |

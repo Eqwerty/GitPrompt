@@ -38,8 +38,6 @@
     "clean": {iconClean},  // compact mode only
     "noUpstreamMarker": {iconNoUpstreamMarker},  // prefix before the branch label when no upstream is set
     "detachedHeadMarker": {iconDetachedHeadMarker},  // prefix before the branch label when HEAD is detached
-    "branchLabelOpen": {iconBranchLabelOpen},
-    "branchLabelClose": {iconBranchLabelClose},
     "branchOperationSeparator": {iconBranchOperationSeparator},  // between branch name and active operation (e.g., rebase)
     "branchLabelOpenNormal": {iconBranchLabelOpenNormal},
     "branchLabelCloseNormal": {iconBranchLabelCloseNormal},
