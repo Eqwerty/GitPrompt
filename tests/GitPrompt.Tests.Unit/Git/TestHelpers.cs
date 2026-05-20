@@ -1,7 +1,6 @@
 using FluentAssertions;
 using GitPrompt.Git;
 using static GitPrompt.Constants.BranchLabelTokens;
-using static GitPrompt.Constants.PromptColors;
 
 namespace GitPrompt.Tests.Unit.Git;
 
@@ -53,15 +52,5 @@ internal static class TestHelpers
     internal static string Indicator(string icon, int count)
     {
         return $"{icon}{count}";
-    }
-
-    internal static string Colored(string color, BranchLabelInfo segment)
-    {
-        return Colored(color, segment.Label);
-    }
-
-    internal static string Colored(string color, string segment)
-    {
-        return $"{color}{segment}{ColorReset}";
     }
 }

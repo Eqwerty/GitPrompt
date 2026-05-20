@@ -136,7 +136,7 @@ public sealed class GitStatusDisplayFormatterCustomIconTests
             operationName: string.Empty);
 
         // Assert
-        display.Should().Contain(Colored(ColorBranchNoUpstream, branchLabel.Label));
+        display.Should().Contain(ColorBranchNoUpstream.Wrap(branchLabel.Label));
     }
 
     [Fact]
@@ -265,6 +265,6 @@ public sealed class GitStatusDisplayFormatterCustomIconTests
             operationName: string.Empty);
 
         // Assert
-        display.Should().Contain(Colored(ColorBranchDetached, branchLabel.Label));
+        display.Should().Contain(ColorBranchDetached.Wrap(branchLabel.Label));
     }
 }

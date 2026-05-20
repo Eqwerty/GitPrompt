@@ -82,7 +82,7 @@ public sealed class GitStatusDisplayFormatterCompactModeTests : IDisposable
             operationName: string.Empty);
 
         // Assert
-        display.Should().Contain($" {Colored(ColorDirty, PromptIcons.IconDirty.ToString())}");
+        display.Should().Contain($" {ColorDirty.Wrap(PromptIcons.IconDirty.ToString())}");
     }
 
     [Fact]
@@ -98,7 +98,7 @@ public sealed class GitStatusDisplayFormatterCompactModeTests : IDisposable
             operationName: string.Empty);
 
         // Assert
-        display.Should().Contain($" {Colored(ColorClean, PromptIcons.IconClean.ToString())}");
+        display.Should().Contain($" {ColorClean.Wrap(PromptIcons.IconClean.ToString())}");
     }
 
     [Fact]
@@ -114,8 +114,8 @@ public sealed class GitStatusDisplayFormatterCompactModeTests : IDisposable
             operationName: string.Empty);
 
         // Assert
-        display.Should().Contain($" {Colored(ColorDirtyStaged, PromptIcons.IconDirty.ToString())}");
-        display.Should().NotContain($" {Colored(ColorDirty, PromptIcons.IconDirty.ToString())}");
+        display.Should().Contain($" {ColorDirtyStaged.Wrap(PromptIcons.IconDirty.ToString())}");
+        display.Should().NotContain($" {ColorDirty.Wrap(PromptIcons.IconDirty.ToString())}");
     }
 
     [Fact]
@@ -278,7 +278,7 @@ public sealed class GitStatusDisplayFormatterCompactModeTests : IDisposable
             operationName: string.Empty);
 
         // Assert
-        display.Should().Contain($" {Colored(ColorDirtyStaged, PromptIcons.IconDirty.ToString())}");
+        display.Should().Contain($" {ColorDirtyStaged.Wrap(PromptIcons.IconDirty.ToString())}");
     }
 
     [Fact]
@@ -294,7 +294,7 @@ public sealed class GitStatusDisplayFormatterCompactModeTests : IDisposable
             operationName: string.Empty);
 
         // Assert
-        display.Should().StartWith(Colored(ColorBranch, TrackedBranchLabel("main")));
+        display.Should().StartWith(ColorBranch.Wrap(TrackedBranchLabel("main").Label));
     }
 
     [Fact]
@@ -310,7 +310,7 @@ public sealed class GitStatusDisplayFormatterCompactModeTests : IDisposable
             operationName: string.Empty);
 
         // Assert
-        display.Should().StartWith(Colored(ColorBranchNoUpstream, NoUpstreamBranchLabel("feature")));
+        display.Should().StartWith(ColorBranchNoUpstream.Wrap(NoUpstreamBranchLabel("feature").Label));
     }
 
     [Fact]

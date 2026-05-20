@@ -120,7 +120,7 @@ public sealed class GitStatusDisplayFormatterTests
                 operationName: string.Empty);
 
         // Assert
-        gitStatusDisplay.Should().StartWith(Colored(ColorBranch, TrackedBranchLabel("main")));
+        gitStatusDisplay.Should().StartWith(ColorBranch.Wrap(TrackedBranchLabel("main").Label));
     }
 
     [Fact]
@@ -138,7 +138,7 @@ public sealed class GitStatusDisplayFormatterTests
             operationName: string.Empty);
 
         // Assert
-        gitStatusDisplay.Should().StartWith(Colored(ColorBranchNoUpstream, NoUpstreamBranchLabel("feature")));
+        gitStatusDisplay.Should().StartWith(ColorBranchNoUpstream.Wrap(NoUpstreamBranchLabel("feature").Label));
     }
 
     [Fact]
@@ -156,7 +156,7 @@ public sealed class GitStatusDisplayFormatterTests
             operationName: string.Empty);
 
         // Assert
-        gitStatusDisplay.Should().StartWith(Colored(ColorBranchDetached, DetachedBranchLabel("abc1234...")));
+        gitStatusDisplay.Should().StartWith(ColorBranchDetached.Wrap(DetachedBranchLabel("abc1234...").Label));
     }
 
     [Fact]
@@ -175,8 +175,8 @@ public sealed class GitStatusDisplayFormatterTests
                 operationName: string.Empty);
 
         // Assert
-        gitStatusDisplay.Should().Contain($" {Colored(ColorAhead, Indicator(PromptIcons.IconAhead, 2))}");
-        gitStatusDisplay.Should().Contain($" {Colored(ColorBehind, Indicator(PromptIcons.IconBehind, 3))}");
+        gitStatusDisplay.Should().Contain($" {ColorAhead.Wrap(Indicator(PromptIcons.IconAhead, 2))}");
+        gitStatusDisplay.Should().Contain($" {ColorBehind.Wrap(Indicator(PromptIcons.IconBehind, 3))}");
     }
 
     [Fact]
@@ -199,13 +199,13 @@ public sealed class GitStatusDisplayFormatterTests
             operationName: string.Empty);
 
         // Assert
-        gitStatusDisplay.Should().Contain(Colored(ColorBranch, TrackedBranchLabel("main")));
-        gitStatusDisplay.Should().Contain($" {Colored(ColorAhead, Indicator(PromptIcons.IconAhead, 1))}");
-        gitStatusDisplay.Should().Contain($" {Colored(ColorBehind, Indicator(PromptIcons.IconBehind, 1))}");
-        gitStatusDisplay.Should().Contain($" {Colored(ColorStaged, Indicator(PromptIcons.IconAdded, 1))}");
-        gitStatusDisplay.Should().Contain($" {Colored(ColorUnstaged, Indicator(PromptIcons.IconModified, 1))}");
-        gitStatusDisplay.Should().Contain($" {Colored(ColorUntracked, Indicator(PromptIcons.IconUntracked, 1))}");
-        gitStatusDisplay.Should().Contain($" {Colored(ColorConflict, Indicator(PromptIcons.IconConflicts, 1))}");
+        gitStatusDisplay.Should().Contain(ColorBranch.Wrap(TrackedBranchLabel("main").Label));
+        gitStatusDisplay.Should().Contain($" {ColorAhead.Wrap(Indicator(PromptIcons.IconAhead, 1))}");
+        gitStatusDisplay.Should().Contain($" {ColorBehind.Wrap(Indicator(PromptIcons.IconBehind, 1))}");
+        gitStatusDisplay.Should().Contain($" {ColorStaged.Wrap(Indicator(PromptIcons.IconAdded, 1))}");
+        gitStatusDisplay.Should().Contain($" {ColorUnstaged.Wrap(Indicator(PromptIcons.IconModified, 1))}");
+        gitStatusDisplay.Should().Contain($" {ColorUntracked.Wrap(Indicator(PromptIcons.IconUntracked, 1))}");
+        gitStatusDisplay.Should().Contain($" {ColorConflict.Wrap(Indicator(PromptIcons.IconConflicts, 1))}");
     }
 
     [Fact]
