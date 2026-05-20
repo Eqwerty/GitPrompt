@@ -7,66 +7,66 @@ internal static class PromptColors
     private const string ReadLineStart = "\u0001";
     private const string ReadLineEnd = "\u0002";
 
-    private static string PromptColor(string ansiColor)
+    private static string FormatAnsi(string ansiColor)
     {
         return $"{ReadLineStart}{ansiColor}{ReadLineEnd}";
     }
 
-    private static string ResolveColor(string? configColor, string defaultColor)
+    private static PromptColor ResolveColor(string? configColor, string defaultColor)
     {
         var color = configColor ?? defaultColor;
 
         try
         {
-            return PromptColor(AnsiColorConverter.ToAnsi(color));
+            return new PromptColor(FormatAnsi(AnsiColorConverter.ToAnsi(color)));
         }
         catch (ArgumentException)
         {
-            return PromptColor(AnsiColorConverter.ToAnsi(defaultColor));
+            return new PromptColor(FormatAnsi(AnsiColorConverter.ToAnsi(defaultColor)));
         }
     }
 
-    internal static string ColorUser => ResolveColor(ConfigReader.Config.Colors?.User, AnsiColors.Green);
+    internal static PromptColor ColorUser => ResolveColor(ConfigReader.Config.Colors?.User, AnsiColors.Green);
 
-    internal static string ColorHost => ResolveColor(ConfigReader.Config.Colors?.Host, AnsiColors.Magenta);
+    internal static PromptColor ColorHost => ResolveColor(ConfigReader.Config.Colors?.Host, AnsiColors.Magenta);
 
-    internal static string ColorPath => ResolveColor(ConfigReader.Config.Colors?.Path, AnsiColors.Orange);
+    internal static PromptColor ColorPath => ResolveColor(ConfigReader.Config.Colors?.Path, AnsiColors.Orange);
 
-    internal static string ColorCommandDuration => ResolveColor(ConfigReader.Config.Colors?.CommandDuration, AnsiColors.Magenta);
+    internal static PromptColor ColorCommandDuration => ResolveColor(ConfigReader.Config.Colors?.CommandDuration, AnsiColors.Magenta);
 
-    internal static string ColorBranch => ResolveColor(ConfigReader.Config.Colors?.Branch, AnsiColors.BoldCyan);
+    internal static PromptColor ColorBranch => ResolveColor(ConfigReader.Config.Colors?.Branch, AnsiColors.BoldCyan);
 
-    internal static string ColorBranchNoUpstream => ResolveColor(ConfigReader.Config.Colors?.BranchNoUpstream, AnsiColors.BoldCyan);
+    internal static PromptColor ColorBranchNoUpstream => ResolveColor(ConfigReader.Config.Colors?.BranchNoUpstream, AnsiColors.BoldCyan);
 
-    internal static string ColorBranchDetached => ResolveColor(ConfigReader.Config.Colors?.BranchDetached, AnsiColors.NormalYellow);
+    internal static PromptColor ColorBranchDetached => ResolveColor(ConfigReader.Config.Colors?.BranchDetached, AnsiColors.NormalYellow);
 
-    internal static string ColorAhead => ResolveColor(ConfigReader.Config.Colors?.Ahead, AnsiColors.BoldCyan);
+    internal static PromptColor ColorAhead => ResolveColor(ConfigReader.Config.Colors?.Ahead, AnsiColors.BoldCyan);
 
-    internal static string ColorBehind => ResolveColor(ConfigReader.Config.Colors?.Behind, AnsiColors.BoldCyan);
+    internal static PromptColor ColorBehind => ResolveColor(ConfigReader.Config.Colors?.Behind, AnsiColors.BoldCyan);
 
-    internal static string ColorStaged => ResolveColor(ConfigReader.Config.Colors?.Staged, AnsiColors.Green);
+    internal static PromptColor ColorStaged => ResolveColor(ConfigReader.Config.Colors?.Staged, AnsiColors.Green);
 
-    internal static string ColorUnstaged => ResolveColor(ConfigReader.Config.Colors?.Unstaged, AnsiColors.Red);
+    internal static PromptColor ColorUnstaged => ResolveColor(ConfigReader.Config.Colors?.Unstaged, AnsiColors.Red);
 
-    internal static string ColorUntracked => ResolveColor(ConfigReader.Config.Colors?.Untracked, AnsiColors.Red);
+    internal static PromptColor ColorUntracked => ResolveColor(ConfigReader.Config.Colors?.Untracked, AnsiColors.Red);
 
-    internal static string ColorStash => ResolveColor(ConfigReader.Config.Colors?.Stash, AnsiColors.Magenta);
+    internal static PromptColor ColorStash => ResolveColor(ConfigReader.Config.Colors?.Stash, AnsiColors.Magenta);
 
-    internal static string ColorConflict => ResolveColor(ConfigReader.Config.Colors?.Conflict, AnsiColors.Red);
+    internal static PromptColor ColorConflict => ResolveColor(ConfigReader.Config.Colors?.Conflict, AnsiColors.Red);
 
-    internal static string ColorDirty => ResolveColor(ConfigReader.Config.Colors?.Dirty, AnsiColors.Orange);
+    internal static PromptColor ColorDirty => ResolveColor(ConfigReader.Config.Colors?.Dirty, AnsiColors.Orange);
 
-    internal static string ColorDirtyStaged => ResolveColor(ConfigReader.Config.Colors?.DirtyStaged, AnsiColors.Green);
+    internal static PromptColor ColorDirtyStaged => ResolveColor(ConfigReader.Config.Colors?.DirtyStaged, AnsiColors.Green);
 
-    internal static string ColorClean => ResolveColor(ConfigReader.Config.Colors?.Clean, AnsiColors.Green);
+    internal static PromptColor ColorClean => ResolveColor(ConfigReader.Config.Colors?.Clean, AnsiColors.Green);
 
-    internal static string ColorMissingPath => ResolveColor(ConfigReader.Config.Colors?.MissingPath, AnsiColors.Red);
+    internal static PromptColor ColorMissingPath => ResolveColor(ConfigReader.Config.Colors?.MissingPath, AnsiColors.Red);
 
-    internal static string ColorTimeout => ResolveColor(ConfigReader.Config.Colors?.Timeout, AnsiColors.Yellow);
+    internal static PromptColor ColorTimeout => ResolveColor(ConfigReader.Config.Colors?.Timeout, AnsiColors.Yellow);
 
-    internal static string ColorPromptSymbol => ResolveColor(ConfigReader.Config.Colors?.PromptSymbol, AnsiColors.White);
+    internal static PromptColor ColorPromptSymbol => ResolveColor(ConfigReader.Config.Colors?.PromptSymbol, AnsiColors.White);
 
-    internal static string ColorPrefix => ResolveColor(ConfigReader.Config.Colors?.Prefix, AnsiColors.White);
+    internal static PromptColor ColorPrefix => ResolveColor(ConfigReader.Config.Colors?.Prefix, AnsiColors.White);
 
-    internal static readonly string ColorReset = PromptColor(AnsiColors.Reset);
+    internal static readonly string ColorReset = FormatAnsi(AnsiColors.Reset);
 }

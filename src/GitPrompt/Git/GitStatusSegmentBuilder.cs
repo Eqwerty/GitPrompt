@@ -6,7 +6,7 @@ namespace GitPrompt.Git;
 
 internal static class GitStatusSegmentBuilder
 {
-    private static readonly string TimeoutSegment = $"{ColorTimeout}[timeout]{ColorReset}";
+    private static readonly string TimeoutSegment = ColorTimeout.Wrap("[timeout]");
 
     internal static string Build(string workingDirectoryPath)
     {

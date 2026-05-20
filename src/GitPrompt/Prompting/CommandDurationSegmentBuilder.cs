@@ -26,7 +26,7 @@ internal static class CommandDurationSegmentBuilder
             return string.Empty;
         }
 
-        return $"{ColorCommandDuration}{FormatDuration(ms.Value)}{ColorReset}";
+        return ColorCommandDuration.Wrap(FormatDuration(ms.Value));
     }
 
     internal static string FormatDuration(long ms)

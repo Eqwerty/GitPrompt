@@ -38,7 +38,7 @@ internal static class ContextSegmentBuilder
 
         if (!string.IsNullOrEmpty(user))
         {
-            return $"{ColorUser}{user}{ColorReset}";
+            return ColorUser.Wrap(user);
         }
 
         var windowsUserName = platformProvider.WindowsUserName;
@@ -51,14 +51,14 @@ internal static class ContextSegmentBuilder
 
                 if (!string.IsNullOrEmpty(domain))
                 {
-                    return $"{ColorUser}{domain}+{windowsUserName}{ColorReset}";
+                    return ColorUser.Wrap($"{domain}+{windowsUserName}");
                 }
             }
 
-            return $"{ColorUser}{windowsUserName}{ColorReset}";
+            return ColorUser.Wrap(windowsUserName);
         }
 
-        return $"{ColorUser}[user?]{ColorReset}";
+        return ColorUser.Wrap("[user?]");
     }
 
     private static string ResolveHost(PlatformProvider platformProvider)
@@ -72,10 +72,10 @@ internal static class ContextSegmentBuilder
 
         if (!string.IsNullOrEmpty(host))
         {
-            return $"{ColorHost}{host}{ColorReset}";
+            return ColorHost.Wrap(host);
         }
 
-        return $"{ColorHost}[host?]{ColorReset}";
+        return ColorHost.Wrap("[host?]");
     }
 
     private static string ResolvePath(PlatformProvider platformProvider)
@@ -90,7 +90,7 @@ internal static class ContextSegmentBuilder
 
         if (string.IsNullOrEmpty(workingDirectoryPath))
         {
-            return $"{ColorPath}[path?]{ColorReset}";
+            return ColorPath.Wrap("[path?]");
         }
 
         var isMissingPath = isFallbackPath && !Directory.Exists(workingDirectoryPath);
@@ -132,7 +132,7 @@ internal static class ContextSegmentBuilder
 
         var pathColor = isMissingPath ? ColorMissingPath : ColorPath;
 
-        return $"{pathColor}{displayPath}{ColorReset}";
+        return pathColor.Wrap(displayPath);
     }
 
     internal static string TruncatePath(string displayPath, int maxDepth)
