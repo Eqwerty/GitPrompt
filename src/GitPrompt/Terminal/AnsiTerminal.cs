@@ -18,7 +18,7 @@ internal static class AnsiTerminal
 
     private static bool DetectColors()
     {
-        if (Console.IsOutputRedirected)
+        if (Console.IsErrorRedirected)
         {
             return false;
         }
