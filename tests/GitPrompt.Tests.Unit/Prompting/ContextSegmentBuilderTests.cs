@@ -381,7 +381,9 @@ public sealed class ContextSegmentBuilderTests
     public void Build_WhenShowUserAndShowHostAndShowPathAreFalse_ShouldReturnEmptyString()
     {
         // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { Context = new Config.ContextConfig { ShowUser = false, ShowHost = false, ShowPath = false } });
+        using var _ = ConfigReader.OverrideForTesting(
+            new Config { Context = new Config.ContextConfig { ShowUser = false, ShowHost = false, ShowPath = false } });
+
         var platformProvider = new TestPlatformProvider(
             user: "me",
             host: "machine",
@@ -409,8 +411,14 @@ public sealed class ContextSegmentBuilderTests
     [InlineData("folder/nested", 2, "folder/nested")]
     public void TruncatePath_ShouldTruncateToMaxDepth(string path, int maxDepth, string expected)
     {
-        // Act & Assert
-        ContextSegmentBuilder.TruncatePath(path, maxDepth).Should().Be(expected);
+        // Arrange
+        ConfigReader.OverrideForTesting(new Config { Context = new Config.ContextConfig { MaxPathDepth = maxDepth } });
+
+        // Act
+        var truncatedPath = ContextSegmentBuilder.TruncatePath(path);
+
+        // Assert
+        truncatedPath.Should().Be(expected);
     }
 
     [Theory]
@@ -420,9 +428,13 @@ public sealed class ContextSegmentBuilderTests
     {
         // Arrange
         const string path = "~/a/b/c/d";
+        ConfigReader.OverrideForTesting(new Config { Context = new Config.ContextConfig { MaxPathDepth = maxDepth } });
 
-        // Act & Assert
-        ContextSegmentBuilder.TruncatePath(path, maxDepth).Should().Be(path);
+        // Act
+        var truncatePath = ContextSegmentBuilder.TruncatePath(path);
+
+        // Assert
+        truncatePath.Should().Be(path);
     }
 
     [Fact]

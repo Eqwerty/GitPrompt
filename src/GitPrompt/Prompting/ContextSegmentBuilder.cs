@@ -23,7 +23,7 @@ internal static class ContextSegmentBuilder
         {
             response += $" {pathSegment}";
         }
-        
+
         return response.TrimStart();
     }
 
@@ -124,7 +124,7 @@ internal static class ContextSegmentBuilder
         }
 
         var displayPath = workingDirectoryPath.Replace('\\', '/');
-        displayPath = TruncatePath(displayPath, ConfigReader.Config.Context!.MaxPathDepth ?? 0);
+        displayPath = TruncatePath(displayPath);
         if (isMissingPath)
         {
             displayPath += " [missing]";
@@ -135,8 +135,10 @@ internal static class ContextSegmentBuilder
         return pathColor.Wrap(displayPath);
     }
 
-    internal static string TruncatePath(string displayPath, int maxDepth)
+    internal static string TruncatePath(string displayPath)
     {
+        var maxDepth = ConfigReader.Config.Context!.MaxPathDepth ?? 0;
+
         if (maxDepth <= 0 || string.IsNullOrEmpty(displayPath))
         {
             return displayPath;
