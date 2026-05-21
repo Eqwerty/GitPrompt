@@ -12,6 +12,7 @@ public sealed class GitAliasesTests
     {
         // Navigate from tests/GitPrompt.Tests.Unit/ up to the repo root
         var repoRoot = Path.GetFullPath(Path.Combine(callerPath, "..", "..", ".."));
+
         return Path.Combine(repoRoot, "git_aliases.sh");
     }
 
@@ -19,17 +20,26 @@ public sealed class GitAliasesTests
     {
         var content = File.ReadAllText(AliasesFilePath);
         var matches = Regex.Matches(content, @"^alias\s+(\w+)=", RegexOptions.Multiline);
-        return matches.Select(m => m.Groups[1].Value).ToList();
+
+        return matches.Select(match => match.Groups[1].Value).ToList();
+    }
+
+    private static IReadOnlyList<string> ParseFunctionNames()
+    {
+        var content = File.ReadAllText(AliasesFilePath);
+        var matches = Regex.Matches(content, @"^(?:function\s+)?(\w+)\s*\(\)", RegexOptions.Multiline);
+
+        return matches.Select(match => match.Groups[1].Value).ToList();
     }
 
     [Fact]
-    public void AliasNames_WhenFileIsParsed_ShouldNotContainDuplicates()
+    public void AliasAndFunctionNames_WhenFileIsParsed_ShouldNotContainDuplicates()
     {
         // Arrange
-        var aliasNames = ParseAliasNames();
+        var allNames = ParseAliasNames().Concat(ParseFunctionNames()).ToList();
 
         // Act
-        var duplicates = aliasNames
+        var duplicates = allNames
             .GroupBy(name => name)
             .Where(group => group.Count() > 1)
             .Select(group => group.Key)
@@ -37,11 +47,11 @@ public sealed class GitAliasesTests
 
         // Assert
         duplicates.Should().BeEmpty(
-            because: $"every alias name must be unique, but found duplicates: {string.Join(", ", duplicates)}");
+            because: $"every alias and function name must be unique, but found duplicates: {string.Join(", ", duplicates)}");
     }
 
     [Fact]
-    public void AliasNames_WhenFileIsParsed_ShouldNotShadowWellKnownCommands()
+    public void AliasAndFunctionNames_WhenFileIsParsed_ShouldNotShadowWellKnownCommands()
     {
         // Arrange
         var wellKnownCommands = new HashSet<string>(StringComparer.Ordinal)
@@ -53,18 +63,21 @@ public sealed class GitAliasesTests
             "man", "which", "where", "type",
             "kill", "ps", "top", "bg", "fg", "jobs",
             "export", "source", "alias", "unalias", "set", "unset",
-            "git", "sh", "bash", "zsh",
+            "git", "sh", "bash", "zsh"
         };
 
-        var aliasNames = ParseAliasNames();
+        // Exclude private helpers (__-prefixed) from the shadowing check
+        var publicNames = ParseAliasNames()
+            .Concat(ParseFunctionNames().Where(n => !n.StartsWith("__", StringComparison.Ordinal)))
+            .ToList();
 
         // Act
-        var shadowedCommands = aliasNames
+        var shadowedCommands = publicNames
             .Where(wellKnownCommands.Contains)
             .ToList();
 
         // Assert
         shadowedCommands.Should().BeEmpty(
-            because: $"aliases must not shadow well-known commands, but found: {string.Join(", ", shadowedCommands)}");
+            because: $"aliases and functions must not shadow well-known commands, but found: {string.Join(", ", shadowedCommands)}");
     }
 }
