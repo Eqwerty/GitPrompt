@@ -10,7 +10,7 @@ namespace GitPrompt.Tests.Unit.Git;
 [Collection(ConfigIsolationCollection.Name)]
 public sealed class GitStatusDisplayFormatterCompactModeTests : IDisposable
 {
-    private readonly IDisposable _configOverride = ConfigReader.OverrideForTesting(new Config());
+    private readonly IDisposable _configOverride = ConfigReader.OverrideForTesting(new ConfigDto());
 
     public void Dispose() => _configOverride.Dispose();
 
@@ -122,7 +122,7 @@ public sealed class GitStatusDisplayFormatterCompactModeTests : IDisposable
     public void BuildDisplayCompact_WhenStashExistsAndShowStashIsTrue_ShouldShowStashCount()
     {
         // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { ShowStash = true });
+        using var _ = ConfigReader.OverrideForTesting(new ConfigDto { ShowStash = true });
 
         // Act
         var display = GitStatusDisplayFormatter.BuildDisplayCompact(
@@ -141,7 +141,7 @@ public sealed class GitStatusDisplayFormatterCompactModeTests : IDisposable
     public void BuildDisplayCompact_WhenStashExistsAndShowStashIsFalse_ShouldOmitStashCount()
     {
         // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { ShowStash = false });
+        using var _ = ConfigReader.OverrideForTesting(new ConfigDto { ShowStash = false });
 
         // Act
         var display = GitStatusDisplayFormatter.BuildDisplayCompact(
@@ -181,7 +181,7 @@ public sealed class GitStatusDisplayFormatterCompactModeTests : IDisposable
     public void BuildDisplayCompact_WhenAllIndicatorsPresent_ShouldRenderInExpectedOrder()
     {
         // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { ShowStash = true });
+        using var _ = ConfigReader.OverrideForTesting(new ConfigDto { ShowStash = true });
 
         // Act
         var display = GitStatusDisplayFormatter.BuildDisplayCompact(
@@ -206,7 +206,7 @@ public sealed class GitStatusDisplayFormatterCompactModeTests : IDisposable
     public void BuildDisplayCompact_WhenCustomDirtyIconIsConfigured_ShouldUseCustomIcon()
     {
         // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { Icons = new Config.IconsConfig { Dirty = "X" } });
+        using var _ = ConfigReader.OverrideForTesting(new ConfigDto { Icons = new ConfigDto.IconsConfig { Dirty = "X" } });
 
         // Act
         var display = GitStatusDisplayFormatter.BuildDisplayCompact(
@@ -226,7 +226,7 @@ public sealed class GitStatusDisplayFormatterCompactModeTests : IDisposable
     public void BuildDisplayCompact_WhenCustomCleanIconIsConfigured_ShouldUseCustomIcon()
     {
         // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { Icons = new Config.IconsConfig { Clean = "OK" } });
+        using var _ = ConfigReader.OverrideForTesting(new ConfigDto { Icons = new ConfigDto.IconsConfig { Clean = "OK" } });
 
         // Act
         var display = GitStatusDisplayFormatter.BuildDisplayCompact(
@@ -246,7 +246,7 @@ public sealed class GitStatusDisplayFormatterCompactModeTests : IDisposable
     public void BuildDisplayCompact_WhenCustomDirtyStagedIconIsConfigured_ShouldUseCustomIcon()
     {
         // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { Icons = new Config.IconsConfig { DirtyStaged = "S" } });
+        using var _ = ConfigReader.OverrideForTesting(new ConfigDto { Icons = new ConfigDto.IconsConfig { DirtyStaged = "S" } });
 
         // Act
         var display = GitStatusDisplayFormatter.BuildDisplayCompact(
@@ -266,7 +266,7 @@ public sealed class GitStatusDisplayFormatterCompactModeTests : IDisposable
     public void BuildDisplayCompact_WhenCustomDirtyStagedColorIsConfigured_ShouldUseCustomColor()
     {
         // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { Colors = new Config.ColorsConfig { DirtyStaged = "#FF00FF" } });
+        using var _ = ConfigReader.OverrideForTesting(new ConfigDto { Colors = new ConfigDto.ColorsConfig { DirtyStaged = "#FF00FF" } });
 
         // Act
         var display = GitStatusDisplayFormatter.BuildDisplayCompact(

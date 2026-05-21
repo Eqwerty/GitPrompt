@@ -10,9 +10,9 @@ public sealed class ConfigInitializerTests
     public void BuildConfigContent_WhenPassedCustomConfig_ShouldUseItsValuesInsteadOfDefaults()
     {
         // Arrange
-        var customConfig = new Config
+        var customConfig = new ConfigDto
         {
-            Context = new Config.ContextConfig { ShowUser = false, MaxPathDepth = 3 },
+            Context = new ConfigDto.ContextConfig { ShowUser = false, MaxPathDepth = 3 },
             Compact = true
         };
 
@@ -29,9 +29,9 @@ public sealed class ConfigInitializerTests
     public void BuildConfigContent_WhenPassedConfigWithCustomIcon_ShouldSerializeIconValue()
     {
         // Arrange
-        var customConfig = new Config
+        var customConfig = new ConfigDto
         {
-            Icons = new Config.IconsConfig { Ahead = "↑" }
+            Icons = new ConfigDto.IconsConfig { Ahead = "↑" }
         };
 
         // Act
@@ -45,7 +45,7 @@ public sealed class ConfigInitializerTests
     public void BuildConfigContent_WhenPassedNewConfig_ShouldProduceSameOutputAsBuildDefaultConfigContent()
     {
         // Act & Assert
-        ConfigInitializer.BuildConfigContent(new Config())
+        ConfigInitializer.BuildConfigContent(new ConfigDto())
             .Should().Be(ConfigInitializer.BuildDefaultConfigContent());
     }
 
@@ -404,5 +404,146 @@ public sealed class ConfigInitializerTests
         content.Should().Contain("\"branch\": \"[1;36m\"");
         content.Should().Contain("\"branchDetached\": \"[0;33m\"");
         content.Should().Contain("\"promptSymbol\": \"[37m\"");
+    }
+
+    [Fact]
+    public void MergeWithDefaults_WhenConfigIsEmpty_ShouldApplyAllDefaults()
+    {
+        // Arrange
+        var empty = new ConfigDto();
+
+        // Act
+        var result = ConfigInitializer.MergeWithDefaults(empty);
+
+        // Assert
+        result.Compact.Should().Be(ConfigDto.DefaultCompact);
+        result.ShowStash.Should().Be(ConfigDto.DefaultShowStash);
+        result.CommandTimeoutMs.Should().Be(ConfigDto.DefaultCommandTimeoutMs);
+        result.Context.ShowUser.Should().Be(ConfigDto.ContextConfig.DefaultShowUser);
+        result.Context.ShowDomain.Should().Be(ConfigDto.ContextConfig.DefaultShowDomain);
+        result.Context.ShowHost.Should().Be(ConfigDto.ContextConfig.DefaultShowHost);
+        result.Context.ShowPath.Should().Be(ConfigDto.ContextConfig.DefaultShowPath);
+        result.Context.MaxPathDepth.Should().Be(ConfigDto.ContextConfig.DefaultMaxPathDepth);
+        result.Layout.Multiline.Should().Be(ConfigDto.LayoutConfig.DefaultMultiline);
+        result.Layout.NewlineBefore.Should().Be(ConfigDto.LayoutConfig.DefaultNewlineBefore);
+        result.Layout.StartOfLine.Should().Be(ConfigDto.LayoutConfig.DefaultStartOfLine);
+        result.Layout.Symbol.Should().BeNull();
+        result.Layout.Prefix.Should().BeNull();
+        result.CommandDuration.Show.Should().Be(ConfigDto.CommandDurationConfig.DefaultShow);
+        result.CommandDuration.MinMs.Should().BeNull();
+        result.Cache.GitStatusTtl.Should().Be(TimeSpan.FromSeconds(ConfigDto.CacheConfig.DefaultGitStatusTtlSeconds));
+        result.Cache.RepositoryTtl.Should().Be(TimeSpan.FromSeconds(ConfigDto.CacheConfig.DefaultRepositoryTtlSeconds));
+    }
+
+    [Fact]
+    public void MergeWithDefaults_WhenUserSetsValues_ShouldOverrideDefaults()
+    {
+        // Arrange
+        var custom = new ConfigDto
+        {
+            Compact = true,
+            ShowStash = false,
+            Context = new ConfigDto.ContextConfig { ShowUser = false, MaxPathDepth = 5 },
+            Layout = new ConfigDto.LayoutConfig { Multiline = false, Symbol = "❯" },
+            CommandDuration = new ConfigDto.CommandDurationConfig { Show = false, MinMs = 2000 }
+        };
+
+        // Act
+        var result = ConfigInitializer.MergeWithDefaults(custom);
+
+        // Assert
+        result.Compact.Should().BeTrue();
+        result.ShowStash.Should().BeFalse();
+        result.Context.ShowUser.Should().BeFalse();
+        result.Context.MaxPathDepth.Should().Be(5);
+        result.Layout.Multiline.Should().BeFalse();
+        result.Layout.Symbol.Should().Be("❯");
+        result.CommandDuration.Show.Should().BeFalse();
+        result.CommandDuration.MinMs.Should().Be(2000);
+    }
+
+    [Fact]
+    public void MergeWithDefaults_WhenDirtyStagedIsNotSet_ShouldFallBackToDirtyIcon()
+    {
+        // Arrange — user sets dirty icon only; dirtyStaged is absent
+        var config = new ConfigDto
+        {
+            Icons = new ConfigDto.IconsConfig { Dirty = "D" }
+        };
+
+        // Act
+        var result = ConfigInitializer.MergeWithDefaults(config);
+
+        // Assert
+        result.Icons.Dirty.Should().Be("D");
+        result.Icons.DirtyStaged.Should().Be("D");
+    }
+
+    [Fact]
+    public void MergeWithDefaults_WhenDirtyStagedIsExplicitlySet_ShouldUseItsOwnValue()
+    {
+        // Arrange — user sets both dirty and dirtyStaged independently
+        var config = new ConfigDto
+        {
+            Icons = new ConfigDto.IconsConfig { Dirty = "D", DirtyStaged = "S" }
+        };
+
+        // Act
+        var result = ConfigInitializer.MergeWithDefaults(config);
+
+        // Assert
+        result.Icons.Dirty.Should().Be("D");
+        result.Icons.DirtyStaged.Should().Be("S");
+    }
+
+    [Fact]
+    public void MergeWithDefaults_WhenCustomIconsAreSet_ShouldUseUserIcons()
+    {
+        // Arrange
+        var config = new ConfigDto
+        {
+            Icons = new ConfigDto.IconsConfig { Ahead = "↑", Behind = "↓", Added = "A" }
+        };
+
+        // Act
+        var result = ConfigInitializer.MergeWithDefaults(config);
+
+        // Assert
+        result.Icons.Ahead.Should().Be("↑");
+        result.Icons.Behind.Should().Be("↓");
+        result.Icons.Added.Should().Be("A");
+        result.Icons.Modified.Should().Be(PromptIcons.IconModified.ToString());
+    }
+
+    [Fact]
+    public void MergeWithDefaults_WhenColorsAreAbsent_ShouldApplyDefaultAnsiCodes()
+    {
+        // Arrange
+        var empty = new ConfigDto();
+
+        // Act
+        var result = ConfigInitializer.MergeWithDefaults(empty);
+
+        // Assert — colors are resolved to config-file format (no leading ESC)
+        result.Colors.User.Should().Be("[32m");
+        result.Colors.Branch.Should().Be("[1;36m");
+        result.Colors.PromptSymbol.Should().Be("[37m");
+    }
+
+    [Fact]
+    public void MergeWithDefaults_WhenUserSetsColor_ShouldUseUserColor()
+    {
+        // Arrange
+        var config = new ConfigDto
+        {
+            Colors = new ConfigDto.ColorsConfig { User = "#FF0000" }
+        };
+
+        // Act
+        var result = ConfigInitializer.MergeWithDefaults(config);
+
+        // Assert
+        result.Colors.User.Should().Be("#FF0000");
+        result.Colors.Branch.Should().Be("[1;36m"); // unchanged default
     }
 }

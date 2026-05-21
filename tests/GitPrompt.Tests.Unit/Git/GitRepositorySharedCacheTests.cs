@@ -13,7 +13,7 @@ public sealed class GitRepositorySharedCacheTests
     {
         // Arrange
         using var cacheDirectory = new TemporaryDirectory();
-        using var configOverride = ConfigReader.OverrideForTesting(new Config { Cache = new Config.CacheConfig { RepositoryTtlSeconds = 60.0 } });
+        using var configOverride = ConfigReader.OverrideForTesting(new ConfigDto { Cache = new ConfigDto.CacheConfig { RepositoryTtlSeconds = 60.0 } });
         using var cacheDirectoryOverride = GitRepositorySharedCache.OverrideCacheDirectoryForTesting(cacheDirectory.DirectoryPath);
         var fakeClock = new FakeTimeProvider(DateTimeOffset.UtcNow);
         using var timeOverride = GitRepositorySharedCache.OverrideTimeProviderForTesting(fakeClock);
@@ -43,7 +43,7 @@ public sealed class GitRepositorySharedCacheTests
     {
         // Arrange
         using var cacheDirectory = new TemporaryDirectory();
-        using var configOverride = ConfigReader.OverrideForTesting(new Config { Cache = new Config.CacheConfig { RepositoryTtlSeconds = 1.0 } });
+        using var configOverride = ConfigReader.OverrideForTesting(new ConfigDto { Cache = new ConfigDto.CacheConfig { RepositoryTtlSeconds = 1.0 } });
         using var cacheDirectoryOverride = GitRepositorySharedCache.OverrideCacheDirectoryForTesting(cacheDirectory.DirectoryPath);
         var fakeClock = new FakeTimeProvider(DateTimeOffset.UtcNow);
         using var timeOverride = GitRepositorySharedCache.OverrideTimeProviderForTesting(fakeClock);
@@ -73,7 +73,7 @@ public sealed class GitRepositorySharedCacheTests
     {
         // Arrange
         using var cacheDirectory = new TemporaryDirectory();
-        using var configOverride = ConfigReader.OverrideForTesting(new Config { Cache = new Config.CacheConfig { RepositoryTtlSeconds = 0 } });
+        using var configOverride = ConfigReader.OverrideForTesting(new ConfigDto { Cache = new ConfigDto.CacheConfig { RepositoryTtlSeconds = 0 } });
         using var cacheDirectoryOverride = GitRepositorySharedCache.OverrideCacheDirectoryForTesting(cacheDirectory.DirectoryPath);
 
         var startDirectoryPath = Path.Combine(cacheDirectory.DirectoryPath, "work");
@@ -100,7 +100,7 @@ public sealed class GitRepositorySharedCacheTests
     {
         // Arrange
         using var cacheDirectory = new TemporaryDirectory();
-        using var configOverride = ConfigReader.OverrideForTesting(new Config { Cache = new Config.CacheConfig { RepositoryTtlSeconds = 60.0 } });
+        using var configOverride = ConfigReader.OverrideForTesting(new ConfigDto { Cache = new ConfigDto.CacheConfig { RepositoryTtlSeconds = 60.0 } });
         using var cacheDirectoryOverride = GitRepositorySharedCache.OverrideCacheDirectoryForTesting(cacheDirectory.DirectoryPath);
         var fakeClock = new FakeTimeProvider(DateTimeOffset.UtcNow);
         using var timeOverride = GitRepositorySharedCache.OverrideTimeProviderForTesting(fakeClock);
@@ -138,7 +138,7 @@ public sealed class GitRepositorySharedCacheTests
     {
         // Arrange
         using var cacheDirectory = new TemporaryDirectory();
-        using var configOverride = ConfigReader.OverrideForTesting(new Config { Cache = new Config.CacheConfig { RepositoryTtlSeconds = 60.0 } });
+        using var configOverride = ConfigReader.OverrideForTesting(new ConfigDto { Cache = new ConfigDto.CacheConfig { RepositoryTtlSeconds = 60.0 } });
         using var cacheDirectoryOverride = GitRepositorySharedCache.OverrideCacheDirectoryForTesting(cacheDirectory.DirectoryPath);
         var fakeClock = new FakeTimeProvider(DateTimeOffset.UtcNow.AddYears(1));
         using var timeOverride = GitRepositorySharedCache.OverrideTimeProviderForTesting(fakeClock);
@@ -174,7 +174,7 @@ public sealed class GitRepositorySharedCacheTests
     {
         // Arrange
         using var cacheDirectory = new TemporaryDirectory();
-        using var configOverride = ConfigReader.OverrideForTesting(new Config { Cache = new Config.CacheConfig { RepositoryTtlSeconds = 60.0 } });
+        using var configOverride = ConfigReader.OverrideForTesting(new ConfigDto { Cache = new ConfigDto.CacheConfig { RepositoryTtlSeconds = 60.0 } });
         using var cacheDirectoryOverride = GitRepositorySharedCache.OverrideCacheDirectoryForTesting(cacheDirectory.DirectoryPath);
         var fakeClock = new FakeTimeProvider(DateTimeOffset.UtcNow.AddYears(1));
         using var timeOverride = GitRepositorySharedCache.OverrideTimeProviderForTesting(fakeClock);

@@ -13,10 +13,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"cache": {"gitStatusTtl": 0, "repositoryTtl": 60}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Cache!.GitStatusTtl.Should().Be(TimeSpan.Zero);
+        config.Cache!.GitStatusTtl.Should().Be(TimeSpan.Zero);
     }
 
     [Fact]
@@ -26,10 +26,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"cache": {"gitStatusTtl": 10, "repositoryTtl": 60}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Cache!.GitStatusTtl.Should().Be(TimeSpan.FromSeconds(10));
+        config.Cache!.GitStatusTtl.Should().Be(TimeSpan.FromSeconds(10));
     }
 
     [Fact]
@@ -39,10 +39,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"cache": {}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Cache!.GitStatusTtl.Should().Be(TimeSpan.FromSeconds(5));
+        config.Cache!.GitStatusTtl.Should().Be(TimeSpan.FromSeconds(5));
     }
 
     [Fact]
@@ -52,10 +52,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"cache": {"gitStatusTtl": 5, "repositoryTtl": 0}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Cache!.RepositoryTtl.Should().Be(TimeSpan.Zero);
+        config.Cache!.RepositoryTtl.Should().Be(TimeSpan.Zero);
     }
 
     [Fact]
@@ -72,10 +72,10 @@ public sealed class ConfigDeserializationTests
                    """;
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Cache!.GitStatusTtl.Should().Be(TimeSpan.Zero);
+        config.Cache!.GitStatusTtl.Should().Be(TimeSpan.Zero);
         config.Cache!.RepositoryTtl.Should().Be(TimeSpan.FromSeconds(60));
     }
 
@@ -86,10 +86,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"cache": {"gitStatusTtl": 2.5, "repositoryTtl": 60}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Cache!.GitStatusTtl.Should().Be(TimeSpan.FromSeconds(2.5));
+        config.Cache!.GitStatusTtl.Should().Be(TimeSpan.FromSeconds(2.5));
     }
 
     [Fact]
@@ -99,10 +99,10 @@ public sealed class ConfigDeserializationTests
         var json = "{}";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.CommandTimeout.Should().Be(TimeSpan.FromMilliseconds(2000));
+        config.CommandTimeout.Should().Be(TimeSpan.FromMilliseconds(2000));
     }
 
     [Fact]
@@ -112,10 +112,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"commandTimeoutMs": 500}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.CommandTimeout.Should().Be(TimeSpan.FromMilliseconds(500));
+        config.CommandTimeout.Should().Be(TimeSpan.FromMilliseconds(500));
     }
 
     [Fact]
@@ -125,10 +125,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"commandTimeoutMs": 0}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.CommandTimeout.Should().BeNull();
+        config.CommandTimeout.Should().BeNull();
     }
 
     [Fact]
@@ -138,10 +138,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"commandTimeoutMs": -1}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.CommandTimeout.Should().BeNull();
+        config.CommandTimeout.Should().BeNull();
     }
 
     [Fact]
@@ -151,10 +151,10 @@ public sealed class ConfigDeserializationTests
         var json = "{}";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.CommandDuration.Should().BeNull();
+        config.CommandDuration.Should().BeNull();
     }
 
     [Fact]
@@ -164,10 +164,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"commandDuration": {}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.CommandDuration!.Show.Should().BeNull();
+        config.CommandDuration!.Show.Should().BeNull();
     }
 
     [Fact]
@@ -177,10 +177,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"commandDuration": {"show": true}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.CommandDuration!.Show.Should().BeTrue();
+        config.CommandDuration!.Show.Should().BeTrue();
     }
 
     [Fact]
@@ -190,10 +190,10 @@ public sealed class ConfigDeserializationTests
         var json = "{}";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Context.Should().BeNull();
+        config.Context.Should().BeNull();
     }
 
     [Fact]
@@ -203,10 +203,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"context": {}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Context!.ShowUser.Should().BeNull();
+        config.Context!.ShowUser.Should().BeNull();
     }
 
     [Fact]
@@ -216,10 +216,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"context": {"showUser": true}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Context!.ShowUser.Should().BeTrue();
+        config.Context!.ShowUser.Should().BeTrue();
     }
 
     [Fact]
@@ -229,10 +229,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"context": {"showUser": false}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Context!.ShowUser.Should().BeFalse();
+        config.Context!.ShowUser.Should().BeFalse();
     }
 
     [Fact]
@@ -242,10 +242,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"context": {}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Context!.ShowHost.Should().BeNull();
+        config.Context!.ShowHost.Should().BeNull();
     }
 
     [Fact]
@@ -255,10 +255,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"context": {"showHost": true}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Context!.ShowHost.Should().BeTrue();
+        config.Context!.ShowHost.Should().BeTrue();
     }
 
     [Fact]
@@ -268,10 +268,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"context": {"showHost": false}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Context!.ShowHost.Should().BeFalse();
+        config.Context!.ShowHost.Should().BeFalse();
     }
 
     [Fact]
@@ -281,10 +281,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"context": {}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Context!.ShowPath.Should().BeNull();
+        config.Context!.ShowPath.Should().BeNull();
     }
 
     [Fact]
@@ -294,10 +294,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"context": {"showPath": true}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Context!.ShowPath.Should().BeTrue();
+        config.Context!.ShowPath.Should().BeTrue();
     }
 
     [Fact]
@@ -307,10 +307,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"context": {"showPath": false}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Context!.ShowPath.Should().BeFalse();
+        config.Context!.ShowPath.Should().BeFalse();
     }
 
     [Fact]
@@ -320,10 +320,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"context": {}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Context!.MaxPathDepth.Should().BeNull();
+        config.Context!.MaxPathDepth.Should().BeNull();
     }
 
     [Fact]
@@ -333,10 +333,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"context": {"maxPathDepth": 3}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Context!.MaxPathDepth.Should().Be(3);
+        config.Context!.MaxPathDepth.Should().Be(3);
     }
 
     [Fact]
@@ -346,10 +346,10 @@ public sealed class ConfigDeserializationTests
         var json = "{}";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Layout.Should().BeNull();
+        config.Layout.Should().BeNull();
     }
 
     [Fact]
@@ -359,10 +359,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"layout": {}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Layout!.Multiline.Should().BeNull();
+        config.Layout!.Multiline.Should().BeNull();
     }
 
     [Fact]
@@ -372,10 +372,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"layout": {"multiline": false}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Layout!.Multiline.Should().BeFalse();
+        config.Layout!.Multiline.Should().BeFalse();
     }
 
     [Fact]
@@ -385,10 +385,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"layout": {"multiline": true}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Layout!.Multiline.Should().BeTrue();
+        config.Layout!.Multiline.Should().BeTrue();
     }
 
     [Fact]
@@ -398,10 +398,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"layout": {}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Layout!.NewlineBefore.Should().BeNull();
+        config.Layout!.NewlineBefore.Should().BeNull();
     }
 
     [Fact]
@@ -411,10 +411,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"layout": {"newlineBefore": true}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Layout!.NewlineBefore.Should().BeTrue();
+        config.Layout!.NewlineBefore.Should().BeTrue();
     }
 
     [Fact]
@@ -424,10 +424,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"layout": {}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Layout!.Symbol.Should().BeNull();
+        config.Layout!.Symbol.Should().BeNull();
     }
 
     [Fact]
@@ -437,10 +437,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"layout": {"symbol": "❯"}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Layout!.Symbol.Should().Be("❯");
+        config.Layout!.Symbol.Should().Be("❯");
     }
 
     [Fact]
@@ -450,10 +450,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"layout": {"symbol": ""}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Layout!.Symbol.Should().BeEmpty();
+        config.Layout!.Symbol.Should().BeEmpty();
     }
 
     [Fact]
@@ -463,10 +463,10 @@ public sealed class ConfigDeserializationTests
         var json = "{}";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Icons.Should().BeNull();
+        config.Icons.Should().BeNull();
     }
 
     [Fact]
@@ -476,10 +476,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"icons": {}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Icons.Should().NotBeNull();
+        config.Icons.Should().NotBeNull();
         config.Icons!.Ahead.Should().BeNull();
         config.Icons!.Behind.Should().BeNull();
         config.Icons!.Added.Should().BeNull();
@@ -499,10 +499,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"icons": {"ahead": "⬆", "behind": "⬇", "stash": "S"}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Icons!.Ahead.Should().Be("⬆");
+        config.Icons!.Ahead.Should().Be("⬆");
         config.Icons!.Behind.Should().Be("⬇");
         config.Icons!.Stash.Should().Be("S");
         config.Icons!.Added.Should().BeNull();
@@ -515,10 +515,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"icons": {}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Icons!.NoUpstreamMarker.Should().BeNull();
+        config.Icons!.NoUpstreamMarker.Should().BeNull();
     }
 
     [Fact]
@@ -528,10 +528,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"icons": {"noUpstreamMarker": "!"}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Icons!.NoUpstreamMarker.Should().Be("!");
+        config.Icons!.NoUpstreamMarker.Should().Be("!");
     }
 
     [Fact]
@@ -541,10 +541,10 @@ public sealed class ConfigDeserializationTests
         var json = "{}";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Colors.Should().BeNull();
+        config.Colors.Should().BeNull();
     }
 
     [Fact]
@@ -554,10 +554,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"colors": {}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Colors.Should().NotBeNull();
+        config.Colors.Should().NotBeNull();
         config.Colors!.User.Should().BeNull();
         config.Colors!.Host.Should().BeNull();
         config.Colors!.Path.Should().BeNull();
@@ -583,10 +583,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"colors": {"user": "#FF0000", "branch": "#00FF00", "timeout": "#0000FF"}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.Colors!.User.Should().Be("#FF0000");
+        config.Colors!.User.Should().Be("#FF0000");
         config.Colors!.Branch.Should().Be("#00FF00");
         config.Colors!.Timeout.Should().Be("#0000FF");
         config.Colors!.Host.Should().BeNull();
@@ -599,10 +599,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"commandDuration": {}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.CommandDuration!.MinMs.Should().BeNull();
+        config.CommandDuration!.MinMs.Should().BeNull();
     }
 
     [Fact]
@@ -612,10 +612,10 @@ public sealed class ConfigDeserializationTests
         var json = """{"commandDuration": {"minMs": 5000}}""";
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.CommandDuration!.MinMs.Should().Be(5000.0);
+        config.CommandDuration!.MinMs.Should().Be(5000.0);
     }
 
     [Fact]
@@ -623,19 +623,19 @@ public sealed class ConfigDeserializationTests
     {
         // Arrange - matches the real config file format with JSONC inline comment
         var json = """
-            {
-              "commandDuration": {
-                "minMs": 5000,  // minimum duration in ms before showing command duration (null = always show)
-                "show": true
-              }
-            }
-            """;
+                   {
+                     "commandDuration": {
+                       "minMs": 5000,  // minimum duration in ms before showing command duration (null = always show)
+                       "show": true
+                     }
+                   }
+                   """;
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.CommandDuration!.MinMs.Should().Be(5000.0);
+        config.CommandDuration!.MinMs.Should().Be(5000.0);
         config.CommandDuration!.Show.Should().BeTrue();
     }
 
@@ -644,18 +644,17 @@ public sealed class ConfigDeserializationTests
     {
         // Arrange - matches the real config file format with JSONC inline comment
         var json = """
-            {
-              "commandDuration": {
-                "show": false  // show last command duration in the prompt (true/false)
-              }
-            }
-            """;
+                   {
+                     "commandDuration": {
+                       "show": false  // show last command duration in the prompt (true/false)
+                     }
+                   }
+                   """;
 
         // Act
-        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
+        var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config!.CommandDuration!.Show.Should().BeFalse();
+        config.CommandDuration!.Show.Should().BeFalse();
     }
 }
-

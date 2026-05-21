@@ -29,7 +29,7 @@ internal static class ContextSegmentBuilder
 
     private static string ResolveUser(PlatformProvider platformProvider)
     {
-        if (ConfigReader.Config.Context?.ShowUser is false)
+        if (ConfigReader.Config.Context.ShowUser is false)
         {
             return string.Empty;
         }
@@ -45,7 +45,7 @@ internal static class ContextSegmentBuilder
 
         if (!string.IsNullOrEmpty(windowsUserName))
         {
-            if (ConfigReader.Config.Context?.ShowDomain is true)
+            if (ConfigReader.Config.Context.ShowDomain is true)
             {
                 var domain = platformProvider.WindowsUserDomain;
 
@@ -63,7 +63,7 @@ internal static class ContextSegmentBuilder
 
     private static string ResolveHost(PlatformProvider platformProvider)
     {
-        if (ConfigReader.Config.Context?.ShowHost is false)
+        if (ConfigReader.Config.Context.ShowHost is false)
         {
             return string.Empty;
         }
@@ -80,7 +80,7 @@ internal static class ContextSegmentBuilder
 
     private static string ResolvePath(PlatformProvider platformProvider)
     {
-        if (ConfigReader.Config.Context?.ShowPath is false)
+        if (ConfigReader.Config.Context.ShowPath is false)
         {
             return string.Empty;
         }
@@ -134,7 +134,7 @@ internal static class ContextSegmentBuilder
 
     internal static string TruncatePath(string displayPath)
     {
-        var maxDepth = ConfigReader.Config.Context?.MaxPathDepth ?? 0;
+        var maxDepth = ConfigReader.Config.Context.MaxPathDepth;
 
         if (maxDepth <= 0 || string.IsNullOrEmpty(displayPath))
         {

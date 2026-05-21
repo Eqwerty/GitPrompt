@@ -36,9 +36,9 @@ public class GitStatusCacheBenchmarks
 
         // Use an isolated cache directory and a long TTL so the cached entry stays valid for
         // the entire benchmark run.
-        _configOverride = ConfigReader.OverrideForTesting(new Config
+        _configOverride = ConfigReader.OverrideForTesting(new ConfigDto
         {
-            Cache = new Config.CacheConfig { GitStatusTtlSeconds = 3600.0 }
+            Cache = new ConfigDto.CacheConfig { GitStatusTtlSeconds = 3600.0 }
         });
 
         _cacheDirectoryOverride = GitStatusSharedCache.OverrideCacheDirectoryForTesting(_cachePath);

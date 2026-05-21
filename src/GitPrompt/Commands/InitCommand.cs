@@ -47,7 +47,7 @@ internal static class InitCommand
                 .Select(command => command.Verb)
                 .Where(verb => !verb.Contains(' ')));
 
-        var promptStartOfLine = (ConfigReader.Config.Layout!.StartOfLine ?? true) ? "1" : "0";
+        var promptStartOfLine = ConfigReader.Config.Layout.StartOfLine ? "1" : "0";
 
         return template
             .Replace("{{GITPROMPT_COMMANDS}}", commands)

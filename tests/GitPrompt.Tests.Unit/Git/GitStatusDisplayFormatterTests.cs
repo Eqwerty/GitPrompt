@@ -232,7 +232,7 @@ public sealed class GitStatusDisplayFormatterTests
     public void BuildBranchLabel_WhenStateIsDetached_ShouldPrependDetachedHeadMarker()
     {
         // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config());
+        using var _ = ConfigReader.OverrideForTesting(new ConfigDto());
 
         // Act
         var label = GitStatusDisplayFormatter.BuildBranchLabel("abc1234...", BranchState.Detached);
@@ -255,7 +255,7 @@ public sealed class GitStatusDisplayFormatterTests
     public void BuildDisplay_WhenStashExistsAndShowStashIsTrue_ShouldShowStashCount()
     {
         // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { ShowStash = true });
+        using var _ = ConfigReader.OverrideForTesting(new ConfigDto { ShowStash = true });
         var statusCounts = new GitStatusCounts();
 
         // Act
@@ -275,7 +275,7 @@ public sealed class GitStatusDisplayFormatterTests
     public void BuildDisplay_WhenStashExistsAndShowStashIsFalse_ShouldOmitStashCount()
     {
         // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { ShowStash = false });
+        using var _ = ConfigReader.OverrideForTesting(new ConfigDto { ShowStash = false });
         var statusCounts = new GitStatusCounts();
 
         // Act

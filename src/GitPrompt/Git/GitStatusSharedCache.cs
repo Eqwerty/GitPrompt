@@ -131,7 +131,7 @@ internal static class GitStatusSharedCache
 
     private static TimeSpan GetCacheTtl()
     {
-        var ttl = ConfigReader.Config.Cache!.GitStatusTtl;
+        var ttl = ConfigReader.Config.Cache.GitStatusTtl;
 
         return ttl > TimeSpan.Zero ? ttl : TimeSpan.Zero;
     }

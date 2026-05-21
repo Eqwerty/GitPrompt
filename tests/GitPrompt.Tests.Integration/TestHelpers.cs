@@ -187,9 +187,9 @@ internal static class TestHelpers
         public GitStatusCacheOverride(string cacheDirectoryPath, TimeSpan ttl = default)
         {
             var effectiveTtl = ttl == default ? TimeSpan.FromMinutes(1) : ttl;
-            _configOverride = ConfigReader.OverrideForTesting(new Config
+            _configOverride = ConfigReader.OverrideForTesting(new ConfigDto
             {
-                Cache = new Config.CacheConfig { GitStatusTtlSeconds = effectiveTtl.TotalSeconds }
+                Cache = new ConfigDto.CacheConfig { GitStatusTtlSeconds = effectiveTtl.TotalSeconds }
             });
 
             _cacheDirectoryOverride = GitStatusSharedCache.OverrideCacheDirectoryForTesting(cacheDirectoryPath);

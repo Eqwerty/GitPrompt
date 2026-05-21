@@ -23,10 +23,10 @@ public sealed class GitStatusTimeoutIntegrationTests
         // Replace git with a fake script that sleeps for 30s so the 100ms timeout reliably fires.
         // This makes the test deterministic on fast CI runners where real git can complete in < 1ms.
         using var fakeGit = new TestHelpers.FakeSlowGitOverride();
-        using var configOverride = ConfigReader.OverrideForTesting(new Config
+        using var configOverride = ConfigReader.OverrideForTesting(new ConfigDto
         {
             CommandTimeoutMs = 100.0,
-            Cache = new Config.CacheConfig { GitStatusTtlSeconds = 0 }
+            Cache = new ConfigDto.CacheConfig { GitStatusTtlSeconds = 0 }
         });
 
         // Act
@@ -50,10 +50,10 @@ public sealed class GitStatusTimeoutIntegrationTests
         await TestHelpers.RunGitAsync(repositoryPath, "commit -m \"initial\"");
 
         // Disable timeout and cache to get a fresh git result.
-        using var configOverride = ConfigReader.OverrideForTesting(new Config
+        using var configOverride = ConfigReader.OverrideForTesting(new ConfigDto
         {
             CommandTimeoutMs = 0,
-            Cache = new Config.CacheConfig { GitStatusTtlSeconds = 0 }
+            Cache = new ConfigDto.CacheConfig { GitStatusTtlSeconds = 0 }
         });
 
         // Act

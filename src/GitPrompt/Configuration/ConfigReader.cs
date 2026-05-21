@@ -12,7 +12,7 @@ internal static class ConfigReader
 
     internal static ConfigLoadResult LoadResult => LazyLoadResult.Value;
 
-    internal static IDisposable OverrideForTesting(Config config)
+    internal static IDisposable OverrideForTesting(ConfigDto config)
     {
         var previous = _configOverride;
         _configOverride = ConfigInitializer.MergeWithDefaults(config);
@@ -26,7 +26,7 @@ internal static class ConfigReader
 
         if (!File.Exists(filePath))
         {
-            return new ConfigLoadResult(filePath, ConfigLoadStatus.Missing, ConfigInitializer.MergeWithDefaults(new Config()));
+            return new ConfigLoadResult(filePath, ConfigLoadStatus.Missing, ConfigInitializer.MergeWithDefaults(new ConfigDto()));
         }
 
         string json;
@@ -36,19 +36,19 @@ internal static class ConfigReader
         }
         catch
         {
-            return new ConfigLoadResult(filePath, ConfigLoadStatus.ReadFailed, ConfigInitializer.MergeWithDefaults(new Config()));
+            return new ConfigLoadResult(filePath, ConfigLoadStatus.ReadFailed, ConfigInitializer.MergeWithDefaults(new ConfigDto()));
         }
 
         try
         {
-            var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.Config);
-            var resolved = ConfigInitializer.MergeWithDefaults(config ?? new Config());
+            var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto);
+            var resolved = ConfigInitializer.MergeWithDefaults(config ?? new ConfigDto());
 
             return new ConfigLoadResult(filePath, ConfigLoadStatus.Loaded, resolved);
         }
         catch
         {
-            return new ConfigLoadResult(filePath, ConfigLoadStatus.ParseFailed, ConfigInitializer.MergeWithDefaults(new Config()));
+            return new ConfigLoadResult(filePath, ConfigLoadStatus.ParseFailed, ConfigInitializer.MergeWithDefaults(new ConfigDto()));
         }
     }
 

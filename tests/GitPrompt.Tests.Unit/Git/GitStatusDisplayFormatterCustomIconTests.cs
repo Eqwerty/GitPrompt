@@ -13,7 +13,7 @@ public sealed class GitStatusDisplayFormatterCustomIconTests
     public void BuildDisplay_WhenCustomAheadIconIsConfigured_ShouldUseCustomIcon()
     {
         // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { Icons = new Config.IconsConfig { Ahead = "⬆" } });
+        using var _ = ConfigReader.OverrideForTesting(new ConfigDto { Icons = new ConfigDto.IconsConfig { Ahead = "⬆" } });
 
         // Act
         var display = GitStatusDisplayFormatter.BuildDisplay(
@@ -33,7 +33,7 @@ public sealed class GitStatusDisplayFormatterCustomIconTests
     public void BuildDisplay_WhenCustomBehindIconIsConfigured_ShouldUseCustomIcon()
     {
         // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { Icons = new Config.IconsConfig { Behind = "⬇" } });
+        using var _ = ConfigReader.OverrideForTesting(new ConfigDto { Icons = new ConfigDto.IconsConfig { Behind = "⬇" } });
 
         // Act
         var display = GitStatusDisplayFormatter.BuildDisplay(
@@ -53,9 +53,9 @@ public sealed class GitStatusDisplayFormatterCustomIconTests
     public void BuildDisplay_WhenMultipleCustomIconsAreConfigured_ShouldUseAllCustomIcons()
     {
         // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config
+        using var _ = ConfigReader.OverrideForTesting(new ConfigDto
         {
-            Icons = new Config.IconsConfig
+            Icons = new ConfigDto.IconsConfig
             {
                 Ahead = "A",
                 Behind = "B",
@@ -89,7 +89,7 @@ public sealed class GitStatusDisplayFormatterCustomIconTests
     public void BuildDisplay_WhenCustomIconIsEmptyString_ShouldShowEmptyIconWithCount()
     {
         // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { Icons = new Config.IconsConfig { Ahead = "" } });
+        using var _ = ConfigReader.OverrideForTesting(new ConfigDto { Icons = new ConfigDto.IconsConfig { Ahead = "" } });
 
         // Act
         var display = GitStatusDisplayFormatter.BuildDisplay(
@@ -109,7 +109,7 @@ public sealed class GitStatusDisplayFormatterCustomIconTests
     public void BuildDisplay_WhenCustomNoUpstreamMarkerIsConfigured_ShouldUseThatMarkerInBranchLabel()
     {
         // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { Icons = new Config.IconsConfig { NoUpstreamMarker = "!" } });
+        using var _ = ConfigReader.OverrideForTesting(new ConfigDto { Icons = new ConfigDto.IconsConfig { NoUpstreamMarker = "!" } });
 
         // Act
         var branchLabel = GitStatusDisplayFormatter.BuildBranchLabel("main", BranchState.NoUpstream);
@@ -123,7 +123,7 @@ public sealed class GitStatusDisplayFormatterCustomIconTests
     public void BuildDisplay_WhenCustomNoUpstreamMarkerIsConfigured_ShouldApplyNoUpstreamColor()
     {
         // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { Icons = new Config.IconsConfig { NoUpstreamMarker = "!" } });
+        using var _ = ConfigReader.OverrideForTesting(new ConfigDto { Icons = new ConfigDto.IconsConfig { NoUpstreamMarker = "!" } });
         var branchLabel = GitStatusDisplayFormatter.BuildBranchLabel("main", BranchState.NoUpstream);
 
         // Act
@@ -143,7 +143,7 @@ public sealed class GitStatusDisplayFormatterCustomIconTests
     public void BuildBranchLabel_WhenBranchLabelBracketsAreAbsent_ShouldDefaultToParentheses()
     {
         // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { Icons = new Config.IconsConfig() });
+        using var _ = ConfigReader.OverrideForTesting(new ConfigDto { Icons = new ConfigDto.IconsConfig() });
 
         // Act
         var label = GitStatusDisplayFormatter.BuildBranchLabel("main", BranchState.Normal);
@@ -156,7 +156,7 @@ public sealed class GitStatusDisplayFormatterCustomIconTests
     public void BuildBranchLabel_WhenDetachedAndBracketsAreAbsent_ShouldDefaultToSquareBrackets()
     {
         // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { Icons = new Config.IconsConfig() });
+        using var _ = ConfigReader.OverrideForTesting(new ConfigDto { Icons = new ConfigDto.IconsConfig() });
 
         // Act
         var label = GitStatusDisplayFormatter.BuildBranchLabel("abc1234...", BranchState.Detached);
@@ -169,7 +169,7 @@ public sealed class GitStatusDisplayFormatterCustomIconTests
     public void BuildBranchLabel_WhenNoUpstreamAndBracketsAreAbsent_ShouldDefaultToParentheses()
     {
         // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { Icons = new Config.IconsConfig() });
+        using var _ = ConfigReader.OverrideForTesting(new ConfigDto { Icons = new ConfigDto.IconsConfig() });
 
         // Act
         var label = GitStatusDisplayFormatter.BuildBranchLabel("feature", BranchState.NoUpstream);
@@ -182,7 +182,7 @@ public sealed class GitStatusDisplayFormatterCustomIconTests
     public void BuildBranchLabel_WhenDetachedBranchLabelOpenIsConfigured_ShouldUseItOnlyForDetachedState()
     {
         // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { Icons = new Config.IconsConfig { BranchLabelOpenDetached = "<", BranchLabelCloseDetached = ">" } });
+        using var _ = ConfigReader.OverrideForTesting(new ConfigDto { Icons = new ConfigDto.IconsConfig { BranchLabelOpenDetached = "<", BranchLabelCloseDetached = ">" } });
 
         // Act
         var detachedLabel = GitStatusDisplayFormatter.BuildBranchLabel("abc1234...", BranchState.Detached);
@@ -198,7 +198,7 @@ public sealed class GitStatusDisplayFormatterCustomIconTests
     public void BuildDisplay_WhenCustomBranchOperationSeparatorIsConfigured_ShouldUseCustomSeparator()
     {
         // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { Icons = new Config.IconsConfig { BranchOperationSeparator = " | " } });
+        using var _ = ConfigReader.OverrideForTesting(new ConfigDto { Icons = new ConfigDto.IconsConfig { BranchOperationSeparator = " | " } });
         var branchLabel = GitStatusDisplayFormatter.BuildBranchLabel("main", BranchState.Normal);
 
         // Act
@@ -219,7 +219,7 @@ public sealed class GitStatusDisplayFormatterCustomIconTests
     public void BuildDisplay_WhenBranchOperationSeparatorIsAbsent_ShouldDefaultToPipe()
     {
         // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { Icons = new Config.IconsConfig() });
+        using var _ = ConfigReader.OverrideForTesting(new ConfigDto { Icons = new ConfigDto.IconsConfig() });
         var branchLabel = GitStatusDisplayFormatter.BuildBranchLabel("main", BranchState.Normal);
 
         // Act
@@ -239,7 +239,7 @@ public sealed class GitStatusDisplayFormatterCustomIconTests
     public void BuildDisplay_WhenCustomDetachedHeadMarkerIsConfigured_ShouldUseThatMarkerInBranchLabel()
     {
         // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { Icons = new Config.IconsConfig { DetachedHeadMarker = "#" } });
+        using var _ = ConfigReader.OverrideForTesting(new ConfigDto { Icons = new ConfigDto.IconsConfig { DetachedHeadMarker = "#" } });
 
         // Act
         var branchLabel = GitStatusDisplayFormatter.BuildBranchLabel("abc1234...", BranchState.Detached);

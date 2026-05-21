@@ -19,14 +19,14 @@ internal readonly record struct PromptResult(
             var config = ConfigReader.Config;
             var promptSymbolSegment = $"{ColorPromptSymbol.Wrap(PromptSymbol)} ";
 
-            var prefix = config.Layout!.Prefix;
+            var prefix = config.Layout.Prefix;
             var prefixSegment = !string.IsNullOrEmpty(prefix) ? ColorPrefix.Wrap(prefix) : string.Empty;
 
-            var body = (config.Layout!.Multiline ?? true)
+            var body = config.Layout.Multiline
                 ? $"{prefixSegment}{PromptLine}\n{promptSymbolSegment}"
                 : $"{prefixSegment}{PromptLine} {promptSymbolSegment}";
 
-            return (config.Layout!.NewlineBefore ?? false) ? $"\n{body}" : body;
+            return config.Layout.NewlineBefore ? $"\n{body}" : body;
         }
     }
 

@@ -12,7 +12,7 @@ public sealed class PromptSymbolBuilderTests
     public void Build_WhenOnWindows_ShouldReturnGreaterThanRegardlessOfUser()
     {
         // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config());
+        using var _ = ConfigReader.OverrideForTesting(new ConfigDto());
         var platformProvider = new TestPlatformProvider(isWindows: true);
 
         // Act
@@ -26,7 +26,7 @@ public sealed class PromptSymbolBuilderTests
     public void Build_WhenOnUnixAndUserIsRoot_ShouldReturnHash()
     {
         // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config());
+        using var _ = ConfigReader.OverrideForTesting(new ConfigDto());
         var platformProvider = new TestPlatformProvider(isWindows: false, user: "root");
 
         // Act
@@ -40,7 +40,7 @@ public sealed class PromptSymbolBuilderTests
     public void Build_WhenOnUnixAndUserIsNotRoot_ShouldReturnDollar()
     {
         // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config());
+        using var _ = ConfigReader.OverrideForTesting(new ConfigDto());
         var platformProvider = new TestPlatformProvider(isWindows: false, user: "me");
 
         // Act
@@ -54,7 +54,7 @@ public sealed class PromptSymbolBuilderTests
     public void Build_WhenCustomSymbolIsConfigured_ShouldReturnCustomSymbolRegardlessOfPlatform()
     {
         // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { Layout = new Config.LayoutConfig { Symbol = "❯" } });
+        using var _ = ConfigReader.OverrideForTesting(new ConfigDto { Layout = new ConfigDto.LayoutConfig { Symbol = "❯" } });
         var platformProvider = new TestPlatformProvider(isWindows: false, user: "me");
 
         // Act
@@ -68,7 +68,7 @@ public sealed class PromptSymbolBuilderTests
     public void Build_WhenCustomSymbolIsConfiguredOnWindows_ShouldReturnCustomSymbol()
     {
         // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { Layout = new Config.LayoutConfig { Symbol = "λ" } });
+        using var _ = ConfigReader.OverrideForTesting(new ConfigDto { Layout = new ConfigDto.LayoutConfig { Symbol = "λ" } });
         var platformProvider = new TestPlatformProvider(isWindows: true);
 
         // Act
@@ -82,7 +82,7 @@ public sealed class PromptSymbolBuilderTests
     public void Build_WhenCustomSymbolIsEmptyString_ShouldReturnEmptyString()
     {
         // Arrange
-        using var _ = ConfigReader.OverrideForTesting(new Config { Layout = new Config.LayoutConfig { Symbol = "" } });
+        using var _ = ConfigReader.OverrideForTesting(new ConfigDto { Layout = new ConfigDto.LayoutConfig { Symbol = "" } });
         var platformProvider = new TestPlatformProvider(isWindows: false, user: "me");
 
         // Act

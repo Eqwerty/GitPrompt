@@ -1,8 +1,6 @@
 using System.Text;
 using GitPrompt.Configuration;
-using static GitPrompt.Constants.BranchLabelTokens;
 using static GitPrompt.Constants.PromptColors;
-using static GitPrompt.Constants.PromptIcons;
 
 namespace GitPrompt.Git;
 
@@ -18,17 +16,17 @@ internal static class GitStatusDisplayFormatter
         GitStatusCounts gitStatusCounts,
         string operationName)
     {
-        var icons = ConfigReader.Config.Icons!;
+        var icons = ConfigReader.Config.Icons;
 
-        var aheadIcon = icons.Ahead ?? IconAhead.ToString();
-        var behindIcon = icons.Behind ?? IconBehind.ToString();
-        var addedIcon = icons.Added ?? IconAdded.ToString();
-        var modifiedIcon = icons.Modified ?? IconModified.ToString();
-        var renamedIcon = icons.Renamed ?? IconRenamed.ToString();
-        var deletedIcon = icons.Deleted ?? IconDeleted.ToString();
-        var untrackedIcon = icons.Untracked ?? IconUntracked.ToString();
-        var conflictsIcon = icons.Conflicts ?? IconConflicts.ToString();
-        var stashIcon = icons.Stash ?? IconStash.ToString();
+        var aheadIcon = icons.Ahead;
+        var behindIcon = icons.Behind;
+        var addedIcon = icons.Added;
+        var modifiedIcon = icons.Modified;
+        var renamedIcon = icons.Renamed;
+        var deletedIcon = icons.Deleted;
+        var untrackedIcon = icons.Untracked;
+        var conflictsIcon = icons.Conflicts;
+        var stashIcon = icons.Stash;
 
         var statusBuilder = new StringBuilder();
 
@@ -75,7 +73,7 @@ internal static class GitStatusDisplayFormatter
             statusBuilder.Append(' ').Append(ColorConflict).Append(conflictsIcon).Append(gitStatusCounts.Conflicts).Append(ColorReset);
         }
 
-        if (stashEntryCount > 0 && (ConfigReader.Config.ShowStash ?? true))
+        if (stashEntryCount > 0 && ConfigReader.Config.ShowStash)
         {
             statusBuilder.Append(' ').Append(ColorStash).Append(stashIcon).Append(stashEntryCount).Append(ColorReset);
         }
@@ -91,13 +89,13 @@ internal static class GitStatusDisplayFormatter
         GitStatusCounts gitStatusCounts,
         string operationName)
     {
-        var icons = ConfigReader.Config.Icons!;
-        var aheadIcon = icons.Ahead ?? IconAhead.ToString();
-        var behindIcon = icons.Behind ?? IconBehind.ToString();
-        var dirtyIcon = icons.Dirty ?? IconDirty.ToString();
-        var dirtyStagedIcon = icons.DirtyStaged ?? icons.Dirty ?? IconDirty.ToString();
-        var cleanIcon = icons.Clean ?? IconClean.ToString();
-        var stashIcon = icons.Stash ?? IconStash.ToString();
+        var icons = ConfigReader.Config.Icons;
+        var aheadIcon = icons.Ahead;
+        var behindIcon = icons.Behind;
+        var dirtyIcon = icons.Dirty;
+        var dirtyStagedIcon = icons.DirtyStaged;
+        var cleanIcon = icons.Clean;
+        var stashIcon = icons.Stash;
 
         var statusBuilder = new StringBuilder();
 
@@ -135,7 +133,7 @@ internal static class GitStatusDisplayFormatter
             statusBuilder.Append(' ').Append(ColorClean).Append(cleanIcon).Append(ColorReset);
         }
 
-        if (stashEntryCount > 0 && (ConfigReader.Config.ShowStash ?? true))
+        if (stashEntryCount > 0 && ConfigReader.Config.ShowStash)
         {
             statusBuilder.Append(' ').Append(ColorStash).Append(stashIcon).Append(stashEntryCount).Append(ColorReset);
         }
@@ -145,25 +143,25 @@ internal static class GitStatusDisplayFormatter
 
     internal static BranchLabelInfo BuildBranchLabel(string branchName, BranchState state)
     {
-        var icons = ConfigReader.Config.Icons!;
+        var icons = ConfigReader.Config.Icons;
 
         var (open, close) = state switch
         {
             BranchState.NoUpstream => (
-                icons.BranchLabelOpenNoUpstream ?? NoUpstreamBranchLabelOpen,
-                icons.BranchLabelCloseNoUpstream ?? NoUpstreamBranchLabelClose),
+                icons.BranchLabelOpenNoUpstream,
+                icons.BranchLabelCloseNoUpstream),
             BranchState.Detached => (
-                icons.BranchLabelOpenDetached ?? DetachedBranchLabelOpen,
-                icons.BranchLabelCloseDetached ?? DetachedBranchLabelClose),
+                icons.BranchLabelOpenDetached,
+                icons.BranchLabelCloseDetached),
             _ => (
-                icons.BranchLabelOpenNormal ?? NormalBranchLabelOpen,
-                icons.BranchLabelCloseNormal ?? NormalBranchLabelClose)
+                icons.BranchLabelOpenNormal,
+                icons.BranchLabelCloseNormal)
         };
 
         var prefix = state switch
         {
-            BranchState.NoUpstream => icons.NoUpstreamMarker ?? NoUpstreamBranchMarker,
-            BranchState.Detached => icons.DetachedHeadMarker ?? DetachedHeadBranchMarker,
+            BranchState.NoUpstream => icons.NoUpstreamMarker,
+            BranchState.Detached => icons.DetachedHeadMarker,
             _ => string.Empty
         };
 
@@ -177,15 +175,15 @@ internal static class GitStatusDisplayFormatter
             return branchLabel.Label;
         }
 
-        var icons = ConfigReader.Config.Icons!;
+        var icons = ConfigReader.Config.Icons;
         var close = branchLabel.State switch
         {
-            BranchState.NoUpstream => icons.BranchLabelCloseNoUpstream ?? NoUpstreamBranchLabelClose,
-            BranchState.Detached => icons.BranchLabelCloseDetached ?? DetachedBranchLabelClose,
-            _ => icons.BranchLabelCloseNormal ?? NormalBranchLabelClose
+            BranchState.NoUpstream => icons.BranchLabelCloseNoUpstream,
+            BranchState.Detached => icons.BranchLabelCloseDetached,
+            _ => icons.BranchLabelCloseNormal
         };
 
-        var separator = icons.BranchOperationSeparator ?? BranchOperationSeparator;
+        var separator = icons.BranchOperationSeparator;
         if (branchLabel.Label.EndsWith(close, StringComparison.Ordinal))
         {
             return branchLabel.Label[..^close.Length] + separator + operationName + close;

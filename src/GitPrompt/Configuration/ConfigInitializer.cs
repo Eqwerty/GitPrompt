@@ -33,98 +33,85 @@ internal static class ConfigInitializer
         File.WriteAllText(configPath, BuildDefaultConfigContent());
     }
 
-    internal static string BuildDefaultConfigContent() => BuildConfigContent(new Config());
+    internal static string BuildDefaultConfigContent() => BuildConfigContent(new ConfigDto());
 
-    internal static string BuildConfigContent(Config config)
+    internal static string BuildConfigContent(ConfigDto configDto)
     {
+        var config = MergeWithDefaults(configDto);
+
         using var stream = typeof(ConfigInitializer).Assembly.GetManifestResourceStream("default-config.jsonc")!;
         using var reader = new StreamReader(stream);
         var template = reader.ReadToEnd();
 
         return template
-            .Replace("{gitStatusTtl}", JsonDouble(config.Cache?.GitStatusTtlSeconds, Config.CacheConfig.DefaultGitStatusTtlSeconds))
-            .Replace("{repositoryTtl}", JsonDouble(config.Cache?.RepositoryTtlSeconds, Config.CacheConfig.DefaultRepositoryTtlSeconds))
-            .Replace("{commandTimeoutMs}", JsonDouble(config.CommandTimeoutMs, Config.DefaultCommandTimeoutMs))
-            .Replace("{commandDurationShow}", JsonBool(config.CommandDuration?.Show, Config.CommandDurationConfig.DefaultShow))
-            .Replace("{commandDurationMinMs}", JsonNullableDouble(config.CommandDuration?.MinMs))
-            .Replace("{showUser}", JsonBool(config.Context?.ShowUser, Config.ContextConfig.DefaultShowUser))
-            .Replace("{showDomain}", JsonBool(config.Context?.ShowDomain, Config.ContextConfig.DefaultShowDomain))
-            .Replace("{showHost}", JsonBool(config.Context?.ShowHost, Config.ContextConfig.DefaultShowHost))
-            .Replace("{showPath}", JsonBool(config.Context?.ShowPath, Config.ContextConfig.DefaultShowPath))
-            .Replace("{maxPathDepth}", JsonInt(config.Context?.MaxPathDepth, Config.ContextConfig.DefaultMaxPathDepth))
-            .Replace("{multiline}", JsonBool(config.Layout?.Multiline, Config.LayoutConfig.DefaultMultiline))
-            .Replace("{newlineBefore}", JsonBool(config.Layout?.NewlineBefore, Config.LayoutConfig.DefaultNewlineBefore))
-            .Replace("{startOfLine}", JsonBool(config.Layout?.StartOfLine, Config.LayoutConfig.DefaultStartOfLine))
-            .Replace("{symbol}", JsonValue(config.Layout?.Symbol))
-            .Replace("{prefix}", JsonValue(config.Layout?.Prefix))
-            .Replace("{compact}", JsonBool(config.Compact, Config.DefaultCompact))
-            .Replace("{showStash}", JsonBool(config.ShowStash, Config.DefaultShowStash))
-            .Replace("{iconAhead}", JsonValue(config.Icons?.Ahead ?? PromptIcons.IconAhead.ToString()))
-            .Replace("{iconBehind}", JsonValue(config.Icons?.Behind ?? PromptIcons.IconBehind.ToString()))
-            .Replace("{iconAdded}", JsonValue(config.Icons?.Added ?? PromptIcons.IconAdded.ToString()))
-            .Replace("{iconModified}", JsonValue(config.Icons?.Modified ?? PromptIcons.IconModified.ToString()))
-            .Replace("{iconRenamed}", JsonValue(config.Icons?.Renamed ?? PromptIcons.IconRenamed.ToString()))
-            .Replace("{iconDeleted}", JsonValue(config.Icons?.Deleted ?? PromptIcons.IconDeleted.ToString()))
-            .Replace("{iconUntracked}", JsonValue(config.Icons?.Untracked ?? PromptIcons.IconUntracked.ToString()))
-            .Replace("{iconConflicts}", JsonValue(config.Icons?.Conflicts ?? PromptIcons.IconConflicts.ToString()))
-            .Replace("{iconStash}", JsonValue(config.Icons?.Stash ?? PromptIcons.IconStash.ToString()))
-            .Replace("{iconDirty}", JsonValue(config.Icons?.Dirty ?? PromptIcons.IconDirty.ToString()))
-            .Replace("{iconClean}", JsonValue(config.Icons?.Clean ?? PromptIcons.IconClean.ToString()))
-            .Replace("{iconNoUpstreamMarker}", JsonValue(config.Icons?.NoUpstreamMarker ?? BranchLabelTokens.NoUpstreamBranchMarker))
-            .Replace("{iconDetachedHeadMarker}", JsonValue(config.Icons?.DetachedHeadMarker ?? BranchLabelTokens.DetachedHeadBranchMarker))
-            .Replace("{iconBranchOperationSeparator}", JsonValue(config.Icons?.BranchOperationSeparator ?? BranchLabelTokens.BranchOperationSeparator))
-            .Replace("{iconBranchLabelOpenNormal}", JsonValue(config.Icons?.BranchLabelOpenNormal ?? BranchLabelTokens.NormalBranchLabelOpen))
-            .Replace("{iconBranchLabelCloseNormal}", JsonValue(config.Icons?.BranchLabelCloseNormal ?? BranchLabelTokens.NormalBranchLabelClose))
-            .Replace("{iconBranchLabelOpenNoUpstream}", JsonValue(config.Icons?.BranchLabelOpenNoUpstream ?? BranchLabelTokens.NoUpstreamBranchLabelOpen))
-            .Replace("{iconBranchLabelCloseNoUpstream}", JsonValue(config.Icons?.BranchLabelCloseNoUpstream ?? BranchLabelTokens.NoUpstreamBranchLabelClose))
-            .Replace("{iconBranchLabelOpenDetached}", JsonValue(config.Icons?.BranchLabelOpenDetached ?? BranchLabelTokens.DetachedBranchLabelOpen))
-            .Replace("{iconBranchLabelCloseDetached}", JsonValue(config.Icons?.BranchLabelCloseDetached ?? BranchLabelTokens.DetachedBranchLabelClose))
-            .Replace("{colorUser}", JsonValue(config.Colors?.User ?? ColorDisplayValue(AnsiColors.Green)))
-            .Replace("{colorHost}", JsonValue(config.Colors?.Host ?? ColorDisplayValue(AnsiColors.Magenta)))
-            .Replace("{colorPath}", JsonValue(config.Colors?.Path ?? ColorDisplayValue(AnsiColors.Orange)))
-            .Replace("{colorCommandDuration}", JsonValue(config.Colors?.CommandDuration ?? ColorDisplayValue(AnsiColors.Magenta)))
-            .Replace("{colorBranch}", JsonValue(config.Colors?.Branch ?? ColorDisplayValue(AnsiColors.BoldCyan)))
-            .Replace("{colorBranchNoUpstream}", JsonValue(config.Colors?.BranchNoUpstream ?? ColorDisplayValue(AnsiColors.BoldCyan)))
-            .Replace("{colorBranchDetached}", JsonValue(config.Colors?.BranchDetached ?? ColorDisplayValue(AnsiColors.NormalYellow)))
-            .Replace("{colorAhead}", JsonValue(config.Colors?.Ahead ?? ColorDisplayValue(AnsiColors.BoldCyan)))
-            .Replace("{colorBehind}", JsonValue(config.Colors?.Behind ?? ColorDisplayValue(AnsiColors.BoldCyan)))
-            .Replace("{colorStaged}", JsonValue(config.Colors?.Staged ?? ColorDisplayValue(AnsiColors.Green)))
-            .Replace("{colorUnstaged}", JsonValue(config.Colors?.Unstaged ?? ColorDisplayValue(AnsiColors.Red)))
-            .Replace("{colorUntracked}", JsonValue(config.Colors?.Untracked ?? ColorDisplayValue(AnsiColors.Red)))
-            .Replace("{colorStash}", JsonValue(config.Colors?.Stash ?? ColorDisplayValue(AnsiColors.Magenta)))
-            .Replace("{colorConflict}", JsonValue(config.Colors?.Conflict ?? ColorDisplayValue(AnsiColors.Red)))
-            .Replace("{colorDirty}", JsonValue(config.Colors?.Dirty ?? ColorDisplayValue(AnsiColors.Orange)))
-            .Replace("{colorClean}", JsonValue(config.Colors?.Clean ?? ColorDisplayValue(AnsiColors.Green)))
-            .Replace("{colorMissingPath}", JsonValue(config.Colors?.MissingPath ?? ColorDisplayValue(AnsiColors.Red)))
-            .Replace("{colorTimeout}", JsonValue(config.Colors?.Timeout ?? ColorDisplayValue(AnsiColors.Yellow)))
-            .Replace("{colorPromptSymbol}", JsonValue(config.Colors?.PromptSymbol ?? ColorDisplayValue(AnsiColors.White)))
-            .Replace("{colorPrefix}", JsonValue(config.Colors?.Prefix ?? ColorDisplayValue(AnsiColors.White)));
+            .Replace("{gitStatusTtl}", JsonDouble(config.Cache.GitStatusTtl.TotalSeconds))
+            .Replace("{repositoryTtl}", JsonDouble(config.Cache.RepositoryTtl.TotalSeconds))
+            .Replace("{commandTimeoutMs}", JsonDouble(config.CommandTimeoutMs))
+            .Replace("{commandDurationShow}", JsonBool(config.CommandDuration.Show))
+            .Replace("{commandDurationMinMs}", JsonNullableDouble(config.CommandDuration.MinMs))
+            .Replace("{showUser}", JsonBool(config.Context.ShowUser))
+            .Replace("{showDomain}", JsonBool(config.Context.ShowDomain))
+            .Replace("{showHost}", JsonBool(config.Context.ShowHost))
+            .Replace("{showPath}", JsonBool(config.Context.ShowPath))
+            .Replace("{maxPathDepth}", JsonInt(config.Context.MaxPathDepth))
+            .Replace("{multiline}", JsonBool(config.Layout.Multiline))
+            .Replace("{newlineBefore}", JsonBool(config.Layout.NewlineBefore))
+            .Replace("{startOfLine}", JsonBool(config.Layout.StartOfLine))
+            .Replace("{symbol}", JsonValue(config.Layout.Symbol))
+            .Replace("{prefix}", JsonValue(config.Layout.Prefix))
+            .Replace("{compact}", JsonBool(config.Compact))
+            .Replace("{showStash}", JsonBool(config.ShowStash))
+            .Replace("{iconAhead}", JsonValue(config.Icons.Ahead))
+            .Replace("{iconBehind}", JsonValue(config.Icons.Behind))
+            .Replace("{iconAdded}", JsonValue(config.Icons.Added))
+            .Replace("{iconModified}", JsonValue(config.Icons.Modified))
+            .Replace("{iconRenamed}", JsonValue(config.Icons.Renamed))
+            .Replace("{iconDeleted}", JsonValue(config.Icons.Deleted))
+            .Replace("{iconUntracked}", JsonValue(config.Icons.Untracked))
+            .Replace("{iconConflicts}", JsonValue(config.Icons.Conflicts))
+            .Replace("{iconStash}", JsonValue(config.Icons.Stash))
+            .Replace("{iconDirty}", JsonValue(config.Icons.Dirty))
+            .Replace("{iconClean}", JsonValue(config.Icons.Clean))
+            .Replace("{iconNoUpstreamMarker}", JsonValue(config.Icons.NoUpstreamMarker))
+            .Replace("{iconDetachedHeadMarker}", JsonValue(config.Icons.DetachedHeadMarker))
+            .Replace("{iconBranchOperationSeparator}", JsonValue(config.Icons.BranchOperationSeparator))
+            .Replace("{iconBranchLabelOpenNormal}", JsonValue(config.Icons.BranchLabelOpenNormal))
+            .Replace("{iconBranchLabelCloseNormal}", JsonValue(config.Icons.BranchLabelCloseNormal))
+            .Replace("{iconBranchLabelOpenNoUpstream}", JsonValue(config.Icons.BranchLabelOpenNoUpstream))
+            .Replace("{iconBranchLabelCloseNoUpstream}", JsonValue(config.Icons.BranchLabelCloseNoUpstream))
+            .Replace("{iconBranchLabelOpenDetached}", JsonValue(config.Icons.BranchLabelOpenDetached))
+            .Replace("{iconBranchLabelCloseDetached}", JsonValue(config.Icons.BranchLabelCloseDetached))
+            .Replace("{colorUser}", JsonValue(config.Colors.User))
+            .Replace("{colorHost}", JsonValue(config.Colors.Host))
+            .Replace("{colorPath}", JsonValue(config.Colors.Path))
+            .Replace("{colorCommandDuration}", JsonValue(config.Colors.CommandDuration))
+            .Replace("{colorBranch}", JsonValue(config.Colors.Branch))
+            .Replace("{colorBranchNoUpstream}", JsonValue(config.Colors.BranchNoUpstream))
+            .Replace("{colorBranchDetached}", JsonValue(config.Colors.BranchDetached))
+            .Replace("{colorAhead}", JsonValue(config.Colors.Ahead))
+            .Replace("{colorBehind}", JsonValue(config.Colors.Behind))
+            .Replace("{colorStaged}", JsonValue(config.Colors.Staged))
+            .Replace("{colorUnstaged}", JsonValue(config.Colors.Unstaged))
+            .Replace("{colorUntracked}", JsonValue(config.Colors.Untracked))
+            .Replace("{colorStash}", JsonValue(config.Colors.Stash))
+            .Replace("{colorConflict}", JsonValue(config.Colors.Conflict))
+            .Replace("{colorDirty}", JsonValue(config.Colors.Dirty))
+            .Replace("{colorClean}", JsonValue(config.Colors.Clean))
+            .Replace("{colorMissingPath}", JsonValue(config.Colors.MissingPath))
+            .Replace("{colorTimeout}", JsonValue(config.Colors.Timeout))
+            .Replace("{colorPromptSymbol}", JsonValue(config.Colors.PromptSymbol))
+            .Replace("{colorPrefix}", JsonValue(config.Colors.Prefix));
     }
 
-    private static string JsonBool(bool? value, bool fallback)
-    {
-        return value ?? fallback ? "true" : "false";
-    }
+    private static string JsonBool(bool value) => value ? "true" : "false";
 
-    private static string JsonInt(int? value, int fallback)
-    {
-        return (value ?? fallback).ToString(CultureInfo.InvariantCulture);
-    }
+    private static string JsonInt(int value) => value.ToString(CultureInfo.InvariantCulture);
 
-    private static string JsonDouble(double? value, double fallback)
-    {
-        return (value ?? fallback).ToString(CultureInfo.InvariantCulture);
-    }
+    private static string JsonDouble(double value) => value.ToString(CultureInfo.InvariantCulture);
 
-    private static string JsonNullableDouble(double? value)
-    {
-        return value.HasValue ? value.Value.ToString(CultureInfo.InvariantCulture) : "null";
-    }
+    private static string JsonNullableDouble(double? value) => value.HasValue ? value.Value.ToString(CultureInfo.InvariantCulture) : "null";
 
-    private static string JsonValue(string? value)
-    {
-        return value is null ? "null" : $"\"{value}\"";
-    }
+    private static string JsonValue(string? value) => value is null ? "null" : $"\"{value}\"";
 
     private static string ColorDisplayValue(string ansiColor)
     {
@@ -176,10 +163,11 @@ internal static class ConfigInitializer
                 return;
             }
 
-            Config userConfig;
+            ConfigDto userConfig;
+
             try
             {
-                userConfig = JsonSerializer.Deserialize(fileContent, ConfigJsonContext.Default.Config) ?? new Config();
+                userConfig = JsonSerializer.Deserialize(fileContent, ConfigJsonContext.Default.ConfigDto) ?? new ConfigDto();
             }
             catch
             {
@@ -197,36 +185,87 @@ internal static class ConfigInitializer
         }
     }
 
-    internal static Config MergeWithDefaults(Config userConfig)
+    internal static Config MergeWithDefaults(ConfigDto userConfig)
     {
-        return userConfig with
+        return new Config
         {
-            Compact = userConfig.Compact ?? Config.DefaultCompact,
-            ShowStash = userConfig.ShowStash ?? Config.DefaultShowStash,
+            Compact = userConfig.Compact ?? ConfigDto.DefaultCompact,
+            ShowStash = userConfig.ShowStash ?? ConfigDto.DefaultShowStash,
+            CommandTimeoutMs = userConfig.CommandTimeoutMs ?? ConfigDto.DefaultCommandTimeoutMs,
+            Cache = new Config.CacheConfig
+            {
+                GitStatusTtl = TimeSpan.FromSeconds(userConfig.Cache?.GitStatusTtlSeconds ?? ConfigDto.CacheConfig.DefaultGitStatusTtlSeconds),
+                RepositoryTtl = TimeSpan.FromSeconds(userConfig.Cache?.RepositoryTtlSeconds ?? ConfigDto.CacheConfig.DefaultRepositoryTtlSeconds)
+            },
             CommandDuration = new Config.CommandDurationConfig
             {
-                Show = userConfig.CommandDuration?.Show ?? Config.CommandDurationConfig.DefaultShow,
+                Show = userConfig.CommandDuration?.Show ?? ConfigDto.CommandDurationConfig.DefaultShow,
                 MinMs = userConfig.CommandDuration?.MinMs
             },
             Context = new Config.ContextConfig
             {
-                ShowUser = userConfig.Context?.ShowUser ?? Config.ContextConfig.DefaultShowUser,
-                ShowDomain = userConfig.Context?.ShowDomain ?? Config.ContextConfig.DefaultShowDomain,
-                ShowHost = userConfig.Context?.ShowHost ?? Config.ContextConfig.DefaultShowHost,
-                ShowPath = userConfig.Context?.ShowPath ?? Config.ContextConfig.DefaultShowPath,
-                MaxPathDepth = userConfig.Context?.MaxPathDepth ?? Config.ContextConfig.DefaultMaxPathDepth
+                ShowUser = userConfig.Context?.ShowUser ?? ConfigDto.ContextConfig.DefaultShowUser,
+                ShowDomain = userConfig.Context?.ShowDomain ?? ConfigDto.ContextConfig.DefaultShowDomain,
+                ShowHost = userConfig.Context?.ShowHost ?? ConfigDto.ContextConfig.DefaultShowHost,
+                ShowPath = userConfig.Context?.ShowPath ?? ConfigDto.ContextConfig.DefaultShowPath,
+                MaxPathDepth = userConfig.Context?.MaxPathDepth ?? ConfigDto.ContextConfig.DefaultMaxPathDepth
             },
             Layout = new Config.LayoutConfig
             {
-                Multiline = userConfig.Layout?.Multiline ?? Config.LayoutConfig.DefaultMultiline,
-                NewlineBefore = userConfig.Layout?.NewlineBefore ?? Config.LayoutConfig.DefaultNewlineBefore,
-                StartOfLine = userConfig.Layout?.StartOfLine ?? Config.LayoutConfig.DefaultStartOfLine,
+                Multiline = userConfig.Layout?.Multiline ?? ConfigDto.LayoutConfig.DefaultMultiline,
+                NewlineBefore = userConfig.Layout?.NewlineBefore ?? ConfigDto.LayoutConfig.DefaultNewlineBefore,
+                StartOfLine = userConfig.Layout?.StartOfLine ?? ConfigDto.LayoutConfig.DefaultStartOfLine,
                 Symbol = userConfig.Layout?.Symbol,
                 Prefix = userConfig.Layout?.Prefix
             },
-            Cache = userConfig.Cache ?? new Config.CacheConfig(),
-            Icons = userConfig.Icons ?? new Config.IconsConfig(),
-            Colors = userConfig.Colors ?? new Config.ColorsConfig()
+            Icons = new Config.IconsConfig
+            {
+                Ahead = userConfig.Icons?.Ahead ?? PromptIcons.IconAhead.ToString(),
+                Behind = userConfig.Icons?.Behind ?? PromptIcons.IconBehind.ToString(),
+                Added = userConfig.Icons?.Added ?? PromptIcons.IconAdded.ToString(),
+                Modified = userConfig.Icons?.Modified ?? PromptIcons.IconModified.ToString(),
+                Renamed = userConfig.Icons?.Renamed ?? PromptIcons.IconRenamed.ToString(),
+                Deleted = userConfig.Icons?.Deleted ?? PromptIcons.IconDeleted.ToString(),
+                Untracked = userConfig.Icons?.Untracked ?? PromptIcons.IconUntracked.ToString(),
+                Conflicts = userConfig.Icons?.Conflicts ?? PromptIcons.IconConflicts.ToString(),
+                Stash = userConfig.Icons?.Stash ?? PromptIcons.IconStash.ToString(),
+                Dirty = userConfig.Icons?.Dirty ?? PromptIcons.IconDirty.ToString(),
+                DirtyStaged = userConfig.Icons?.DirtyStaged ?? userConfig.Icons?.Dirty ?? PromptIcons.IconDirty.ToString(),
+                Clean = userConfig.Icons?.Clean ?? PromptIcons.IconClean.ToString(),
+                NoUpstreamMarker = userConfig.Icons?.NoUpstreamMarker ?? BranchLabelTokens.NoUpstreamBranchMarker,
+                DetachedHeadMarker = userConfig.Icons?.DetachedHeadMarker ?? BranchLabelTokens.DetachedHeadBranchMarker,
+                BranchLabelOpenNormal = userConfig.Icons?.BranchLabelOpenNormal ?? BranchLabelTokens.NormalBranchLabelOpen,
+                BranchLabelCloseNormal = userConfig.Icons?.BranchLabelCloseNormal ?? BranchLabelTokens.NormalBranchLabelClose,
+                BranchLabelOpenNoUpstream = userConfig.Icons?.BranchLabelOpenNoUpstream ?? BranchLabelTokens.NoUpstreamBranchLabelOpen,
+                BranchLabelCloseNoUpstream = userConfig.Icons?.BranchLabelCloseNoUpstream ?? BranchLabelTokens.NoUpstreamBranchLabelClose,
+                BranchLabelOpenDetached = userConfig.Icons?.BranchLabelOpenDetached ?? BranchLabelTokens.DetachedBranchLabelOpen,
+                BranchLabelCloseDetached = userConfig.Icons?.BranchLabelCloseDetached ?? BranchLabelTokens.DetachedBranchLabelClose,
+                BranchOperationSeparator = userConfig.Icons?.BranchOperationSeparator ?? BranchLabelTokens.BranchOperationSeparator
+            },
+            Colors = new Config.ColorsConfig
+            {
+                User = userConfig.Colors?.User ?? ColorDisplayValue(AnsiColors.Green),
+                Host = userConfig.Colors?.Host ?? ColorDisplayValue(AnsiColors.Magenta),
+                Path = userConfig.Colors?.Path ?? ColorDisplayValue(AnsiColors.Orange),
+                CommandDuration = userConfig.Colors?.CommandDuration ?? ColorDisplayValue(AnsiColors.Magenta),
+                Branch = userConfig.Colors?.Branch ?? ColorDisplayValue(AnsiColors.BoldCyan),
+                BranchNoUpstream = userConfig.Colors?.BranchNoUpstream ?? ColorDisplayValue(AnsiColors.BoldCyan),
+                BranchDetached = userConfig.Colors?.BranchDetached ?? ColorDisplayValue(AnsiColors.NormalYellow),
+                Ahead = userConfig.Colors?.Ahead ?? ColorDisplayValue(AnsiColors.BoldCyan),
+                Behind = userConfig.Colors?.Behind ?? ColorDisplayValue(AnsiColors.BoldCyan),
+                Staged = userConfig.Colors?.Staged ?? ColorDisplayValue(AnsiColors.Green),
+                Unstaged = userConfig.Colors?.Unstaged ?? ColorDisplayValue(AnsiColors.Red),
+                Untracked = userConfig.Colors?.Untracked ?? ColorDisplayValue(AnsiColors.Red),
+                Stash = userConfig.Colors?.Stash ?? ColorDisplayValue(AnsiColors.Magenta),
+                Conflict = userConfig.Colors?.Conflict ?? ColorDisplayValue(AnsiColors.Red),
+                Dirty = userConfig.Colors?.Dirty ?? ColorDisplayValue(AnsiColors.Orange),
+                DirtyStaged = userConfig.Colors?.DirtyStaged ?? ColorDisplayValue(AnsiColors.Green),
+                Clean = userConfig.Colors?.Clean ?? ColorDisplayValue(AnsiColors.Green),
+                MissingPath = userConfig.Colors?.MissingPath ?? ColorDisplayValue(AnsiColors.Red),
+                Timeout = userConfig.Colors?.Timeout ?? ColorDisplayValue(AnsiColors.Yellow),
+                PromptSymbol = userConfig.Colors?.PromptSymbol ?? ColorDisplayValue(AnsiColors.White),
+                Prefix = userConfig.Colors?.Prefix ?? ColorDisplayValue(AnsiColors.White)
+            }
         };
     }
 
