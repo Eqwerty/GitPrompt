@@ -86,7 +86,7 @@ internal static class PromptDiagnostics
             return;
         }
 
-        if (_repoCacheMissRecorded && _repoCacheMissReason != RepoCacheMissReason.NoEntry)
+        if (_repoCacheMissRecorded && _repoCacheMissReason is not RepoCacheMissReason.NoEntry)
         {
             return;
         }
@@ -250,6 +250,7 @@ internal static class PromptDiagnostics
                 : string.Empty;
 
             var repoSuffix = _repoCacheRepoFound ? string.Empty : ", no repo found";
+
             return $"miss · {missReason}walked {dirs} {dirWord}{repoSuffix}";
         }
 
@@ -380,4 +381,3 @@ internal static class PromptDiagnostics
         }
     }
 }
-
