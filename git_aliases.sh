@@ -275,7 +275,7 @@ function __git_web_url() {
 }
 
 # Create a pull request and open it in the default browser
-function pr() {
+function gpr() {
   local base_url branch_name main_branch pr_url
 
   base_url=$(__git_web_url) || { echo "Error: no supported remote found (GitHub or Azure DevOps)"; return 1; }
@@ -296,7 +296,7 @@ function pr() {
 }
 
 # Open the current branch or the main branch in the repository
-function gh() {
+function grepo() {
   local base_url main_branch current_branch url
 
   git rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo "Error: not in a git repository"; return 1; }
