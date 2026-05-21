@@ -45,7 +45,7 @@ internal static class ContextSegmentBuilder
 
         if (!string.IsNullOrEmpty(windowsUserName))
         {
-            if (ConfigReader.Config.Context!.ShowDomain ?? false)
+            if (ConfigReader.Config.Context?.ShowDomain is true)
             {
                 var domain = platformProvider.WindowsUserDomain;
 
@@ -85,8 +85,7 @@ internal static class ContextSegmentBuilder
             return string.Empty;
         }
 
-        var workingDirectoryPath = platformProvider.WorkingDirectory.Path;
-        var isFallbackPath = platformProvider.WorkingDirectory.IsFromFallback;
+        var (workingDirectoryPath, isFallbackPath) = platformProvider.WorkingDirectory;
 
         if (string.IsNullOrEmpty(workingDirectoryPath))
         {
@@ -123,28 +122,26 @@ internal static class ContextSegmentBuilder
             // Keep the raw path if normalization fails.
         }
 
-        var displayPath = workingDirectoryPath.Replace('\\', '/');
-        displayPath = TruncatePath(displayPath);
+        var displayPath = TruncatePath(workingDirectoryPath).Replace('\\', '/');
+
         if (isMissingPath)
         {
-            displayPath += " [missing]";
+            return ColorMissingPath.Wrap($"{displayPath} [missing]");
         }
 
-        var pathColor = isMissingPath ? ColorMissingPath : ColorPath;
-
-        return pathColor.Wrap(displayPath);
+        return ColorPath.Wrap(displayPath);
     }
 
     internal static string TruncatePath(string displayPath)
     {
-        var maxDepth = ConfigReader.Config.Context!.MaxPathDepth ?? 0;
+        var maxDepth = ConfigReader.Config.Context?.MaxPathDepth ?? 0;
 
         if (maxDepth <= 0 || string.IsNullOrEmpty(displayPath))
         {
             return displayPath;
         }
 
-        string anchor;
+        string? anchor;
         string[] segments;
 
         if (displayPath.StartsWith("~/", StringComparison.Ordinal) || displayPath is "~")
@@ -164,7 +161,7 @@ internal static class ContextSegmentBuilder
         }
         else
         {
-            anchor = null!;
+            anchor = null;
             segments = displayPath.Split('/');
         }
 
