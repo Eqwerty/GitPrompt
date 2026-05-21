@@ -17,6 +17,8 @@ alias gc="git commit -m" # Commit with a message
 alias gca="git commit --amend --no-edit" # Amend the last commit without changing the message
 alias gcae="git commit --amend" # Amend the last commit and open the editor to change the message
 alias gcam="git commit --amend -m" # Amend the last commit and edit the message
+alias gcf="git commit --fixup" # Create a fixup commit targeting a given commit
+alias gcs="git commit --squash" # Create a squash commit targeting a given commit
 
 # ============================ Branch ============================
 alias gb="git branch" # List branches
@@ -69,6 +71,7 @@ alias gpof="git push -u origin HEAD --force-with-lease" # Force push the current
 # ============================ Rebase ============================
 alias gr="git rebase" # Rebase the current branch
 alias gri="git rebase -i" # Start an interactive rebase
+alias grias="git rebase -i --autosquash" # Interactive rebase with autosquash enabled
 alias gra="git rebase --abort" # Abort a rebase
 alias grc="git rebase --continue" # Continue a rebase after resolving conflicts
 
