@@ -9,7 +9,7 @@ internal static class CommandDurationSegmentBuilder
 {
     internal static string Build(PlatformProvider platformProvider)
     {
-        if (ConfigReader.Config.CommandDuration.Show is false)
+        if (!ConfigReader.Config.CommandDuration.Show)
         {
             return string.Empty;
         }
