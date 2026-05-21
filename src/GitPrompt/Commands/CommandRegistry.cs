@@ -12,6 +12,11 @@ internal static class CommandRegistry
             Description: "Show this help",
             Execute: _ => HelpCommand.PrintHelp()),
 
+        new(Verb: "--version",
+            Usage: "gitprompt --version",
+            Description: "Show the installed version (commit hash)",
+            Execute: _ => VersionCommand.PrintVersion()),
+
         new(Verb: "init",
             Usage: "gitprompt init bash",
             Description: "Print Bash shell integration script",

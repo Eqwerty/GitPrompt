@@ -25,6 +25,7 @@ dotnet publish src/GitPrompt/GitPrompt.csproj \
   --no-restore \
   -p:DebugType=None \
   -p:DebugSymbols=false \
+  -p:SourceRevisionId="$(git rev-parse --short HEAD)" \
   -o "$PUBLISH_DIR"
 
 cp "$PUBLISH_DIR/GitPrompt${EXTENSION}" "$DIST_DIR/$BIN_NAME"

@@ -77,6 +77,7 @@ if ! try_step "Publishing AOT ($RUNTIME_IDENTIFIER)" "$TEMPORARY_DIRECTORY/publi
       --no-restore \
       -p:DebugType=None \
       -p:DebugSymbols=false \
+      -p:SourceRevisionId="$(git -C "$REPOSITORY_ROOT" rev-parse --short HEAD 2>/dev/null || echo 'unknown')" \
       -o "$PUBLISH_DIRECTORY"; then
   rm -rf "$PUBLISH_DIRECTORY"
   mkdir -p "$PUBLISH_DIRECTORY"
@@ -91,6 +92,7 @@ if ! try_step "Publishing AOT ($RUNTIME_IDENTIFIER)" "$TEMPORARY_DIRECTORY/publi
       -p:SelfContained=false \
       -p:DebugType=None \
       -p:DebugSymbols=false \
+      -p:SourceRevisionId="$(git -C "$REPOSITORY_ROOT" rev-parse --short HEAD 2>/dev/null || echo 'unknown')" \
       -o "$PUBLISH_DIRECTORY"
 fi
 
