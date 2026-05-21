@@ -93,7 +93,7 @@ public sealed class ConfigDeserializationTests
     }
 
     [Fact]
-    public void CommandTimeout_WhenCommandTimeoutMsIsAbsent_ShouldReturnDefault2000Ms()
+    public void CommandTimeout_WhenCommandTimeoutMsIsAbsent_ShouldReturnNull()
     {
         // Arrange
         var json = "{}";
@@ -102,7 +102,7 @@ public sealed class ConfigDeserializationTests
         var config = JsonSerializer.Deserialize(json, ConfigJsonContext.Default.ConfigDto)!;
 
         // Assert
-        config.CommandTimeout.Should().Be(TimeSpan.FromMilliseconds(2000));
+        config.CommandTimeout.Should().BeNull();
     }
 
     [Fact]

@@ -7,7 +7,7 @@ internal sealed record ConfigDto
 {
     internal const bool DefaultCompact = false;
     internal const bool DefaultShowStash = true;
-    internal const double DefaultCommandTimeoutMs = 2000;
+    internal const double DefaultCommandTimeoutMs = 0;
 
     [JsonInclude]
     internal CacheConfig? Cache { get; init; }

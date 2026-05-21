@@ -297,7 +297,7 @@ public sealed class ConfigInitializerTests
         var content = ConfigInitializer.BuildDefaultConfigContent();
 
         // Assert
-        content.Should().Contain("\"commandTimeoutMs\": 2000");
+        content.Should().Contain("\"commandTimeoutMs\": 0");
     }
 
     [Fact]

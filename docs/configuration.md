@@ -26,7 +26,7 @@ Controls how long `gitprompt` waits for a Git subprocess before killing it and s
 
 | Key | Default | Description |
 |---|---|---|
-| `commandTimeoutMs` | `2000` | Git subprocess timeout in milliseconds |
+| `commandTimeoutMs` | `0` | Git subprocess timeout in milliseconds |
 
 ## Command Duration
 
