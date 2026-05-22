@@ -28,8 +28,7 @@ internal static class GitStatusSegmentBuilder
             return string.Empty;
         }
 
-        var repositoryRootPath = repositoryContext.Value.WorkingTreePath;
-        var gitDirectoryPath = repositoryContext.Value.GitDirectoryPath;
+        var (repositoryRootPath, gitDirectoryPath) = repositoryContext.Value;
 
         if (GitStatusSharedCache.TryGet(repositoryRootPath, gitDirectoryPath, out var cachedSegment))
         {
@@ -72,10 +71,21 @@ internal static class GitStatusSegmentBuilder
         }
 
         var segment = ConfigReader.Config.Compact
-            ? GitStatusDisplayFormatter.BuildDisplayCompact(branchLabel, snapshot.CommitsAhead, snapshot.CommitsBehind, snapshot.StashEntryCount, snapshot.GitStatusCounts, operationName)
-            : GitStatusDisplayFormatter.BuildDisplay(branchLabel, snapshot.CommitsAhead, snapshot.CommitsBehind, snapshot.StashEntryCount, snapshot.GitStatusCounts, operationName);
+            ? GitStatusDisplayFormatter.BuildDisplayCompact(branchLabel,
+                snapshot.CommitsAhead,
+                snapshot.CommitsBehind,
+                snapshot.StashEntryCount,
+                snapshot.GitStatusCounts,
+                operationName)
+            : GitStatusDisplayFormatter.BuildDisplay(branchLabel,
+                snapshot.CommitsAhead,
+                snapshot.CommitsBehind,
+                snapshot.StashEntryCount,
+                snapshot.GitStatusCounts,
+                operationName);
 
         GitStatusSharedCache.Set(repositoryRootPath, gitDirectoryPath, segment);
+
         return segment;
     }
 
@@ -111,7 +121,7 @@ internal static class GitStatusSegmentBuilder
 
         if (!snapshot.HasUpstream)
         {
-            return (GitHistoryCalculator.ComputeLocalAheadCommitCount(repositoryRootPath), 0);
+            return (GitHistoryCalculator.ComputeLocalAheadCommitCount(repositoryRootPath), Behind: 0);
         }
 
         return (snapshot.CommitsAhead, snapshot.CommitsBehind);
