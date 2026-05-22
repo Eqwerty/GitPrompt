@@ -177,7 +177,7 @@ function gcc() {
 alias gbl="git blame --color-by-age --color-lines" # Show blame information with color-by-age and color-lines
 alias ggr="git grep --no-index -i -I --exclude-standard --heading --line-number" # Search for a string in the repository
 alias gsh="git show -w" # Show details of a commit
-alias gshno="git show --name-only" # Show names of files changed in a commit
+alias gshno="git show --oneline --name-only" # Show names of files changed in a commit
 
 # ============================ Reset ============================
 alias grm="git reset --mixed" # Reset index but keep changes in the working directory (mixed mode)
