@@ -1,12 +1,13 @@
 using System.Text;
 using GitPrompt.Configuration;
+using GitPrompt.Constants;
 using static GitPrompt.Constants.PromptColors;
 
 namespace GitPrompt.Git;
 
 internal static class GitStatusDisplayFormatter
 {
-    private readonly record struct CountStyle(int Value, string Color, string Icon);
+    private readonly record struct CountStyle(int Value, PromptColor Color, string Icon);
 
     internal static string BuildDisplay(
         BranchLabelInfo branchLabel,
@@ -39,16 +40,16 @@ internal static class GitStatusDisplayFormatter
             _ => ColorBranch
         };
 
-        statusBuilder.Append(branchColor).Append(labelWithOp).Append(ColorReset);
+        statusBuilder.Append(branchColor.Wrap(labelWithOp));
 
         if (commitsAhead > 0)
         {
-            statusBuilder.Append(' ').Append(ColorAhead).Append(aheadIcon).Append(commitsAhead).Append(ColorReset);
+            statusBuilder.Append(' ').Append(ColorAhead.Wrap($"{aheadIcon}{commitsAhead}"));
         }
 
         if (commitsBehind > 0)
         {
-            statusBuilder.Append(' ').Append(ColorBehind).Append(behindIcon).Append(commitsBehind).Append(ColorReset);
+            statusBuilder.Append(' ').Append(ColorBehind.Wrap($"{behindIcon}{commitsBehind}"));
         }
 
         AppendCountIndicators(
@@ -65,17 +66,17 @@ internal static class GitStatusDisplayFormatter
 
         if (gitStatusCounts.Untracked > 0)
         {
-            statusBuilder.Append(' ').Append(ColorUntracked).Append(untrackedIcon).Append(gitStatusCounts.Untracked).Append(ColorReset);
+            statusBuilder.Append(' ').Append(ColorUntracked.Wrap($"{untrackedIcon}{gitStatusCounts.Untracked}"));
         }
 
         if (gitStatusCounts.Conflicts > 0)
         {
-            statusBuilder.Append(' ').Append(ColorConflict).Append(conflictsIcon).Append(gitStatusCounts.Conflicts).Append(ColorReset);
+            statusBuilder.Append(' ').Append(ColorConflict.Wrap($"{conflictsIcon}{gitStatusCounts.Conflicts}"));
         }
 
         if (stashEntryCount > 0 && ConfigReader.Config.ShowStash)
         {
-            statusBuilder.Append(' ').Append(ColorStash).Append(stashIcon).Append(stashEntryCount).Append(ColorReset);
+            statusBuilder.Append(' ').Append(ColorStash.Wrap($"{stashIcon}{stashEntryCount}"));
         }
 
         return statusBuilder.ToString();
@@ -108,34 +109,34 @@ internal static class GitStatusDisplayFormatter
             _ => ColorBranch
         };
 
-        statusBuilder.Append(branchColor).Append(labelWithOp).Append(ColorReset);
+        statusBuilder.Append(branchColor.Wrap(labelWithOp));
 
         if (commitsAhead > 0)
         {
-            statusBuilder.Append(' ').Append(ColorAhead).Append(aheadIcon).Append(commitsAhead).Append(ColorReset);
+            statusBuilder.Append(' ').Append(ColorAhead.Wrap($"{aheadIcon}{commitsAhead}"));
         }
 
         if (commitsBehind > 0)
         {
-            statusBuilder.Append(' ').Append(ColorBehind).Append(behindIcon).Append(commitsBehind).Append(ColorReset);
+            statusBuilder.Append(' ').Append(ColorBehind.Wrap($"{behindIcon}{commitsBehind}"));
         }
 
         if (gitStatusCounts.IsDirtyStaged)
         {
-            statusBuilder.Append(' ').Append(ColorDirtyStaged).Append(dirtyStagedIcon).Append(ColorReset);
+            statusBuilder.Append(' ').Append(ColorDirtyStaged.Wrap(dirtyStagedIcon));
         }
         else if (gitStatusCounts.IsDirty)
         {
-            statusBuilder.Append(' ').Append(ColorDirty).Append(dirtyIcon).Append(ColorReset);
+            statusBuilder.Append(' ').Append(ColorDirty.Wrap(dirtyIcon));
         }
         else
         {
-            statusBuilder.Append(' ').Append(ColorClean).Append(cleanIcon).Append(ColorReset);
+            statusBuilder.Append(' ').Append(ColorClean.Wrap(cleanIcon));
         }
 
         if (stashEntryCount > 0 && ConfigReader.Config.ShowStash)
         {
-            statusBuilder.Append(' ').Append(ColorStash).Append(stashIcon).Append(stashEntryCount).Append(ColorReset);
+            statusBuilder.Append(' ').Append(ColorStash.Wrap($"{stashIcon}{stashEntryCount}"));
         }
 
         return statusBuilder.ToString();
@@ -198,7 +199,7 @@ internal static class GitStatusDisplayFormatter
         {
             if (item.Value > 0)
             {
-                sb.Append(' ').Append(item.Color).Append(item.Icon).Append(item.Value).Append(ColorReset);
+                sb.Append(' ').Append(item.Color.Wrap($"{item.Icon}{item.Value}"));
             }
         }
     }
