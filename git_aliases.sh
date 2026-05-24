@@ -7,9 +7,17 @@ alias gaa="git add -A" # Add all changes to the staging area
 alias gas="git add -A && git status -s" # Add all changes to the staging area and show a short status
 alias gap="git add --patch" # Interactively stage changes in the working directory
 
-# Add a file based on a partial name match from modified files
+# Interactively select modified/untracked files to add (menu)
 function gam() {
-  __git_match_and_execute "gam" "$1" git add
+  local -a files selected
+  mapfile -t files < <(git status --porcelain | awk '{print $2}')
+  if [[ ${#files[@]} -eq 0 ]]; then
+    echo "No modified files to add"
+    return 1
+  fi
+  mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select --multi)
+  [[ ${#selected[@]} -eq 0 ]] && return 0
+  git add -- "${selected[@]}"
 }
 
 # ============================ Commit ============================
@@ -32,20 +40,22 @@ alias gco="git checkout" # Switch branches
 alias gcot="git checkout --track" # Switch to a remote branch and track it
 alias gcob="git checkout -b" # Create and switch to a new branch
 
-# Check out a branch based on a partial name match.
+# Interactively select a branch to check out (menu, current branch excluded)
 function gcobm() {
-  if [ -z "$1" ]; then
-    echo "Usage: gcobm <partial-branch-name>"
+  local current_branch
+  current_branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+
+  local -a branches selected
+  mapfile -t branches < <(git branch --list | sed 's/^[* ] //' | grep -v "^${current_branch}$")
+
+  if [[ ${#branches[@]} -eq 0 ]]; then
+    echo "No other branches to switch to"
     return 1
   fi
 
-  mapfile -t matches < <(git branch --list | grep -i "$1" | sed 's/^[* ] //')
-
-  case ${#matches[@]} in
-    1) git checkout "${matches[0]}" ;;
-    0) echo "No branches found matching '$1'" ; return 3 ;;
-    *) echo "Multiple matches found:"; printf "  %s\n" "${matches[@]}"; return 2 ;;
-  esac
+  mapfile -t selected < <(printf '%s\n' "${branches[@]}" | __git_select)
+  [[ ${#selected[@]} -eq 0 ]] && return 0
+  git checkout "${selected[0]}"
 }
 
 # ============================ Merge ============================
@@ -94,19 +104,17 @@ function gssh() {
   git stash show -w -p "stash@{$1}"
 }
 
-# stash changes of a specific file based on a partial name match from modified files
+# Interactively select a modified/untracked file to stash (menu)
 function gsufm() {
-  if [ -z "$1" ]; then
-    echo "Usage: gsufm <partial-file-name>"
+  local -a files selected
+  mapfile -t files < <(git status --porcelain | awk '{print $2}')
+  if [[ ${#files[@]} -eq 0 ]]; then
+    echo "No modified files to stash"
     return 1
   fi
-  mapfile -t matches < <(git status --porcelain | awk '{print $2}' | grep -i "$1")
-
-  case ${#matches[@]} in
-    1) git stash push -u -- "${matches[0]}" ;;
-    0) echo "No files found matching '$1'" ; return 3 ;;
-    *) echo "Multiple matches found:"; printf "  %s\n" "${matches[@]}"; return 2 ;;
-  esac
+  mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select --multi)
+  [[ ${#selected[@]} -eq 0 ]] && return 0
+  git stash push -u -- "${selected[@]}"
 }
 
 # ============================ Log ============================
@@ -206,14 +214,30 @@ alias gd="git diff -w" # Show changes between commits, branches, or the working 
 alias gds="git diff -w --staged" # Show changes in the staging area
 alias gdfu="git diff --name-only --diff-filter=U" # Show files with unmerged changes or conflicts
 
-# Show the diff of a file based on a partial name match from modified files
+# Show the diff of a file interactively selected from modified files (menu)
 function gdm() {
-  __git_match_and_execute "gdm" "$1" git diff
+  local -a files selected
+  mapfile -t files < <(git status --porcelain | awk '{print $2}')
+  if [[ ${#files[@]} -eq 0 ]]; then
+    echo "No modified files"
+    return 1
+  fi
+  mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select)
+  [[ ${#selected[@]} -eq 0 ]] && return 0
+  git diff -w -- "${selected[0]}"
 }
 
-# Show the diff of a staged file based on a partial name match from modified files
+# Show the diff of a staged file interactively selected from staged files (menu)
 function gdsm() {
-  __git_match_and_execute "gdsm" "$1" git diff --staged
+  local -a files selected
+  mapfile -t files < <(git status --porcelain | awk 'substr($0,1,1) != " " && substr($0,1,1) != "?" {print $2}')
+  if [[ ${#files[@]} -eq 0 ]]; then
+    echo "No staged files"
+    return 1
+  fi
+  mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select)
+  [[ ${#selected[@]} -eq 0 ]] && return 0
+  git diff -w --staged -- "${selected[0]}"
 }
 
 # ============================ Status ============================
@@ -224,9 +248,17 @@ alias gss="git status -s" # Show a short status of the working directory
 alias gref="git reflog" # Show the reflog
 
 # ============================ File Checkout ============================
-# Check out a file based on a partial name match from modified files
+# Interactively select modified/untracked files to check out (menu)
 function gcofm() {
-  __git_match_and_execute "gcofm" "$1" git checkout
+  local -a files selected
+  mapfile -t files < <(git status --porcelain | awk '{print $2}')
+  if [[ ${#files[@]} -eq 0 ]]; then
+    echo "No modified files"
+    return 1
+  fi
+  mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select --multi)
+  [[ ${#selected[@]} -eq 0 ]] && return 0
+  git checkout -- "${selected[@]}"
 }
 
 # ============================ Cherry-Pick ============================
@@ -366,28 +398,78 @@ function gcdroot() {
     fi
 }
 
-# Execute a Git command on a file matched by partial name from modified/untracked files
-# Usage: __git_match_and_execute <description> <partial-file-name> <git-command-words...>
-# - If exactly one match is found, the command is run with that file.
-# - If multiple matches are found, it lists them and exits with code 2.
-# - If no match is found, it exits with code 3.
-function __git_match_and_execute() {
-  local description="$1"
-  local partial_name="$2"
-  shift 2
+# Interactive menu picker for selecting from a list of items.
+# Usage: <list> | __git_select [--multi]
+# - Reads candidates from stdin (one per line).
+# - If exactly one candidate exists, auto-selects it without prompting.
+# - Uses fzf when installed; otherwise falls back to a numbered list prompt.
+# - --multi: allow selecting more than one item (Tab in fzf; space-separated numbers in fallback).
+# Output: selected item(s) on stdout, one per line.
+function __git_select() {
+  local multi=0
+  [[ "${1:-}" == "--multi" ]] && multi=1
 
-  if [ -z "$partial_name" ]; then
-    echo "Usage: $description <partial-file-name>"
+  local -a items
+  mapfile -t items
+
+  if [[ ${#items[@]} -eq 0 ]]; then
     return 1
   fi
 
-  mapfile -t matches < <(git status --porcelain | awk '{print $2}' | grep -i "$partial_name")
+  if [[ ${#items[@]} -eq 1 ]]; then
+    echo "→ Auto-selected: ${items[0]}" >&2
+    printf '%s\n' "${items[0]}"
+    return 0
+  fi
 
-  case ${#matches[@]} in
-    1) "$@" -- "${matches[0]}" ;;
-    0) echo "No files found matching '$partial_name'" ; return 3 ;;
-    *) echo "Multiple matches found:"; printf "  %s\n" "${matches[@]}"; return 2 ;;
-  esac
+  if command -v fzf >/dev/null 2>&1; then
+    if [[ $multi -eq 1 ]]; then
+      printf '%s\n' "${items[@]}" | fzf --multi --header "Tab: toggle selection | Enter: confirm"
+    else
+      printf '%s\n' "${items[@]}" | fzf
+    fi
+    return $?
+  fi
+
+  echo "Tip: Install fzf for a better interactive selection experience." >&2
+  local i
+  for i in "${!items[@]}"; do
+    printf '  %d) %s\n' "$((i+1))" "${items[$i]}" >&2
+  done
+
+  while true; do
+    if [[ $multi -eq 1 ]]; then
+      printf 'Pick numbers (space-separated, or q to quit): ' >&2
+    else
+      printf 'Pick a number (or q to quit): ' >&2
+    fi
+    read -r input </dev/tty
+    [[ "$input" == "q" ]] && return 1
+
+    if [[ $multi -eq 1 ]]; then
+      local -a selected=()
+      local valid=1 num
+      for num in $input; do
+        if ! [[ "$num" =~ ^[1-9][0-9]*$ ]] || [[ "$num" -gt "${#items[@]}" ]]; then
+          echo "Invalid selection: $num" >&2
+          valid=0
+          break
+        fi
+        selected+=("${items[$((num-1))]}")
+      done
+      if [[ $valid -eq 1 && ${#selected[@]} -gt 0 ]]; then
+        printf '%s\n' "${selected[@]}"
+        return 0
+      fi
+    else
+      if [[ "$input" =~ ^[1-9][0-9]*$ ]] && [[ "$input" -le "${#items[@]}" ]]; then
+        printf '%s\n' "${items[$((input-1))]}"
+        return 0
+      else
+        echo "Invalid selection: '$input'" >&2
+      fi
+    fi
+  done
 }
 
 # Enable autocomplete for aliases
