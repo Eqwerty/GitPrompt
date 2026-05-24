@@ -286,7 +286,7 @@ function gpr() {
   branch_name=$(git symbolic-ref --short HEAD 2>/dev/null)
   [ -n "$branch_name" ] || { echo "Error: not in a git repository or in detached HEAD state"; return 1; }
 
-  main_branch=$(gdefault)
+  main_branch=$(gbdefault)
   [ -n "$main_branch" ] || { echo "Error: could not determine default branch"; return 1; }
 
   if [[ "$base_url" == *dev.azure.com* || "$base_url" == *visualstudio.com* ]]; then
@@ -306,10 +306,10 @@ function grepo() {
 
   base_url=$(__git_web_url) || { echo "Error: no supported remote found (GitHub or Azure DevOps)"; return 1; }
 
-  main_branch=$(gdefault)
+  main_branch=$(gbdefault)
   [ -n "$main_branch" ] || { echo "Error: could not determine default branch"; return 1; }
 
-  current_branch=$(gcurrent 2>/dev/null)
+  current_branch=$(gbcurrent 2>/dev/null)
   url="$base_url"
   if [[ -n "$current_branch" && "$main_branch" != "$current_branch" ]]; then
     if [[ "$base_url" == *dev.azure.com* || "$base_url" == *visualstudio.com* ]]; then
@@ -324,7 +324,7 @@ function grepo() {
 
 # ============================ Utils ============================
 # Get the default branch name with fallbacks when origin/HEAD is not configured
-function gdefault() {
+function gbdefault() {
   local default_branch
 
   default_branch=$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null | cut -d'/' -f2)
@@ -349,7 +349,7 @@ function gdefault() {
   printf '%s\n' "$default_branch"
 }
 
-alias gcurrent="git symbolic-ref --short HEAD" # Get the current branch name
+alias gbcurrent="git symbolic-ref --short HEAD" # Get the current branch name
 alias gcgl="git config --global --list" # List the current global Git configuration
 alias gcge="git config --global --edit" # Opens the global Git configuration file
 alias gcfd="git clean -fd" # Remove untracked files and directories
