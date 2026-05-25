@@ -15,7 +15,7 @@ Default install location: `~/.local/bin/gitprompt` (Linux/macOS) or `~/.local/bi
 Add to your Bash startup file (`~/.bashrc`, or `~/.bash_profile` on macOS):
 
 ```sh
-eval "$(gitprompt init bash)"
+eval "$($HOME/.local/bin/gitprompt init bash)"
 ```
 
 ## Maintenance

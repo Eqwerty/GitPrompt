@@ -180,7 +180,7 @@ fi
 if [ "$TARGET_OS" = "windows" ]; then
   EVAL_LINE='eval "$($HOME/.local/bin/gitprompt.exe init bash)"'
 else
-  EVAL_LINE='eval "$(gitprompt init bash)"'
+  EVAL_LINE='eval "$($HOME/.local/bin/gitprompt init bash)"'
 fi
 
 FINAL_BINARY_PATH="$BIN_DIR/$BINARY_NAME"
