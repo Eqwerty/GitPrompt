@@ -10,14 +10,14 @@ alias gap="git add --patch" # Interactively stage changes in the working directo
 # Interactively select modified/untracked files to add (menu)
 function gam() {
   local -a files selected
-  mapfile -t files < <(git status --porcelain | awk '{print $2}')
+  mapfile -t files < <(git status --porcelain | awk '{print substr($0,4)}')
   if [[ ${#files[@]} -eq 0 ]]; then
     echo "No modified files to add"
     return 1
   fi
   mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select --multi)
   [[ ${#selected[@]} -eq 0 ]] && return 0
-  git add -- "${selected[@]/#/:(top)}"
+  git add -- "${selected[@]/#/:(top)}"  # :(top) = git pathspec: resolve path from repo root
 }
 
 # ============================ Commit ============================
@@ -42,24 +42,17 @@ alias gcob="git checkout -b" # Create and switch to a new branch
 
 # Interactively select local branches to delete (safe, menu, no auto-select)
 function gbdm() {
-  local current_branch
-  current_branch=$(git symbolic-ref --short HEAD 2>/dev/null)
-
-  local -a branches selected
-  mapfile -t branches < <(git branch --list | sed 's/^[* ] //' | grep -v "^${current_branch}$")
-
-  if [[ ${#branches[@]} -eq 0 ]]; then
-    echo "No branches to delete"
-    return 1
-  fi
-
-  mapfile -t selected < <(printf '%s\n' "${branches[@]}" | __git_select --multi --no-auto)
-  [[ ${#selected[@]} -eq 0 ]] && return 0
-  git branch -d "${selected[@]}"
+  __git_branch_delete -d
 }
 
 # Interactively select local branches to force-delete (menu, no auto-select)
 function gbDm() {
+  __git_branch_delete -D
+}
+
+# Shared helper for gbdm / gbDm — $1 is the delete flag (-d or -D)
+function __git_branch_delete() {
+  local flag="$1"
   local current_branch
   current_branch=$(git symbolic-ref --short HEAD 2>/dev/null)
 
@@ -73,7 +66,7 @@ function gbDm() {
 
   mapfile -t selected < <(printf '%s\n' "${branches[@]}" | __git_select --multi --no-auto)
   [[ ${#selected[@]} -eq 0 ]] && return 0
-  git branch -D "${selected[@]}"
+  git branch "$flag" "${selected[@]}"
 }
 
 # Interactively select a branch to check out (menu, current branch excluded)
@@ -166,7 +159,7 @@ alias gsshno="git stash show --name-only" # Show names of files changed in a sta
 
 # Show changes of a specific stash
 function gssh() {
-  if [ -z "$1" ]; then
+  if [[ -z "$1" ]]; then
     echo "Usage: gssh <stash-index>"
     return 1
   fi
@@ -176,19 +169,19 @@ function gssh() {
 # Interactively select a modified/untracked file to stash (menu)
 function gsufm() {
   local -a files selected
-  mapfile -t files < <(git status --porcelain | awk '{print $2}')
+  mapfile -t files < <(git status --porcelain | awk '{print substr($0,4)}')
   if [[ ${#files[@]} -eq 0 ]]; then
     echo "No modified files to stash"
     return 1
   fi
   mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select --multi)
   [[ ${#selected[@]} -eq 0 ]] && return 0
-  git stash push -u -- "${selected[@]/#/:(top)}"
+  git stash push -u -- "${selected[@]/#/:(top)}"  # :(top) = git pathspec: resolve path from repo root
 }
 
 # ============================ Log ============================
 alias glog="git log --graph --pretty=format:'%C(bold cyan)%h%Creset%C(auto)%d%Creset %C(white)%s %Cgreen(%cr) %C(bold cyan)<%an>%Creset' --abbrev-commit" # Show a graphical log with commit details
-alias glh="glog HEAD.." # Show commits in other branches not yet merged into HEAD
+alias glh="glog HEAD.." # Show commits in <branch> not yet merged into HEAD (usage: glh <branch>)
 alias gluh="glog @{u}..HEAD" # Show commits not pushed to the upstream branch
 
 # Show a graphical log filtered to commits by the current git user
@@ -210,9 +203,9 @@ function glm() {
 
 # Copy the short hash of the Nth most recent commit to the clipboard
 function gcc() {
-  local index line short_hash commit_message
+  local index short_hash commit_message
 
-  if [ -z "$1" ]; then
+  if [[ -z "$1" ]]; then
     echo "Usage: gcc <commit-position>"
     echo "Example: gcc 4"
     return 1
@@ -224,15 +217,12 @@ function gcc() {
   fi
 
   index="$1"
-  line=$(git log -n "$index" --oneline 2>/dev/null | tail -n 1)
+  read -r short_hash commit_message < <(git log --skip=$((index-1)) -1 --format="%h %s" 2>/dev/null)
 
-  if [ -z "$line" ]; then
+  if [[ -z "$short_hash" ]]; then
     echo "Error: could not find commit at position $index"
     return 1
   fi
-
-  short_hash=$(awk '{print $1}' <<< "$line")
-  commit_message=$(awk '{$1=""; sub(/^ /, ""); print}' <<< "$line")
 
   if command -v clip.exe >/dev/null 2>&1; then
     if command -v iconv >/dev/null 2>&1; then
@@ -240,10 +230,18 @@ function gcc() {
     else
       printf '%s' "$short_hash" | clip.exe
     fi
+  elif command -v pbcopy >/dev/null 2>&1; then
+    printf '%s' "$short_hash" | pbcopy
+  elif command -v wl-copy >/dev/null 2>&1; then
+    printf '%s' "$short_hash" | wl-copy
+  elif command -v xclip >/dev/null 2>&1; then
+    printf '%s' "$short_hash" | xclip -selection clipboard
+  elif command -v xsel >/dev/null 2>&1; then
+    printf '%s' "$short_hash" | xsel --clipboard --input
   elif command -v clip >/dev/null 2>&1; then
     printf '%s' "$short_hash" | clip
   else
-    echo "Error: no clipboard command found (expected clip.exe or clip)"
+    echo "Error: no clipboard command found (tried clip.exe, pbcopy, wl-copy, xclip, xsel, clip)"
     return 1
   fi
 
@@ -269,27 +267,27 @@ function grmm() {
   fi
   mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select --multi)
   [[ ${#selected[@]} -eq 0 ]] && return 0
-  git reset -- "${selected[@]/#/:(top)}"
+  git reset -- "${selected[@]/#/:(top)}"  # :(top) = git pathspec: resolve path from repo root
 }
 
-alias grhh="git reset HEAD --hard" # Discards all uncommitted changes (hard reset).
+alias grhh="git reset --hard HEAD" # Discard all uncommitted changes (hard reset)
 
 # Reset the current branch to n commits before HEAD
 function grh() {
-  if [ -z "$1" ]; then
+  if [[ -z "$1" ]]; then
     echo "Usage: grh <number-of-commits>"
     return 1
   fi
-  git reset "HEAD~$1" --soft
+  git reset --soft "HEAD~$1"
 }
 
 # Reset the current branch to the specified commit and apply --hard
 function grch() {
-  if [ -z "$1" ]; then
+  if [[ -z "$1" ]]; then
     echo "Usage: grch <commit-hash>"
     return 1
   fi
-  git reset "$1" --hard
+  git reset --hard "$1"
 }
 
 # ============================ Diff ============================
@@ -307,7 +305,7 @@ function gdm() {
   fi
   mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select)
   [[ ${#selected[@]} -eq 0 ]] && return 0
-  git diff -w -- ":(top)${selected[0]}"
+  git diff -w -- ":(top)${selected[0]}"  # :(top) = git pathspec: resolve path from repo root
 }
 
 # Show the diff of a staged file interactively selected from staged files (menu)
@@ -320,7 +318,7 @@ function gdsm() {
   fi
   mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select)
   [[ ${#selected[@]} -eq 0 ]] && return 0
-  git diff -w --staged -- ":(top)${selected[0]}"
+  git diff -w --staged -- ":(top)${selected[0]}"  # :(top) = git pathspec: resolve path from repo root
 }
 
 # ============================ Status ============================
@@ -334,14 +332,14 @@ alias gref="git reflog" # Show the reflog
 # Interactively select modified/untracked files to check out (menu)
 function gcofm() {
   local -a files selected
-  mapfile -t files < <(git status --porcelain | awk '{print $2}')
+  mapfile -t files < <(git status --porcelain | awk '{print substr($0,4)}')
   if [[ ${#files[@]} -eq 0 ]]; then
     echo "No modified files"
     return 1
   fi
   mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select --multi)
   [[ ${#selected[@]} -eq 0 ]] && return 0
-  git checkout -- "${selected[@]/#/:(top)}"
+  git checkout -- "${selected[@]/#/:(top)}"  # :(top) = git pathspec: resolve path from repo root
 }
 
 # ============================ Cherry-Pick ============================
@@ -399,10 +397,10 @@ function gpr() {
   base_url=$(__git_web_url) || { echo "Error: no supported remote found (GitHub or Azure DevOps)"; return 1; }
 
   branch_name=$(git symbolic-ref --short HEAD 2>/dev/null)
-  [ -n "$branch_name" ] || { echo "Error: not in a git repository or in detached HEAD state"; return 1; }
+  [[ -n "$branch_name" ]] || { echo "Error: not in a git repository or in detached HEAD state"; return 1; }
 
   main_branch=$(gbdefault)
-  [ -n "$main_branch" ] || { echo "Error: could not determine default branch"; return 1; }
+  [[ -n "$main_branch" ]] || { echo "Error: could not determine default branch"; return 1; }
 
   if [[ "$base_url" == *dev.azure.com* || "$base_url" == *visualstudio.com* ]]; then
     pr_url="$base_url/pullrequestcreate?sourceRef=refs/heads/$branch_name&targetRef=refs/heads/$main_branch"
@@ -422,7 +420,7 @@ function grepo() {
   base_url=$(__git_web_url) || { echo "Error: no supported remote found (GitHub or Azure DevOps)"; return 1; }
 
   main_branch=$(gbdefault)
-  [ -n "$main_branch" ] || { echo "Error: could not determine default branch"; return 1; }
+  [[ -n "$main_branch" ]] || { echo "Error: could not determine default branch"; return 1; }
 
   current_branch=$(gbcurrent 2>/dev/null)
   url="$base_url"
@@ -444,7 +442,7 @@ function gbdefault() {
 
   default_branch=$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null | cut -d'/' -f2)
 
-  if [ -z "$default_branch" ]; then
+  if [[ -z "$default_branch" ]]; then
     for branch in main master; do
       if git show-ref --verify --quiet "refs/remotes/origin/$branch" 2>/dev/null; then
         default_branch="$branch"
@@ -453,11 +451,11 @@ function gbdefault() {
     done
   fi
 
-  if [ -z "$default_branch" ]; then
+  if [[ -z "$default_branch" ]]; then
     default_branch=$(git remote show origin 2>/dev/null | awk -F': ' '/HEAD branch/ {print $2; exit}')
   fi
 
-  if [ -z "$default_branch" ]; then
+  if [[ -z "$default_branch" ]]; then
     default_branch=$(git symbolic-ref --short HEAD 2>/dev/null)
   fi
 
