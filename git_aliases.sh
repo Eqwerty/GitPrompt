@@ -58,6 +58,39 @@ function gcobm() {
   git checkout "${selected[0]}"
 }
 
+# Interactively select a remote branch to check out and track (menu)
+function gcotm() {
+  local current_upstream
+  current_upstream=$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null)
+
+  local -a branches selected
+  mapfile -t branches < <(git branch --remotes | sed 's/^  //' | grep -v ' -> ' | grep -v "^${current_upstream}$")
+
+  if [[ ${#branches[@]} -eq 0 ]]; then
+    echo "No remote branches to track"
+    return 1
+  fi
+
+  mapfile -t selected < <(printf '%s\n' "${branches[@]}" | __git_select)
+  [[ ${#selected[@]} -eq 0 ]] && return 0
+  git checkout --track "${selected[0]}"
+}
+
+# Interactively select a remote branch to check out in detached HEAD mode (menu)
+function gcorbm() {
+  local -a branches selected
+  mapfile -t branches < <(git branch --remotes | sed 's/^  //' | grep -v ' -> ')
+
+  if [[ ${#branches[@]} -eq 0 ]]; then
+    echo "No remote branches to check out"
+    return 1
+  fi
+
+  mapfile -t selected < <(printf '%s\n' "${branches[@]}" | __git_select)
+  [[ ${#selected[@]} -eq 0 ]] && return 0
+  git checkout "${selected[0]}"
+}
+
 # ============================ Merge ============================
 alias gm="git merge --no-edit" # Merge branches without opening an editor
 alias gma="git merge --abort" # Abort a merge
