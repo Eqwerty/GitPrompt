@@ -22,6 +22,9 @@ internal abstract class PlatformProvider
 
     internal abstract long? LastCommandDurationMs { get; }
 
+    internal static string? ResolveHost(string? msystem, string machineName) =>
+        !string.IsNullOrEmpty(msystem) ? msystem : machineName;
+
     private sealed class SystemPlatformProvider : PlatformProvider
     {
         internal override bool IsWindows() => OperatingSystem.IsWindows();
@@ -32,7 +35,8 @@ internal abstract class PlatformProvider
 
         internal override string? WindowsUserDomain => Environment.GetEnvironmentVariable("USERDOMAIN");
 
-        internal override string Host => Environment.MachineName;
+        internal override string? Host =>
+            ResolveHost(Environment.GetEnvironmentVariable("MSYSTEM"), Environment.MachineName);
 
         internal override WorkingDirectoryContext WorkingDirectory
         {
