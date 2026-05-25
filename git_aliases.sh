@@ -189,6 +189,20 @@ alias gshno="git show --oneline --name-only" # Show names of files changed in a 
 
 # ============================ Reset ============================
 alias grm="git reset" # Reset index but keep changes in the working directory (mixed mode)
+
+# Interactively select staged files to unstage (menu)
+function grmm() {
+  local -a files selected
+  mapfile -t files < <(git status --porcelain | awk 'substr($0,1,1) != " " && substr($0,1,1) != "?" {print $2}')
+  if [[ ${#files[@]} -eq 0 ]]; then
+    echo "No staged files to reset"
+    return 1
+  fi
+  mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select --multi)
+  [[ ${#selected[@]} -eq 0 ]] && return 0
+  git reset -- "${selected[@]}"
+}
+
 alias grhh="git reset HEAD --hard" # Discards all uncommitted changes (hard reset).
 
 # Reset the current branch to n commits before HEAD
