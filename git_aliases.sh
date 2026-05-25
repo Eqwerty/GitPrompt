@@ -188,7 +188,7 @@ alias gsh="git show -w" # Show details of a commit
 alias gshno="git show --oneline --name-only" # Show names of files changed in a commit
 
 # ============================ Reset ============================
-alias grm="git reset --mixed" # Reset index but keep changes in the working directory (mixed mode)
+alias grm="git reset" # Reset index but keep changes in the working directory (mixed mode)
 alias grhh="git reset HEAD --hard" # Discards all uncommitted changes (hard reset).
 
 # Reset the current branch to n commits before HEAD
