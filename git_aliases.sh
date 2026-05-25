@@ -231,7 +231,7 @@ alias gdfu="git diff --name-only --diff-filter=U" # Show files with unmerged cha
 # Show the diff of a file interactively selected from modified files (menu)
 function gdm() {
   local -a files selected
-  mapfile -t files < <(git status --porcelain | awk '{print $2}')
+  mapfile -t files < <(git status --porcelain | awk 'substr($0,2,1) != " " && substr($0,2,1) != "?" {print $2}')
   if [[ ${#files[@]} -eq 0 ]]; then
     echo "No modified files"
     return 1
