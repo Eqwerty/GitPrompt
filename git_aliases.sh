@@ -40,6 +40,42 @@ alias gco="git checkout" # Switch branches
 alias gcot="git checkout --track" # Switch to a remote branch and track it
 alias gcob="git checkout -b" # Create and switch to a new branch
 
+# Interactively select local branches to delete (safe, menu, no auto-select)
+function gbdm() {
+  local current_branch
+  current_branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+
+  local -a branches selected
+  mapfile -t branches < <(git branch --list | sed 's/^[* ] //' | grep -v "^${current_branch}$")
+
+  if [[ ${#branches[@]} -eq 0 ]]; then
+    echo "No branches to delete"
+    return 1
+  fi
+
+  mapfile -t selected < <(printf '%s\n' "${branches[@]}" | __git_select --multi --no-auto)
+  [[ ${#selected[@]} -eq 0 ]] && return 0
+  git branch -d "${selected[@]}"
+}
+
+# Interactively select local branches to force-delete (menu, no auto-select)
+function gbDm() {
+  local current_branch
+  current_branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+
+  local -a branches selected
+  mapfile -t branches < <(git branch --list | sed 's/^[* ] //' | grep -v "^${current_branch}$")
+
+  if [[ ${#branches[@]} -eq 0 ]]; then
+    echo "No branches to delete"
+    return 1
+  fi
+
+  mapfile -t selected < <(printf '%s\n' "${branches[@]}" | __git_select --multi --no-auto)
+  [[ ${#selected[@]} -eq 0 ]] && return 0
+  git branch -D "${selected[@]}"
+}
+
 # Interactively select a branch to check out (menu, current branch excluded)
 function gcobm() {
   local current_branch
@@ -453,8 +489,14 @@ function gcdroot() {
 # - --multi: allow selecting more than one item (Tab in fzf; space-separated numbers in fallback).
 # Output: selected item(s) on stdout, one per line.
 function __git_select() {
-  local multi=0
-  [[ "${1:-}" == "--multi" ]] && multi=1
+  local multi=0 no_auto=0
+  while [[ "${1:-}" == --* ]]; do
+    case "$1" in
+      --multi)   multi=1 ;;
+      --no-auto) no_auto=1 ;;
+    esac
+    shift
+  done
 
   local -a items
   mapfile -t items
@@ -463,7 +505,7 @@ function __git_select() {
     return 1
   fi
 
-  if [[ ${#items[@]} -eq 1 ]]; then
+  if [[ ${#items[@]} -eq 1 && $no_auto -eq 0 ]]; then
     echo "→ Auto-selected: ${items[0]}" >&2
     printf '%s\n' "${items[0]}"
     return 0
