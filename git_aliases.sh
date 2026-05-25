@@ -368,8 +368,9 @@ function __git_web_url() {
       ;;
     git@ssh.dev.azure.com:*)
       path="${remote_url#git@ssh.dev.azure.com:v3/}"
-      IFS='/' read -r org project repo <<< "$path"
-      echo "https://dev.azure.com/$org/$project/_git/$repo"
+      org="${path%%/*}"; path="${path#*/}"; project="${path%%/*}"; repo="${path#*/}"
+      url="https://dev.azure.com/$org/$project/_git/$repo"
+      echo "$url"
       ;;
     https://dev.azure.com/* | https://*@dev.azure.com/*)
       # Strip embedded credentials if present (e.g. https://Org@dev.azure.com/... → https://dev.azure.com/...)
@@ -378,8 +379,9 @@ function __git_web_url() {
       ;;
     git@vs-ssh.visualstudio.com:*)
       path="${remote_url#git@vs-ssh.visualstudio.com:v3/}"
-      IFS='/' read -r org project repo <<< "$path"
-      echo "https://dev.azure.com/$org/$project/_git/$repo"
+      org="${path%%/*}"; path="${path#*/}"; project="${path%%/*}"; repo="${path#*/}"
+      url="https://dev.azure.com/$org/$project/_git/$repo"
+      echo "$url"
       ;;
     https://*.visualstudio.com/*)
       echo "${remote_url%.git}"
