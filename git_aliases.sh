@@ -17,7 +17,7 @@ function gam() {
   fi
   mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select --multi)
   [[ ${#selected[@]} -eq 0 ]] && return 0
-  git add -- "${selected[@]}"
+  git add -- "${selected[@]/#/:(top)}"
 }
 
 # ============================ Commit ============================
@@ -183,7 +183,7 @@ function gsufm() {
   fi
   mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select --multi)
   [[ ${#selected[@]} -eq 0 ]] && return 0
-  git stash push -u -- "${selected[@]}"
+  git stash push -u -- "${selected[@]/#/:(top)}"
 }
 
 # ============================ Log ============================
@@ -262,14 +262,14 @@ alias grm="git reset" # Reset index but keep changes in the working directory (m
 # Interactively select staged files to unstage (menu)
 function grmm() {
   local -a files selected
-  mapfile -t files < <(git status --porcelain | awk 'substr($0,1,1) != " " && substr($0,1,1) != "?" {print $2}')
+  mapfile -t files < <(git diff --name-only --cached)
   if [[ ${#files[@]} -eq 0 ]]; then
     echo "No staged files to reset"
     return 1
   fi
   mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select --multi)
   [[ ${#selected[@]} -eq 0 ]] && return 0
-  git reset -- "${selected[@]}"
+  git reset -- "${selected[@]/#/:(top)}"
 }
 
 alias grhh="git reset HEAD --hard" # Discards all uncommitted changes (hard reset).
@@ -300,27 +300,27 @@ alias gdfu="git diff --name-only --diff-filter=U" # Show files with unmerged cha
 # Show the diff of a file interactively selected from modified files (menu)
 function gdm() {
   local -a files selected
-  mapfile -t files < <(git status --porcelain | awk 'substr($0,2,1) != " " && substr($0,2,1) != "?" {print $2}')
+  mapfile -t files < <(git diff --name-only)
   if [[ ${#files[@]} -eq 0 ]]; then
     echo "No modified files"
     return 1
   fi
   mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select)
   [[ ${#selected[@]} -eq 0 ]] && return 0
-  git diff -w -- "${selected[0]}"
+  git diff -w -- ":(top)${selected[0]}"
 }
 
 # Show the diff of a staged file interactively selected from staged files (menu)
 function gdsm() {
   local -a files selected
-  mapfile -t files < <(git status --porcelain | awk 'substr($0,1,1) != " " && substr($0,1,1) != "?" {print $2}')
+  mapfile -t files < <(git diff --name-only --cached)
   if [[ ${#files[@]} -eq 0 ]]; then
     echo "No staged files"
     return 1
   fi
   mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select)
   [[ ${#selected[@]} -eq 0 ]] && return 0
-  git diff -w --staged -- "${selected[0]}"
+  git diff -w --staged -- ":(top)${selected[0]}"
 }
 
 # ============================ Status ============================
@@ -341,7 +341,7 @@ function gcofm() {
   fi
   mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select --multi)
   [[ ${#selected[@]} -eq 0 ]] && return 0
-  git checkout -- "${selected[@]}"
+  git checkout -- "${selected[@]/#/:(top)}"
 }
 
 # ============================ Cherry-Pick ============================
