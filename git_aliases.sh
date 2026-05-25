@@ -360,31 +360,32 @@ function __git_web_url() {
   local remote_url
   remote_url=$(git remote get-url origin 2>/dev/null) || { echo "Error: no remote 'origin' found" >&2; return 1; }
 
+  local url org project repo path
   case "$remote_url" in
     *github.com*)
-      printf '%s\n' "$(printf '%s' "$remote_url" | sed -Ee 's#git@github\.com:#https://github.com/#' -e 's%\.git$%%')"
+      url=$(printf '%s' "$remote_url" | sed -Ee 's#git@github\.com:#https://github.com/#' -e 's#\.git$##')
+      echo "$url"
       ;;
     git@ssh.dev.azure.com:*)
-      local path org project repo
       path="${remote_url#git@ssh.dev.azure.com:v3/}"
       IFS='/' read -r org project repo <<< "$path"
-      printf 'https://dev.azure.com/%s/%s/_git/%s\n' "$org" "$project" "$repo"
+      echo "https://dev.azure.com/$org/$project/_git/$repo"
       ;;
     https://dev.azure.com/* | https://*@dev.azure.com/*)
       # Strip embedded credentials if present (e.g. https://Org@dev.azure.com/... → https://dev.azure.com/...)
-      printf '%s\n' "$(printf '%s' "${remote_url%.git}" | sed 's#https://[^@/]*@#https://#')"
+      url=$(printf '%s' "${remote_url%.git}" | sed 's#https://[^@/]*@#https://#')
+      echo "$url"
       ;;
     git@vs-ssh.visualstudio.com:*)
-      local path org project repo
       path="${remote_url#git@vs-ssh.visualstudio.com:v3/}"
       IFS='/' read -r org project repo <<< "$path"
-      printf 'https://dev.azure.com/%s/%s/_git/%s\n' "$org" "$project" "$repo"
+      echo "https://dev.azure.com/$org/$project/_git/$repo"
       ;;
     https://*.visualstudio.com/*)
-      printf '%s\n' "${remote_url%.git}"
+      echo "${remote_url%.git}"
       ;;
     *)
-      printf 'Error: unsupported remote URL format: %s\n' "$remote_url" >&2
+      echo "Error: unsupported remote URL format: $remote_url" >&2
       return 1
       ;;
   esac
