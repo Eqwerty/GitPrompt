@@ -252,7 +252,21 @@ function gcc() {
 alias gbl="git blame --color-by-age --color-lines" # Show blame information with color-by-age and color-lines
 alias ggr="git grep --no-index -i -I --exclude-standard --heading --line-number" # Search for a string in the repository
 alias gsh="git show -w" # Show details of a commit
-alias gshno="git show --oneline --name-only" # Show names of files changed in a commit
+alias gshno="git show --name-only --format=" # Show names of files changed in a commit
+
+# Interactively select a file changed in a commit to show its diff (menu, defaults to HEAD)
+function gshm() {
+  local commit="${1:-HEAD}"
+  local -a files selected
+  mapfile -t files < <(git show --name-only --format= "$commit" 2>/dev/null)
+  if [[ ${#files[@]} -eq 0 ]]; then
+    echo "No files changed in commit $commit"
+    return 1
+  fi
+  mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select)
+  [[ ${#selected[@]} -eq 0 ]] && return 0
+  git show -w "$commit" -- ":(top)${selected[0]}"
+}
 
 # ============================ Reset ============================
 alias grm="git reset" # Reset index but keep changes in the working directory (mixed mode)
