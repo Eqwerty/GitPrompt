@@ -5,4 +5,5 @@ internal sealed record CommandDescriptor(
     string Usage,
     string Description,
     Action<string[]> Execute,
-    bool IsHidden = false);
+    bool IsHidden = false,
+    string? Group = null);

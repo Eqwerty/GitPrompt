@@ -81,4 +81,72 @@ public sealed class HelpCommandTests
             line => line.Length > expectedDescriptionColumn && !char.IsWhiteSpace(line[expectedDescriptionColumn]),
             $"all descriptions should start at column {expectedDescriptionColumn}");
     }
+
+    [Theory]
+    [InlineData("Flags:")]
+    [InlineData("Setup:")]
+    [InlineData("Configuration:")]
+    [InlineData("Aliases:")]
+    [InlineData("Maintenance:")]
+    [InlineData("Diagnostics:")]
+    public void PrintHelp_ShouldOutputEachSectionHeader(string header)
+    {
+        // Arrange
+        var output = new StringWriter();
+
+        // Act
+        HelpCommand.PrintHelp(output);
+
+        // Assert
+        output.ToString().Should().Contain(header);
+    }
+
+    [Theory]
+    [InlineData("Configuration:", "gitprompt config", "gitprompt config reset [-y]")]
+    [InlineData("Aliases:", "gitprompt aliases", "gitprompt aliases enable", "gitprompt aliases disable")]
+    [InlineData("Maintenance:", "gitprompt update", "gitprompt update aliases", "gitprompt uninstall")]
+    [InlineData("Diagnostics:", "gitprompt debug", "gitprompt paths")]
+    public void PrintHelp_WhenSectionHasSubCommands_ShouldGroupThemUnderSectionHeader(string header, params string[] usages)
+    {
+        // Arrange
+        var output = new StringWriter();
+
+        // Act
+        HelpCommand.PrintHelp(output);
+
+        // Assert
+        var text = output.ToString();
+        var headerIndex = text.IndexOf(header, StringComparison.Ordinal);
+        headerIndex.Should().BeGreaterThan(-1, $"section '{header}' should be present");
+
+        var nextHeaderIndex = FindNextSectionHeader(text, headerIndex + header.Length);
+
+        foreach (var usage in usages)
+        {
+            var usageIndex = text.IndexOf(usage, StringComparison.Ordinal);
+            usageIndex.Should().BeGreaterThan(headerIndex, $"'{usage}' should appear after '{header}'");
+            if (nextHeaderIndex >= 0)
+            {
+                usageIndex.Should().BeLessThan(nextHeaderIndex, $"'{usage}' should appear before the next section");
+            }
+        }
+    }
+
+    private static int FindNextSectionHeader(string text, int startIndex)
+    {
+        var headers = new[] { "Flags:", "Setup:", "Configuration:", "Aliases:", "Maintenance:", "Diagnostics:" };
+        var minIndex = -1;
+
+        foreach (var header in headers)
+        {
+            var idx = text.IndexOf(header, startIndex, StringComparison.Ordinal);
+            if (idx >= 0 && (minIndex < 0 || idx < minIndex))
+            {
+                minIndex = idx;
+            }
+        }
+
+        return minIndex;
+    }
 }
+

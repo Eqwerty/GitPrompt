@@ -8,20 +8,24 @@ internal static class HelpCommand
     {
         output ??= Console.Out;
 
-        var configPath = AppPaths.GetConfigFilePath();
         var visibleCommands = CommandRegistry.VisibleCommands;
         var padWidth = visibleCommands.Max(command => command.Usage.Length) + 5;
 
+        var groups = visibleCommands
+            .GroupBy(command => command.Group ?? string.Empty)
+            .ToList();
+
         output.WriteLine("GitPrompt - fast Git prompt for Bash");
-        output.WriteLine();
-        output.WriteLine("Usage:");
 
-        foreach (var command in visibleCommands)
+        foreach (var group in groups)
         {
-            output.WriteLine($"  {command.Usage.PadRight(padWidth)}{command.Description}");
-        }
+            output.WriteLine();
+            output.WriteLine($"{group.Key}:");
 
-        output.WriteLine();
-        output.WriteLine($"Config: {configPath}");
+            foreach (var command in group)
+            {
+                output.WriteLine($"  {command.Usage.PadRight(padWidth)}{command.Description}");
+            }
+        }
     }
 }
