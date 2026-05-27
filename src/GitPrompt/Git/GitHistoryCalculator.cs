@@ -6,13 +6,13 @@ internal static class GitHistoryCalculator
 {
     private static readonly string[] CandidateBaseReferences = ["origin/main", "origin/master", "main", "master"];
 
-    internal static int ComputeLocalAheadCommitCount(string repositoryRootPath)
+    internal static int ComputeLocalAheadCommitCount(string repositoryRootPath, string currentBranchName)
     {
-        var baseReference = ResolveBaseReference(repositoryRootPath);
+        var baseReference = ResolveBaseReference(repositoryRootPath, currentBranchName);
 
         if (string.IsNullOrEmpty(baseReference))
         {
-            return ComputeLocalAheadCommitCountWithFallbacks(repositoryRootPath);
+            return ComputeLocalAheadCommitCountWithFallbacks(repositoryRootPath, currentBranchName);
         }
 
         var forkPointCommit = RunGitCommand(repositoryRootPath, "merge-base", "--fork-point", baseReference, "HEAD") ?? string.Empty;
@@ -30,7 +30,7 @@ internal static class GitHistoryCalculator
         return int.TryParse(commitCountOutput, out var commitCount) ? commitCount : 0;
     }
 
-    private static int ComputeLocalAheadCommitCountWithFallbacks(string repositoryRootPath)
+    private static int ComputeLocalAheadCommitCountWithFallbacks(string repositoryRootPath, string currentBranchName)
     {
         var remoteHeadRef = RunGitCommand(repositoryRootPath, "symbolic-ref", "refs/remotes/origin/HEAD");
 
@@ -49,14 +49,22 @@ internal static class GitHistoryCalculator
 
         foreach (var candidateReference in CandidateBaseReferences)
         {
+            if (IsSameBranch(candidateReference, currentBranchName))
+            {
+                continue;
+            }
+
             var commitCount = TryGetAheadCountAgainstReference(repositoryRootPath, candidateReference);
+
             if (commitCount.HasValue)
             {
                 return commitCount.Value;
             }
         }
 
-        return 0;
+        var totalCountOutput = RunGitCommand(repositoryRootPath, "rev-list", "--count", "HEAD");
+
+        return int.TryParse(totalCountOutput, out var totalCount) ? totalCount : 0;
     }
 
     private static int? TryGetAheadCountAgainstReference(string repositoryRootPath, string baseReference)
@@ -114,7 +122,7 @@ internal static class GitHistoryCalculator
         return (commitsAhead, commitsBehind);
     }
 
-    private static string ResolveBaseReference(string repositoryRootPath)
+    private static string ResolveBaseReference(string repositoryRootPath, string currentBranchName)
     {
         var baseReference = RunGitCommand(repositoryRootPath, "symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD");
         if (!string.IsNullOrEmpty(baseReference))
@@ -130,6 +138,11 @@ internal static class GitHistoryCalculator
 
         foreach (var candidateReference in CandidateBaseReferences)
         {
+            if (IsSameBranch(candidateReference, currentBranchName))
+            {
+                continue;
+            }
+
             if (candidateReference.StartsWith("origin/", StringComparison.Ordinal))
             {
                 var remoteReferencePath = $"refs/remotes/{candidateReference}";
@@ -149,6 +162,15 @@ internal static class GitHistoryCalculator
         }
 
         return string.Empty;
+    }
+
+    private static bool IsSameBranch(string candidateReference, string currentBranchName)
+    {
+        var shortName = candidateReference.StartsWith("origin/", StringComparison.Ordinal)
+            ? candidateReference["origin/".Length..]
+            : candidateReference;
+
+        return string.Equals(shortName, currentBranchName, StringComparison.Ordinal);
     }
 
     private static bool ReferenceExists(string repositoryRootPath, string referencePath)

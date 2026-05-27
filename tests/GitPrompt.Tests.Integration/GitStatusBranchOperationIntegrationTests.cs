@@ -164,9 +164,65 @@ public sealed class GitStatusBranchOperationIntegrationTests
         originHeadResult.ExitCode.Should().NotBe(0);
 
         // Act
-        var localAheadCount = GitHistoryCalculator.ComputeLocalAheadCommitCount(localRepositoryPath);
+        var localAheadCount = GitHistoryCalculator.ComputeLocalAheadCommitCount(localRepositoryPath, "main");
 
         // Assert
         localAheadCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task BuildGitStatusSegment_WhenFreshRepoOnDefaultBranchWithCommitsAndNoRemote_ShouldShowAheadCount()
+    {
+        // Arrange
+        using var sandbox = new TestHelpers.TemporaryDirectory();
+        var repositoryPath = Path.Combine(sandbox.DirectoryPath, "repo");
+
+        await TestHelpers.RunGitAsync(sandbox.DirectoryPath, $"init --initial-branch=main {TestHelpers.Quote(repositoryPath)}");
+        await TestHelpers.ConfigureGitIdentityAsync(repositoryPath);
+
+        await File.WriteAllTextAsync(Path.Combine(repositoryPath, "a.txt"), "a\n");
+        await TestHelpers.RunGitAsync(repositoryPath, "add a.txt");
+        await TestHelpers.RunGitAsync(repositoryPath, "commit -m \"first\"");
+
+        await File.WriteAllTextAsync(Path.Combine(repositoryPath, "b.txt"), "b\n");
+        await TestHelpers.RunGitAsync(repositoryPath, "add b.txt");
+        await TestHelpers.RunGitAsync(repositoryPath, "commit -m \"second\"");
+
+        // Act
+        var gitStatusSegment = GitStatusSegmentBuilder.Build(repositoryPath);
+
+        // Assert
+        gitStatusSegment.Should().Contain(TestHelpers.NoUpstreamBranchLabel("main"));
+        gitStatusSegment.Should().Contain(TestHelpers.Indicator(PromptIcons.IconAhead, 2));
+    }
+
+    [Fact]
+    public async Task BuildGitStatusSegment_WhenFreshRepoOnNonDefaultBranchWithCommitsAndNoRemote_ShouldShowAheadCount()
+    {
+        // Arrange
+        using var sandbox = new TestHelpers.TemporaryDirectory();
+        var repositoryPath = Path.Combine(sandbox.DirectoryPath, "repo");
+
+        await TestHelpers.RunGitAsync(sandbox.DirectoryPath, $"init --initial-branch=feature {TestHelpers.Quote(repositoryPath)}");
+        await TestHelpers.ConfigureGitIdentityAsync(repositoryPath);
+
+        await File.WriteAllTextAsync(Path.Combine(repositoryPath, "a.txt"), "a\n");
+        await TestHelpers.RunGitAsync(repositoryPath, "add a.txt");
+        await TestHelpers.RunGitAsync(repositoryPath, "commit -m \"first\"");
+
+        await File.WriteAllTextAsync(Path.Combine(repositoryPath, "b.txt"), "b\n");
+        await TestHelpers.RunGitAsync(repositoryPath, "add b.txt");
+        await TestHelpers.RunGitAsync(repositoryPath, "commit -m \"second\"");
+
+        await File.WriteAllTextAsync(Path.Combine(repositoryPath, "c.txt"), "c\n");
+        await TestHelpers.RunGitAsync(repositoryPath, "add c.txt");
+        await TestHelpers.RunGitAsync(repositoryPath, "commit -m \"third\"");
+
+        // Act
+        var gitStatusSegment = GitStatusSegmentBuilder.Build(repositoryPath);
+
+        // Assert
+        gitStatusSegment.Should().Contain(TestHelpers.NoUpstreamBranchLabel("feature"));
+        gitStatusSegment.Should().Contain(TestHelpers.Indicator(PromptIcons.IconAhead, 3));
     }
 }

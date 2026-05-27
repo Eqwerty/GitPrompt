@@ -121,7 +121,7 @@ internal static class GitStatusSegmentBuilder
 
         if (!snapshot.HasUpstream)
         {
-            return (GitHistoryCalculator.ComputeLocalAheadCommitCount(repositoryRootPath), Behind: 0);
+            return (GitHistoryCalculator.ComputeLocalAheadCommitCount(repositoryRootPath, snapshot.BranchHeadName), Behind: 0);
         }
 
         return (snapshot.CommitsAhead, snapshot.CommitsBehind);

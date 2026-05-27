@@ -60,7 +60,8 @@ public sealed class GitStatusSharedCacheTests
 
         GitStatusSharedCache.Set(repositoryPath, gitDirectoryPath, "cached-segment");
 
-        File.WriteAllText(branchPath, "0000000000000000000000000000000000000002\n");
+        // Write different-length content to guarantee a size change regardless of filesystem timestamp precision.
+        File.WriteAllText(branchPath, "0000000000000000000000000000000000000002\n\n");
 
         // Act
         var found = GitStatusSharedCache.TryGet(repositoryPath, gitDirectoryPath, out _);
