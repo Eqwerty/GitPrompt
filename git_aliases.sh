@@ -305,8 +305,12 @@ function grch() {
 }
 
 # ============================ Diff ============================
-alias gd="git diff -w" # Show changes between commits, branches, or the working directory
-alias gds="git diff -w --staged" # Show changes in the staging area
+alias gd="git diff" # Show changes between commits, branches, or the working directory
+alias gdw="git diff -w" # Show changes while ignoring whitespace
+alias gdno="git diff --name-only" # Show names of changed files
+alias gds="git diff --staged" # Show changes in the staging area
+alias gdsw="git diff --staged -w" # Show staged changes while ignoring whitespace
+alias gdsno="git diff --staged --name-only" # Show names of staged files
 alias gdfu="git diff --name-only --diff-filter=U" # Show files with unmerged changes or conflicts
 
 # Show the diff of a file interactively selected from modified files (menu)
