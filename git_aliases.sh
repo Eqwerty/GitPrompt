@@ -163,7 +163,7 @@ function gssh() {
     echo "Usage: gssh <stash-index>"
     return 1
   fi
-  git stash show -w -p "stash@{$1}"
+  git stash show -p "stash@{$1}"
 }
 
 # Interactively select a modified/untracked file to stash (menu)
@@ -234,7 +234,7 @@ function gsshm() {
   [[ ${#selected[@]} -eq 0 ]] && return 0
   local ref
   ref=$(echo "${selected[0]}" | cut -d: -f1)
-  git stash show -w -p "$ref"
+  git stash show -p "$ref"
 }
 
 # ============================ Log ============================
@@ -309,7 +309,7 @@ function gcc() {
 # ============================ Show ============================
 alias gbl="git blame --color-by-age --color-lines" # Show blame information with color-by-age and color-lines
 alias ggr="git grep --no-index -i -I --exclude-standard --heading --line-number" # Search for a string in the repository
-alias gsh="git show -w" # Show details of a commit
+alias gsh="git show" # Show details of a commit
 alias gshno="git show --name-only --format=" # Show names of files changed in a commit
 
 # Interactively select a file changed in a commit to show its diff (menu, defaults to HEAD)
@@ -324,7 +324,7 @@ function gshm() {
   local preview="git show --color=always ${commit} -- {}"
   mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select --preview "$preview")
   [[ ${#selected[@]} -eq 0 ]] && return 0
-  git show -w "$commit" -- ":(top)${selected[0]}"
+  git show "$commit" -- ":(top)${selected[0]}"
 }
 
 # ============================ Reset ============================
@@ -365,10 +365,8 @@ function grch() {
 
 # ============================ Diff ============================
 alias gd="git diff" # Show changes between commits, branches, or the working directory
-alias gdw="git diff -w" # Show changes while ignoring whitespace
 alias gdno="git diff --name-only" # Show names of changed files
 alias gds="git diff --staged" # Show changes in the staging area
-alias gdsw="git diff --staged -w" # Show staged changes while ignoring whitespace
 alias gdsno="git diff --staged --name-only" # Show names of staged files
 alias gdfu="git diff --name-only --diff-filter=U" # Show files with unmerged changes or conflicts
 
@@ -382,7 +380,7 @@ function gdm() {
   fi
   mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select --preview "$__GIT_DIFF_PREVIEW")
   [[ ${#selected[@]} -eq 0 ]] && return 0
-  git diff -w -- ":(top)${selected[0]}"  # :(top) = git pathspec: resolve path from repo root
+  git diff -- ":(top)${selected[0]}"  # :(top) = git pathspec: resolve path from repo root
 }
 
 # Show the diff of a staged file interactively selected from staged files (menu)
@@ -395,7 +393,7 @@ function gdsm() {
   fi
   mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select --preview "$__GIT_STAGED_PREVIEW")
   [[ ${#selected[@]} -eq 0 ]] && return 0
-  git diff -w --staged -- ":(top)${selected[0]}"  # :(top) = git pathspec: resolve path from repo root
+  git diff --staged -- ":(top)${selected[0]}"  # :(top) = git pathspec: resolve path from repo root
 }
 
 # ============================ Status ============================
