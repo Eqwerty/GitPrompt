@@ -10,12 +10,12 @@ alias gap="git add --patch" # Interactively stage changes in the working directo
 # Interactively select modified/untracked files to add (menu)
 function gam() {
   local -a files selected
-  mapfile -t files < <(git status --porcelain | awk '{print substr($0,4)}')
+  mapfile -t files < <({ git diff --name-only; git ls-files --others --exclude-standard; } | sort -u)
   if [[ ${#files[@]} -eq 0 ]]; then
     echo "No modified files to add"
     return 1
   fi
-  mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select --multi)
+  mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select --multi --preview "$__GIT_FILE_PREVIEW")
   [[ ${#selected[@]} -eq 0 ]] && return 0
   git add -- "${selected[@]/#/:(top)}"  # :(top) = git pathspec: resolve path from repo root
 }
@@ -57,14 +57,14 @@ function __git_branch_delete() {
   current_branch=$(git symbolic-ref --short HEAD 2>/dev/null)
 
   local -a branches selected
-  mapfile -t branches < <(git branch --list | sed 's/^[* ] //' | grep -v "^${current_branch}$")
+  mapfile -t branches < <(git branch --list --sort=-committerdate | sed 's/^[* ] //' | grep -v "^${current_branch}$")
 
   if [[ ${#branches[@]} -eq 0 ]]; then
     echo "No branches to delete"
     return 1
   fi
 
-  mapfile -t selected < <(printf '%s\n' "${branches[@]}" | __git_select --multi --no-auto)
+  mapfile -t selected < <(printf '%s\n' "${branches[@]}" | __git_select --multi --preview "$__GIT_BRANCH_UNMERGED_PREVIEW")
   [[ ${#selected[@]} -eq 0 ]] && return 0
   git branch "$flag" "${selected[@]}"
 }
@@ -75,14 +75,14 @@ function gcobm() {
   current_branch=$(git symbolic-ref --short HEAD 2>/dev/null)
 
   local -a branches selected
-  mapfile -t branches < <(git branch --list | sed 's/^[* ] //' | grep -v "^${current_branch}$")
+  mapfile -t branches < <(git branch --list --sort=-committerdate | sed 's/^[* ] //' | grep -v "^${current_branch}$")
 
   if [[ ${#branches[@]} -eq 0 ]]; then
     echo "No other branches to switch to"
     return 1
   fi
 
-  mapfile -t selected < <(printf '%s\n' "${branches[@]}" | __git_select)
+  mapfile -t selected < <(printf '%s\n' "${branches[@]}" | __git_select --preview "$__GIT_BRANCH_UNMERGED_PREVIEW")
   [[ ${#selected[@]} -eq 0 ]] && return 0
   git checkout "${selected[0]}"
 }
@@ -93,14 +93,14 @@ function gcotm() {
   current_upstream=$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null)
 
   local -a branches selected
-  mapfile -t branches < <(git branch --remotes | sed 's/^  //' | grep -v ' -> ' | grep -v "^${current_upstream}$")
+  mapfile -t branches < <(git branch --remotes --sort=-committerdate | sed 's/^  //' | grep -v ' -> ' | grep -v "^${current_upstream}$")
 
   if [[ ${#branches[@]} -eq 0 ]]; then
     echo "No remote branches to track"
     return 1
   fi
 
-  mapfile -t selected < <(printf '%s\n' "${branches[@]}" | __git_select)
+  mapfile -t selected < <(printf '%s\n' "${branches[@]}" | __git_select --preview "$__GIT_BRANCH_UNMERGED_PREVIEW")
   [[ ${#selected[@]} -eq 0 ]] && return 0
   git checkout --track "${selected[0]}"
 }
@@ -108,14 +108,14 @@ function gcotm() {
 # Interactively select a remote branch to check out in detached HEAD mode (menu)
 function gcorbm() {
   local -a branches selected
-  mapfile -t branches < <(git branch --remotes | sed 's/^  //' | grep -v ' -> ')
+  mapfile -t branches < <(git branch --remotes --sort=-committerdate | sed 's/^  //' | grep -v ' -> ')
 
   if [[ ${#branches[@]} -eq 0 ]]; then
     echo "No remote branches to check out"
     return 1
   fi
 
-  mapfile -t selected < <(printf '%s\n' "${branches[@]}" | __git_select)
+  mapfile -t selected < <(printf '%s\n' "${branches[@]}" | __git_select --preview "$__GIT_BRANCH_UNMERGED_PREVIEW")
   [[ ${#selected[@]} -eq 0 ]] && return 0
   git checkout "${selected[0]}"
 }
@@ -174,9 +174,67 @@ function gsufm() {
     echo "No modified files to stash"
     return 1
   fi
-  mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select --multi)
+  mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select --multi --preview 'out=$(git diff HEAD --color=always -- {}); [ -n "$out" ] && printf "%s\n" "$out" || { cmd=$(command -v batcat || command -v bat); [ -n "$cmd" ] && "$cmd" --paging=never --color=always --style=plain {} || cat {}; }')
   [[ ${#selected[@]} -eq 0 ]] && return 0
   git stash push -u -- "${selected[@]/#/:(top)}"  # :(top) = git pathspec: resolve path from repo root
+}
+function gspm() {
+  local -a stashes selected
+  mapfile -t stashes < <(git stash list)
+  if [[ ${#stashes[@]} -eq 0 ]]; then
+    echo "No stashes to pop"
+    return 1
+  fi
+  mapfile -t selected < <(printf '%s\n' "${stashes[@]}" | __git_select --preview "$__GIT_STASH_PREVIEW")
+  [[ ${#selected[@]} -eq 0 ]] && return 0
+  local ref
+  ref=$(echo "${selected[0]}" | cut -d: -f1)
+  git stash pop "$ref"
+}
+
+# Interactively select a stash to apply (menu)
+function gsam() {
+  local -a stashes selected
+  mapfile -t stashes < <(git stash list)
+  if [[ ${#stashes[@]} -eq 0 ]]; then
+    echo "No stashes to apply"
+    return 1
+  fi
+  mapfile -t selected < <(printf '%s\n' "${stashes[@]}" | __git_select --preview "$__GIT_STASH_PREVIEW")
+  [[ ${#selected[@]} -eq 0 ]] && return 0
+  local ref
+  ref=$(echo "${selected[0]}" | cut -d: -f1)
+  git stash apply "$ref"
+}
+
+# Interactively select a stash to drop (menu, no auto-select)
+function gsdm() {
+  local -a stashes selected
+  mapfile -t stashes < <(git stash list)
+  if [[ ${#stashes[@]} -eq 0 ]]; then
+    echo "No stashes to drop"
+    return 1
+  fi
+  mapfile -t selected < <(printf '%s\n' "${stashes[@]}" | __git_select --preview "$__GIT_STASH_PREVIEW")
+  [[ ${#selected[@]} -eq 0 ]] && return 0
+  local ref
+  ref=$(echo "${selected[0]}" | cut -d: -f1)
+  git stash drop "$ref"
+}
+
+# Interactively select a stash to show its diff (menu)
+function gsshm() {
+  local -a stashes selected
+  mapfile -t stashes < <(git stash list)
+  if [[ ${#stashes[@]} -eq 0 ]]; then
+    echo "No stashes to show"
+    return 1
+  fi
+  mapfile -t selected < <(printf '%s\n' "${stashes[@]}" | __git_select --preview "$__GIT_STASH_PREVIEW")
+  [[ ${#selected[@]} -eq 0 ]] && return 0
+  local ref
+  ref=$(echo "${selected[0]}" | cut -d: -f1)
+  git stash show -w -p "$ref"
 }
 
 # ============================ Log ============================
@@ -263,7 +321,8 @@ function gshm() {
     echo "No files changed in commit $commit"
     return 1
   fi
-  mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select)
+  local preview="git show --color=always ${commit} -- {}"
+  mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select --preview "$preview")
   [[ ${#selected[@]} -eq 0 ]] && return 0
   git show -w "$commit" -- ":(top)${selected[0]}"
 }
@@ -279,7 +338,7 @@ function grmm() {
     echo "No staged files to reset"
     return 1
   fi
-  mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select --multi)
+  mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select --multi --preview "$__GIT_STAGED_PREVIEW")
   [[ ${#selected[@]} -eq 0 ]] && return 0
   git reset -- "${selected[@]/#/:(top)}"  # :(top) = git pathspec: resolve path from repo root
 }
@@ -321,7 +380,7 @@ function gdm() {
     echo "No modified files"
     return 1
   fi
-  mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select)
+  mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select --preview "$__GIT_DIFF_PREVIEW")
   [[ ${#selected[@]} -eq 0 ]] && return 0
   git diff -w -- ":(top)${selected[0]}"  # :(top) = git pathspec: resolve path from repo root
 }
@@ -334,7 +393,7 @@ function gdsm() {
     echo "No staged files"
     return 1
   fi
-  mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select)
+  mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select --preview "$__GIT_STAGED_PREVIEW")
   [[ ${#selected[@]} -eq 0 ]] && return 0
   git diff -w --staged -- ":(top)${selected[0]}"  # :(top) = git pathspec: resolve path from repo root
 }
@@ -350,12 +409,12 @@ alias gref="git reflog" # Show the reflog
 # Interactively select modified/untracked files to check out (menu)
 function gcofm() {
   local -a files selected
-  mapfile -t files < <(git status --porcelain | awk '{print substr($0,4)}')
+  mapfile -t files < <(git diff --name-only)
   if [[ ${#files[@]} -eq 0 ]]; then
-    echo "No modified files"
+    echo "No files with unstaged changes"
     return 1
   fi
-  mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select --multi)
+  mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select --multi --preview "$__GIT_FILE_PREVIEW")
   [[ ${#selected[@]} -eq 0 ]] && return 0
   git checkout -- "${selected[@]/#/:(top)}"  # :(top) = git pathspec: resolve path from repo root
 }
@@ -500,19 +559,29 @@ function gcdroot() {
     fi
 }
 
+# Branch preview command for fzf — shows only commits not yet in the default branch (origin/HEAD).
+# fzf runs previews in a subshell where aliases are unavailable, so the full git command is stored here.
+__GIT_BRANCH_UNMERGED_PREVIEW='git log --graph --color=always --pretty=format:"%C(bold cyan)%h%Creset %C(white)%s %Cgreen(%cr) %C(bold cyan)<%an>%Creset" --abbrev-commit "$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null || echo origin/main)"..{}'
+
+# Diff preview constants — use plain colored git output.
+__GIT_FILE_PREVIEW='out=$(git diff --color=always -- {}); [ -n "$out" ] && printf "%s\n" "$out" || { cmd=$(command -v batcat || command -v bat); [ -n "$cmd" ] && "$cmd" --paging=never --color=always --style=plain {} || cat {}; }'
+__GIT_DIFF_PREVIEW='git diff --color=always -- {}'
+__GIT_STAGED_PREVIEW='git diff --staged --color=always -- {}'
+__GIT_STASH_PREVIEW='ref=$(echo {} | cut -d: -f1); git stash show -p --color=always "$ref" 2>/dev/null; git show "${ref}^3" --color=always 2>/dev/null'
+
 # Interactive menu picker for selecting from a list of items.
 # Usage: <list> | __git_select [--multi]
 # - Reads candidates from stdin (one per line).
-# - If exactly one candidate exists, auto-selects it without prompting.
+# - Always shows the interactive menu, even for a single item.
 # - Uses fzf when installed; otherwise falls back to a numbered list prompt.
 # - --multi: allow selecting more than one item (Tab in fzf; space-separated numbers in fallback).
 # Output: selected item(s) on stdout, one per line.
 function __git_select() {
-  local multi=0 no_auto=0
+  local multi=0 preview_cmd=""
   while [[ "${1:-}" == --* ]]; do
     case "$1" in
       --multi)   multi=1 ;;
-      --no-auto) no_auto=1 ;;
+      --preview) preview_cmd="$2"; shift ;;
     esac
     shift
   done
@@ -524,17 +593,13 @@ function __git_select() {
     return 1
   fi
 
-  if [[ ${#items[@]} -eq 1 && $no_auto -eq 0 ]]; then
-    echo "→ Auto-selected: ${items[0]}" >&2
-    printf '%s\n' "${items[0]}"
-    return 0
-  fi
-
   if command -v fzf >/dev/null 2>&1; then
+    local -a fzf_opts=()
+    [[ -n "$preview_cmd" ]] && fzf_opts+=(--preview "$preview_cmd" --preview-window "right:60%:wrap")
     if [[ $multi -eq 1 ]]; then
-      printf '%s\n' "${items[@]}" | fzf --multi --header "Tab: toggle selection | Enter: confirm"
+      printf '%s\n' "${items[@]}" | fzf --multi --header "Tab: toggle selection | Enter: confirm" "${fzf_opts[@]}"
     else
-      printf '%s\n' "${items[@]}" | fzf
+      printf '%s\n' "${items[@]}" | fzf "${fzf_opts[@]}"
     fi
     return $?
   fi
