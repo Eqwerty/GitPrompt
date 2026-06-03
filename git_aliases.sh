@@ -323,7 +323,7 @@ function gshm() {
     echo "No files changed in commit $commit"
     return 1
   fi
-  local preview="if command -v delta >/dev/null 2>&1; then if git show --diff-filter=AD --name-only --format= ${commit} -- {} | grep -q .; then git show --color=never ${commit} -- {} | delta --config \"\$__DELTA_LINEAR_CONFIG\" --paging=never --width \${FZF_PREVIEW_COLUMNS}; else git show --color=never ${commit} -- {} | delta --paging=never --width \${FZF_PREVIEW_COLUMNS}; fi; else git show --color=always ${commit} -- {}; fi"
+  local preview="if command -v delta >/dev/null 2>&1; then if git show --diff-filter=AD --name-only --format= ${commit} -- {} | grep -q .; then git show --format= --color=never ${commit} -- {} | delta --config \"\$__DELTA_LINEAR_CONFIG\" --paging=never --width \${FZF_PREVIEW_COLUMNS}; else git show --format= --color=never ${commit} -- {} | delta --paging=never --width \${FZF_PREVIEW_COLUMNS}; fi; else git show --format= --color=always ${commit} -- {}; fi"
   mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select --preview "$preview")
   [[ ${#selected[@]} -eq 0 ]] && return 0
   git show "$commit" -- ":(top)${selected[0]}"
