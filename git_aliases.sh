@@ -614,7 +614,7 @@ function __git_select() {
   if command -v fzf >/dev/null 2>&1; then
     local -a fzf_opts=(--height 100% --layout=reverse)
     if [[ -n "$preview_cmd" ]]; then
-      fzf_opts+=(--preview "$preview_cmd" --preview-window "bottom:70%:wrap" --bind "ctrl-/:toggle-preview")
+      fzf_opts+=(--preview "$preview_cmd" --preview-window "bottom:80%:wrap" --bind "ctrl-/:toggle-preview")
     fi
     local header_preview=""
     [[ -n "$preview_cmd" ]] && header_preview=" | Ctrl-/: toggle preview"
