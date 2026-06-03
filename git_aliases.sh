@@ -602,12 +602,16 @@ function __git_select() {
   fi
 
   if command -v fzf >/dev/null 2>&1; then
-    local -a fzf_opts=()
-    [[ -n "$preview_cmd" ]] && fzf_opts+=(--preview "$preview_cmd" --preview-window "right:60%:wrap")
+    local -a fzf_opts=(--height 100% --layout=reverse)
+    if [[ -n "$preview_cmd" ]]; then
+      fzf_opts+=(--preview "$preview_cmd" --preview-window "bottom:70%:wrap" --bind "ctrl-/:toggle-preview")
+    fi
+    local header_preview=""
+    [[ -n "$preview_cmd" ]] && header_preview=" | Ctrl-/: toggle preview"
     if [[ $multi -eq 1 ]]; then
-      printf '%s\n' "${items[@]}" | fzf --multi --header "Tab: toggle selection | Enter: confirm" "${fzf_opts[@]}"
+      printf '%s\n' "${items[@]}" | fzf --multi --header "Tab: toggle selection | Enter: confirm${header_preview}" "${fzf_opts[@]}"
     else
-      printf '%s\n' "${items[@]}" | fzf "${fzf_opts[@]}"
+      printf '%s\n' "${items[@]}" | fzf --header "Enter: confirm${header_preview}" "${fzf_opts[@]}"
     fi
     return $?
   fi
