@@ -557,9 +557,18 @@ function gcdroot() {
     fi
 }
 
-# Branch preview command for fzf — shows only commits not yet in the default branch (origin/HEAD).
+# Branch preview command for fzf — shows commits ahead of the default branch (origin/HEAD).
+# When the selected branch IS the default branch, falls back to showing its most recent commits.
 # fzf runs previews in a subshell where aliases are unavailable, so the full git command is stored here.
-__GIT_BRANCH_UNMERGED_PREVIEW='git log --graph --color=always --pretty=format:"%C(bold cyan)%h%Creset %C(white)%s %Cgreen(%cr) %C(bold cyan)<%an>%Creset" --abbrev-commit "$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null || echo origin/main)"..{}'
+__GIT_BRANCH_UNMERGED_PREVIEW='
+  _default=$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null || echo origin/main)
+  _default_short=${_default#*/}
+  _fmt="%C(bold cyan)%h%Creset %C(white)%s %Cgreen(%cr) %C(bold cyan)<%an>%Creset"
+  if [ {} = "$_default_short" ] || [ {} = "$_default" ]; then
+    git log --graph --color=always --pretty=format:"$_fmt" --abbrev-commit -20 {}
+  else
+    git log --graph --color=always --pretty=format:"$_fmt" --abbrev-commit "$_default"..{}
+  fi'
 
 # Delta reads config via libgit2 (not the git CLI), so GIT_CONFIG_* env vars have no effect on it.
 # Instead, generate a preview-specific gitconfig at source time. It includes the global config so
