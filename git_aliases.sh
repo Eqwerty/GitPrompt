@@ -151,7 +151,7 @@ alias grc="git rebase --continue" # Continue a rebase after resolving conflicts
 alias gsu="git stash push -u" # Stash untracked changes
 alias gsum="git stash push -u -m" # Stash untracked changes with a message
 alias gsd="git stash drop" # Drop a stash
-alias gsp="git stash pop" # Apply the most recent stash
+alias gsp="git stash pop" # Apply the most recent stash and remove it from the stash list
 alias gsl="git stash list" # List all stashes
 alias gsc="git stash clear" # Clear all stashes
 alias gsa="git stash apply" # Apply a stash
@@ -178,6 +178,8 @@ function gsufm() {
   [[ ${#selected[@]} -eq 0 ]] && return 0
   git stash push -u -- "${selected[@]/#/:(top)}"  # :(top) = git pathspec: resolve path from repo root
 }
+
+# Interactively select a stash to pop (menu)
 function gspm() {
   local -a stashes selected
   mapfile -t stashes < <(git stash list)
@@ -249,14 +251,14 @@ function glogm() {
 
 # Display a limited number of recent Git log entries (default: all)
 function gl() {
-    local count=${1:--1}
-    glog -n "$count"
+  local count=${1:--1}
+  glog -n "$count"
 }
 
 # Display a limited number of recent Git log entries (default: all) by the author logged in
 function glm() {
-    local count=${1:--1}
-    glogm -n "$count"
+  local count=${1:--1}
+  glogm -n "$count"
 }
 
 # Copy the short hash of the Nth most recent commit to the clipboard
@@ -329,6 +331,7 @@ function gshm() {
 
 # ============================ Reset ============================
 alias grm="git reset" # Reset index but keep changes in the working directory (mixed mode)
+alias grhh="git reset --hard HEAD" # Discard all uncommitted changes (hard reset)
 
 # Interactively select staged files to unstage (menu)
 function grmm() {
@@ -342,8 +345,6 @@ function grmm() {
   [[ ${#selected[@]} -eq 0 ]] && return 0
   git reset -- "${selected[@]/#/:(top)}"  # :(top) = git pathspec: resolve path from repo root
 }
-
-alias grhh="git reset --hard HEAD" # Discard all uncommitted changes (hard reset)
 
 # Reset the current branch to n commits before HEAD
 function grh() {
@@ -419,8 +420,8 @@ function gcofm() {
 
 # ============================ Cherry-Pick ============================
 alias gcp="git cherry-pick" # Apply the changes introduced by an existing commit
-alias gcpa="git cherry-pick --abort" # Cancel the cherry-picking operation and return to the pre-sequence state.
-alias gcpc="git cherry-pick --continue" # Continue the cherry-picking operation in progress.
+alias gcpa="git cherry-pick --abort" # Cancel the cherry-picking operation and return to the pre-sequence state
+alias gcpc="git cherry-pick --continue" # Continue the cherry-picking operation in progress
 
 # ============================ Tags ============================
 alias gt="git tag" # List or create tags
@@ -547,14 +548,14 @@ alias gcfd="git clean -fd" # Remove untracked files and directories
 alias gcfdn="git clean -fdn" # Show which untracked files and directories would be removed
 
 function gcdroot() {
-    local root
-    root=$(git rev-parse --show-toplevel 2>/dev/null)
-    if [[ -n "$root" ]]; then
-        cd "$root" || return
-    else
-        echo "Not inside a Git repository"
-        return 1
-    fi
+  local root
+  root=$(git rev-parse --show-toplevel 2>/dev/null)
+  if [[ -n "$root" ]]; then
+    cd "$root" || return
+  else
+    echo "Not inside a Git repository"
+    return 1
+  fi
 }
 
 # Branch preview command for fzf — shows commits ahead of the default branch (origin/HEAD).
@@ -570,7 +571,6 @@ __GIT_BRANCH_UNMERGED_PREVIEW='
     git log --graph --color=always --pretty=format:"$_fmt" --abbrev-commit "$_default"..{}
   fi'
 
-# Delta reads config via libgit2 (not the git CLI), so GIT_CONFIG_* env vars have no effect on it.
 # Diff preview constants — pipe through delta when available. Fallback to plain --color=always output when delta is not installed.
 __GIT_FILE_PREVIEW='if git diff --quiet -- {} 2>/dev/null; then cmd=$(command -v batcat || command -v bat); [ -n "$cmd" ] && "$cmd" --paging=never --color=always --style=plain {} || cat {}; elif command -v delta >/dev/null 2>&1; then git diff --color=never -- {} | delta --paging=never --width ${FZF_PREVIEW_COLUMNS}; else git diff --color=always -- {}; fi'
 __GIT_HEAD_PREVIEW='if git diff --quiet HEAD -- {} 2>/dev/null; then cmd=$(command -v batcat || command -v bat); [ -n "$cmd" ] && "$cmd" --paging=never --color=always --style=plain {} || cat {}; elif command -v delta >/dev/null 2>&1; then git diff --color=never HEAD -- {} | delta --paging=never --width ${FZF_PREVIEW_COLUMNS}; else git diff --color=always HEAD -- {}; fi'
