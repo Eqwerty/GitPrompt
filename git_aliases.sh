@@ -323,7 +323,7 @@ function gshm() {
     echo "No files changed in commit $commit"
     return 1
   fi
-  local preview="if command -v delta >/dev/null 2>&1; then git show --color=never ${commit} -- {} | delta --paging=never --width \${FZF_PREVIEW_COLUMNS}; else git show --color=always ${commit} -- {}; fi"
+  local preview="if command -v delta >/dev/null 2>&1; then if git show --diff-filter=AD --name-only --format= ${commit} -- {} | grep -q .; then git show --color=never ${commit} -- {} | delta --config \"\$__DELTA_LINEAR_CONFIG\" --paging=never --width \${FZF_PREVIEW_COLUMNS}; else git show --color=never ${commit} -- {} | delta --paging=never --width \${FZF_PREVIEW_COLUMNS}; fi; else git show --color=always ${commit} -- {}; fi"
   mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select --preview "$preview")
   [[ ${#selected[@]} -eq 0 ]] && return 0
   git show "$commit" -- ":(top)${selected[0]}"
@@ -571,12 +571,21 @@ __GIT_BRANCH_UNMERGED_PREVIEW='
     git log --graph --color=always --pretty=format:"$_fmt" --abbrev-commit "$_default"..{}
   fi'
 
+# Linear (non-side-by-side) delta config for pure-addition or pure-deletion diffs.
+# Created once; includes ~/.gitconfig so all user delta styles are preserved.
+__DELTA_LINEAR_CONFIG="$HOME/.cache/gitprompt/delta-linear.gitconfig"
+if [[ ! -f "$__DELTA_LINEAR_CONFIG" ]]; then
+  mkdir -p "$(dirname "$__DELTA_LINEAR_CONFIG")"
+  printf '[include]\n\tpath = %s\n[delta]\n\tside-by-side = false\n' "$HOME/.gitconfig" > "$__DELTA_LINEAR_CONFIG"
+fi
+export __DELTA_LINEAR_CONFIG
+
 # Diff preview constants — pipe through delta when available. Fallback to plain --color=always output when delta is not installed.
-__GIT_FILE_PREVIEW='if git diff --quiet -- {} 2>/dev/null; then cmd=$(command -v batcat || command -v bat); [ -n "$cmd" ] && "$cmd" --paging=never --color=always --style=plain {} || cat {}; elif command -v delta >/dev/null 2>&1; then git diff --color=never -- {} | delta --paging=never --width ${FZF_PREVIEW_COLUMNS}; else git diff --color=always -- {}; fi'
-__GIT_HEAD_PREVIEW='if git diff --quiet HEAD -- {} 2>/dev/null; then cmd=$(command -v batcat || command -v bat); [ -n "$cmd" ] && "$cmd" --paging=never --color=always --style=plain {} || cat {}; elif command -v delta >/dev/null 2>&1; then git diff --color=never HEAD -- {} | delta --paging=never --width ${FZF_PREVIEW_COLUMNS}; else git diff --color=always HEAD -- {}; fi'
-__GIT_DIFF_PREVIEW='if command -v delta >/dev/null 2>&1; then git diff --color=never -- {} | delta --paging=never --width ${FZF_PREVIEW_COLUMNS}; else git diff --color=always -- {}; fi'
-__GIT_STAGED_PREVIEW='if command -v delta >/dev/null 2>&1; then git diff --staged --color=never -- {} | delta --paging=never --width ${FZF_PREVIEW_COLUMNS}; else git diff --staged --color=always -- {}; fi'
-__GIT_STASH_PREVIEW='ref=$(echo {} | cut -d: -f1); if command -v delta >/dev/null 2>&1; then { git stash show -p --color=never "$ref" 2>/dev/null; git show "${ref}^3" --color=never 2>/dev/null; } | delta --paging=never --width ${FZF_PREVIEW_COLUMNS}; else git stash show -p --color=always "$ref" 2>/dev/null; git show "${ref}^3" --color=always 2>/dev/null; fi'
+__GIT_FILE_PREVIEW='if git diff --quiet -- {} 2>/dev/null; then cmd=$(command -v batcat || command -v bat); [ -n "$cmd" ] && "$cmd" --paging=never --color=always --style=plain {} || cat {}; elif command -v delta >/dev/null 2>&1; then if git diff --diff-filter=D --name-only -- {} | grep -q .; then git diff --color=never -- {} | delta --config "$__DELTA_LINEAR_CONFIG" --paging=never --width ${FZF_PREVIEW_COLUMNS}; else git diff --color=never -- {} | delta --paging=never --width ${FZF_PREVIEW_COLUMNS}; fi; else git diff --color=always -- {}; fi'
+__GIT_HEAD_PREVIEW='if git diff --quiet HEAD -- {} 2>/dev/null; then cmd=$(command -v batcat || command -v bat); [ -n "$cmd" ] && "$cmd" --paging=never --color=always --style=plain {} || cat {}; elif command -v delta >/dev/null 2>&1; then if git diff HEAD --diff-filter=AD --name-only -- {} | grep -q .; then git diff --color=never HEAD -- {} | delta --config "$__DELTA_LINEAR_CONFIG" --paging=never --width ${FZF_PREVIEW_COLUMNS}; else git diff --color=never HEAD -- {} | delta --paging=never --width ${FZF_PREVIEW_COLUMNS}; fi; else git diff --color=always HEAD -- {}; fi'
+__GIT_DIFF_PREVIEW='if command -v delta >/dev/null 2>&1; then if git diff --diff-filter=D --name-only -- {} | grep -q .; then git diff --color=never -- {} | delta --config "$__DELTA_LINEAR_CONFIG" --paging=never --width ${FZF_PREVIEW_COLUMNS}; else git diff --color=never -- {} | delta --paging=never --width ${FZF_PREVIEW_COLUMNS}; fi; else git diff --color=always -- {}; fi'
+__GIT_STAGED_PREVIEW='if command -v delta >/dev/null 2>&1; then if git diff --staged --diff-filter=AD --name-only -- {} | grep -q .; then git diff --staged --color=never -- {} | delta --config "$__DELTA_LINEAR_CONFIG" --paging=never --width ${FZF_PREVIEW_COLUMNS}; else git diff --staged --color=never -- {} | delta --paging=never --width ${FZF_PREVIEW_COLUMNS}; fi; else git diff --staged --color=always -- {}; fi'
+__GIT_STASH_PREVIEW='ref=$(echo {} | cut -d: -f1); if command -v delta >/dev/null 2>&1; then _has_added=false; git stash show --diff-filter=AD --name-only "$ref" 2>/dev/null | grep -q . && _has_added=true; git cat-file -e "${ref}^3" 2>/dev/null && _has_added=true; if $_has_added; then { git stash show -p --color=never "$ref" 2>/dev/null; git show "${ref}^3" --color=never 2>/dev/null; } | delta --config "$__DELTA_LINEAR_CONFIG" --paging=never --width ${FZF_PREVIEW_COLUMNS}; else { git stash show -p --color=never "$ref" 2>/dev/null; git show "${ref}^3" --color=never 2>/dev/null; } | delta --paging=never --width ${FZF_PREVIEW_COLUMNS}; fi; else git stash show -p --color=always "$ref" 2>/dev/null; git show "${ref}^3" --color=always 2>/dev/null; fi'
 
 # Interactive menu picker for selecting from a list of items.
 # Usage: <list> | __git_select [--multi]
