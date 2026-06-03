@@ -321,7 +321,7 @@ function gshm() {
     echo "No files changed in commit $commit"
     return 1
   fi
-  local preview="if command -v delta >/dev/null 2>&1; then git show --color=never ${commit} -- {} | delta --paging=never --config \"\$HOME/.config/gitprompt/delta-preview.gitconfig\"; else git show --color=always ${commit} -- {}; fi"
+  local preview="if command -v delta >/dev/null 2>&1; then git show --color=never ${commit} -- {} | delta --paging=never --width \${FZF_PREVIEW_COLUMNS}; else git show --color=always ${commit} -- {}; fi"
   mapfile -t selected < <(printf '%s\n' "${files[@]}" | __git_select --preview "$preview")
   [[ ${#selected[@]} -eq 0 ]] && return 0
   git show "$commit" -- ":(top)${selected[0]}"
@@ -571,20 +571,12 @@ __GIT_BRANCH_UNMERGED_PREVIEW='
   fi'
 
 # Delta reads config via libgit2 (not the git CLI), so GIT_CONFIG_* env vars have no effect on it.
-# Instead, generate a preview-specific gitconfig at source time. It includes the global config so
-# all other delta settings (colors, line numbers, etc.) are inherited, then overrides side-by-side.
-# delta --config points to this file in preview commands, leaving the normal git diff untouched.
-mkdir -p "$HOME/.config/gitprompt"
-printf '[include]\n\tpath = %s/.gitconfig\n[delta]\n\tside-by-side = false\n' "$HOME" \
-    > "$HOME/.config/gitprompt/delta-preview.gitconfig"
-
-# Diff preview constants — pipe through delta when available, with side-by-side disabled for the
-# narrow fzf preview pane. Fallback to plain --color=always output when delta is not installed.
-__GIT_FILE_PREVIEW='if git diff --quiet -- {} 2>/dev/null; then cmd=$(command -v batcat || command -v bat); [ -n "$cmd" ] && "$cmd" --paging=never --color=always --style=plain {} || cat {}; elif command -v delta >/dev/null 2>&1; then git diff --color=never -- {} | delta --paging=never --config "$HOME/.config/gitprompt/delta-preview.gitconfig"; else git diff --color=always -- {}; fi'
-__GIT_HEAD_PREVIEW='if git diff --quiet HEAD -- {} 2>/dev/null; then cmd=$(command -v batcat || command -v bat); [ -n "$cmd" ] && "$cmd" --paging=never --color=always --style=plain {} || cat {}; elif command -v delta >/dev/null 2>&1; then git diff --color=never HEAD -- {} | delta --paging=never --config "$HOME/.config/gitprompt/delta-preview.gitconfig"; else git diff --color=always HEAD -- {}; fi'
-__GIT_DIFF_PREVIEW='if command -v delta >/dev/null 2>&1; then git diff --color=never -- {} | delta --paging=never --config "$HOME/.config/gitprompt/delta-preview.gitconfig"; else git diff --color=always -- {}; fi'
-__GIT_STAGED_PREVIEW='if command -v delta >/dev/null 2>&1; then git diff --staged --color=never -- {} | delta --paging=never --config "$HOME/.config/gitprompt/delta-preview.gitconfig"; else git diff --staged --color=always -- {}; fi'
-__GIT_STASH_PREVIEW='ref=$(echo {} | cut -d: -f1); if command -v delta >/dev/null 2>&1; then { git stash show -p --color=never "$ref" 2>/dev/null; git show "${ref}^3" --color=never 2>/dev/null; } | delta --paging=never --config "$HOME/.config/gitprompt/delta-preview.gitconfig"; else git stash show -p --color=always "$ref" 2>/dev/null; git show "${ref}^3" --color=always 2>/dev/null; fi'
+# Diff preview constants — pipe through delta when available. Fallback to plain --color=always output when delta is not installed.
+__GIT_FILE_PREVIEW='if git diff --quiet -- {} 2>/dev/null; then cmd=$(command -v batcat || command -v bat); [ -n "$cmd" ] && "$cmd" --paging=never --color=always --style=plain {} || cat {}; elif command -v delta >/dev/null 2>&1; then git diff --color=never -- {} | delta --paging=never --width ${FZF_PREVIEW_COLUMNS}; else git diff --color=always -- {}; fi'
+__GIT_HEAD_PREVIEW='if git diff --quiet HEAD -- {} 2>/dev/null; then cmd=$(command -v batcat || command -v bat); [ -n "$cmd" ] && "$cmd" --paging=never --color=always --style=plain {} || cat {}; elif command -v delta >/dev/null 2>&1; then git diff --color=never HEAD -- {} | delta --paging=never --width ${FZF_PREVIEW_COLUMNS}; else git diff --color=always HEAD -- {}; fi'
+__GIT_DIFF_PREVIEW='if command -v delta >/dev/null 2>&1; then git diff --color=never -- {} | delta --paging=never --width ${FZF_PREVIEW_COLUMNS}; else git diff --color=always -- {}; fi'
+__GIT_STAGED_PREVIEW='if command -v delta >/dev/null 2>&1; then git diff --staged --color=never -- {} | delta --paging=never --width ${FZF_PREVIEW_COLUMNS}; else git diff --staged --color=always -- {}; fi'
+__GIT_STASH_PREVIEW='ref=$(echo {} | cut -d: -f1); if command -v delta >/dev/null 2>&1; then { git stash show -p --color=never "$ref" 2>/dev/null; git show "${ref}^3" --color=never 2>/dev/null; } | delta --paging=never --width ${FZF_PREVIEW_COLUMNS}; else git stash show -p --color=always "$ref" 2>/dev/null; git show "${ref}^3" --color=always 2>/dev/null; fi'
 
 # Interactive menu picker for selecting from a list of items.
 # Usage: <list> | __git_select [--multi]
