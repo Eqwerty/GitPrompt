@@ -89,6 +89,16 @@ The installer sets up a collection of Git aliases and shell functions (e.g. `gs`
 
 See [`git_aliases.sh`](git_aliases.sh) for the full list.
 
+### Optional tools
+
+Some aliases show interactive menus with diff previews when these tools are installed. Everything falls back gracefully when they are not.
+
+| Tool | Purpose | Fallback |
+|---|---|---|
+| [fzf](https://github.com/junegunn/fzf) | Fuzzy-search menus for files, branches, stashes, and commits | Numbered list prompt |
+| [delta](https://github.com/dandavison/delta) | Syntax-highlighted diffs in fzf previews | Plain `git diff --color` |
+| [bat](https://github.com/sharkdp/bat) | Syntax-highlighted view for untracked files | `cat` |
+
 To get the latest validated aliases without reinstalling:
 
 ```sh
