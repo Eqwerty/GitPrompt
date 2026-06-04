@@ -243,6 +243,7 @@ function gsshm() {
 alias glog="git log --graph --pretty=format:'%C(bold cyan)%h%Creset%C(auto)%d%Creset %C(white)%s %Cgreen(%cr) %C(bold cyan)<%an>%Creset' --abbrev-commit" # Show a graphical log with commit details
 alias glh="glog HEAD.." # Show commits in <branch> not yet merged into HEAD (usage: glh <branch>)
 alias gluh="glog @{u}..HEAD" # Show commits not pushed to the upstream branch
+alias glhu="glog HEAD..@{u}" # Show commits not pulled from the upstream branch (behind)
 
 # Show a graphical log filtered to commits by the current git user
 function glogm() {
