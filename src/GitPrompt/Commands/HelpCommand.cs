@@ -1,5 +1,3 @@
-using GitPrompt.Platform;
-
 namespace GitPrompt.Commands;
 
 internal static class HelpCommand
