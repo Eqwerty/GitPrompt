@@ -225,4 +225,48 @@ public sealed class GitStatusBranchOperationIntegrationTests
         gitStatusSegment.Should().Contain(TestHelpers.NoUpstreamBranchLabel("feature"));
         gitStatusSegment.Should().Contain(TestHelpers.Indicator(PromptIcons.IconAhead, 3));
     }
+
+    [Fact]
+    public async Task BuildGitStatusSegment_WhenRemoteBranchIsDeletedButTrackingConfigRemains_ShouldShowTrackedBranchLabelAndAheadCount()
+    {
+        // Arrange
+        using var sandbox = new TestHelpers.TemporaryDirectory();
+        var remoteRepositoryPath = Path.Combine(sandbox.DirectoryPath, "remote.git");
+        var sourceRepositoryPath = Path.Combine(sandbox.DirectoryPath, "source");
+        var localRepositoryPath = Path.Combine(sandbox.DirectoryPath, "local");
+
+        await TestHelpers.RunGitAsync(sandbox.DirectoryPath, $"init --bare --initial-branch=main {TestHelpers.Quote(remoteRepositoryPath)}");
+        await TestHelpers.RunGitAsync(sandbox.DirectoryPath, $"clone {TestHelpers.Quote(remoteRepositoryPath)} {TestHelpers.Quote(sourceRepositoryPath)}");
+        await TestHelpers.ConfigureGitIdentityAsync(sourceRepositoryPath);
+
+        await File.WriteAllTextAsync(Path.Combine(sourceRepositoryPath, "base.txt"), "base\n");
+        await TestHelpers.RunGitAsync(sourceRepositoryPath, "add base.txt");
+        await TestHelpers.RunGitAsync(sourceRepositoryPath, "commit -m \"base\"");
+        await TestHelpers.RunGitAsync(sourceRepositoryPath, "push -u origin main");
+
+        await TestHelpers.RunGitAsync(sandbox.DirectoryPath, $"clone {TestHelpers.Quote(remoteRepositoryPath)} {TestHelpers.Quote(localRepositoryPath)}");
+        await TestHelpers.ConfigureGitIdentityAsync(localRepositoryPath);
+
+        // Create and push the feature branch so the tracking config is established
+        await TestHelpers.RunGitAsync(localRepositoryPath, "checkout -b feature");
+        await File.WriteAllTextAsync(Path.Combine(localRepositoryPath, "feature.txt"), "feature\n");
+        await TestHelpers.RunGitAsync(localRepositoryPath, "add feature.txt");
+        await TestHelpers.RunGitAsync(localRepositoryPath, "commit -m \"feature commit\"");
+        await TestHelpers.RunGitAsync(localRepositoryPath, "push -u origin feature");
+
+        // Add a local commit so there is something ahead
+        await File.WriteAllTextAsync(Path.Combine(localRepositoryPath, "feature2.txt"), "feature2\n");
+        await TestHelpers.RunGitAsync(localRepositoryPath, "add feature2.txt");
+        await TestHelpers.RunGitAsync(localRepositoryPath, "commit -m \"feature commit 2\"");
+
+        // Delete the remote branch — tracking config stays, remote tracking ref is gone
+        await TestHelpers.RunGitAsync(localRepositoryPath, "push origin :feature");
+
+        // Act
+        var gitStatusSegment = GitStatusSegmentBuilder.Build(localRepositoryPath);
+
+        // Assert
+        gitStatusSegment.Should().Contain(TestHelpers.TrackedBranchLabel("feature"));
+        gitStatusSegment.Should().Contain(TestHelpers.Indicator(PromptIcons.IconAhead, 2));
+    }
 }

@@ -114,12 +114,10 @@ internal static class GitStatusSegmentBuilder
 
     private static (int Ahead, int Behind) ResolveAheadBehindCounts(string repositoryRootPath, GitStatusSnapshot snapshot)
     {
-        if (snapshot.HasUpstream && !snapshot.HasAheadBehindCounts && !string.IsNullOrEmpty(snapshot.UpstreamReference))
-        {
-            return GitHistoryCalculator.ComputeAheadBehindAgainstUpstream(repositoryRootPath, snapshot.UpstreamReference);
-        }
-
-        if (!snapshot.HasUpstream)
+        // No upstream, or upstream is configured but its remote ref is gone (HasUpstream=true,
+        // HasAheadBehindCounts=false): fall back to a local ahead-count so the user can still
+        // see how many commits need to be pushed.
+        if (!snapshot.HasUpstream || !snapshot.HasAheadBehindCounts)
         {
             return (GitHistoryCalculator.ComputeLocalAheadCommitCount(repositoryRootPath, snapshot.BranchHeadName), Behind: 0);
         }
