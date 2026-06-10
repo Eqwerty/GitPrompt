@@ -260,6 +260,10 @@ Clean indicator (compact mode only). Default:
 Prefix on branch name when there is no upstream. Default:
 .BR * .
 .TP
+.B icons.goneUpstreamMarker
+Prefix on branch name when the upstream is configured but the remote branch is gone. Default:
+.BR ! .
+.TP
 .B icons.detachedHeadMarker
 Prefix on branch name when HEAD is detached. Default:
 .BR : .
@@ -278,6 +282,14 @@ Opening bracket when there is no upstream. Default:
 .TP
 .B icons.branchLabelCloseNoUpstream
 Closing bracket when there is no upstream. Default:
+.BR ) .
+.TP
+.B icons.branchLabelOpenGoneUpstream
+Opening bracket when the upstream is configured but gone. Default:
+.BR ( .
+.TP
+.B icons.branchLabelCloseGoneUpstream
+Closing bracket when the upstream is configured but gone. Default:
 .BR ) .
 .TP
 .B icons.branchLabelOpenDetached
@@ -320,6 +332,10 @@ Branch name (tracked). Default:
 .TP
 .B colors.branchNoUpstream
 Branch name (no upstream). Default:
+.BR #48A8CD .
+.TP
+.B colors.branchGoneUpstream
+Branch name (upstream configured but remote branch is gone). Default:
 .BR #48A8CD .
 .TP
 .B colors.branchDetached

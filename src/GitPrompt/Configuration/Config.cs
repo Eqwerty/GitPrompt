@@ -96,6 +96,8 @@ internal sealed record Config
 
         internal required string NoUpstreamMarker { get; init; }
 
+        internal required string GoneUpstreamMarker { get; init; }
+
         internal required string DetachedHeadMarker { get; init; }
 
         internal required string BranchLabelOpenNormal { get; init; }
@@ -105,6 +107,10 @@ internal sealed record Config
         internal required string BranchLabelOpenNoUpstream { get; init; }
 
         internal required string BranchLabelCloseNoUpstream { get; init; }
+
+        internal required string BranchLabelOpenGoneUpstream { get; init; }
+
+        internal required string BranchLabelCloseGoneUpstream { get; init; }
 
         internal required string BranchLabelOpenDetached { get; init; }
 
@@ -126,6 +132,8 @@ internal sealed record Config
         internal required string Branch { get; init; }
 
         internal required string BranchNoUpstream { get; init; }
+
+        internal required string BranchGoneUpstream { get; init; }
 
         internal required string BranchDetached { get; init; }
 

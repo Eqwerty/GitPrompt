@@ -229,6 +229,16 @@ public sealed class GitStatusDisplayFormatterTests
     }
 
     [Fact]
+    public void BuildBranchLabel_WhenStateIsGoneUpstream_ShouldPrependGoneUpstreamMarker()
+    {
+        // Act
+        var label = GitStatusDisplayFormatter.BuildBranchLabel("feature", BranchState.GoneUpstream);
+
+        // Assert
+        label.Should().Be(GoneUpstreamBranchLabel("feature"));
+    }
+
+    [Fact]
     public void BuildBranchLabel_WhenStateIsDetached_ShouldPrependDetachedHeadMarker()
     {
         // Arrange

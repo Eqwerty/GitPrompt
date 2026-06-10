@@ -66,7 +66,15 @@ internal static class GitStatusSegmentBuilder
             snapshot = snapshot with { CommitsAhead = commitsAhead, CommitsBehind = commitsBehind };
 
             var isInOperation = !string.IsNullOrEmpty(operationName);
-            var state = snapshot.HasUpstream || isInOperation ? BranchState.Normal : BranchState.NoUpstream;
+            BranchState state;
+            if (snapshot.HasUpstream && !snapshot.HasAheadBehindCounts)
+            {
+                state = isInOperation ? BranchState.Normal : BranchState.GoneUpstream;
+            }
+            else
+            {
+                state = snapshot.HasUpstream || isInOperation ? BranchState.Normal : BranchState.NoUpstream;
+            }
             branchLabel = GitStatusDisplayFormatter.BuildBranchLabel(snapshot.BranchHeadName, state);
         }
 

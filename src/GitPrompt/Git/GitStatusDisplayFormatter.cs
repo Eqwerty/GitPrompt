@@ -36,6 +36,7 @@ internal static class GitStatusDisplayFormatter
         var branchColor = branchLabel.State switch
         {
             BranchState.NoUpstream => ColorBranchNoUpstream,
+            BranchState.GoneUpstream => ColorBranchGoneUpstream,
             BranchState.Detached => ColorBranchDetached,
             _ => ColorBranch
         };
@@ -105,6 +106,7 @@ internal static class GitStatusDisplayFormatter
         var branchColor = branchLabel.State switch
         {
             BranchState.NoUpstream => ColorBranchNoUpstream,
+            BranchState.GoneUpstream => ColorBranchGoneUpstream,
             BranchState.Detached => ColorBranchDetached,
             _ => ColorBranch
         };
@@ -151,6 +153,9 @@ internal static class GitStatusDisplayFormatter
             BranchState.NoUpstream => (
                 icons.BranchLabelOpenNoUpstream,
                 icons.BranchLabelCloseNoUpstream),
+            BranchState.GoneUpstream => (
+                icons.BranchLabelOpenGoneUpstream,
+                icons.BranchLabelCloseGoneUpstream),
             BranchState.Detached => (
                 icons.BranchLabelOpenDetached,
                 icons.BranchLabelCloseDetached),
@@ -162,6 +167,7 @@ internal static class GitStatusDisplayFormatter
         var prefix = state switch
         {
             BranchState.NoUpstream => icons.NoUpstreamMarker,
+            BranchState.GoneUpstream => icons.GoneUpstreamMarker,
             BranchState.Detached => icons.DetachedHeadMarker,
             _ => string.Empty
         };
@@ -180,6 +186,7 @@ internal static class GitStatusDisplayFormatter
         var close = branchLabel.State switch
         {
             BranchState.NoUpstream => icons.BranchLabelCloseNoUpstream,
+            BranchState.GoneUpstream => icons.BranchLabelCloseGoneUpstream,
             BranchState.Detached => icons.BranchLabelCloseDetached,
             _ => icons.BranchLabelCloseNormal
         };

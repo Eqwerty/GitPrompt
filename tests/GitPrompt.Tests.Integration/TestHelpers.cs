@@ -97,6 +97,11 @@ internal static class TestHelpers
         return $"{NoUpstreamBranchMarker}{NoUpstreamBranchLabelOpen}{branchName}{NoUpstreamBranchLabelClose}";
     }
 
+    internal static string GoneUpstreamBranchLabel(string branchName)
+    {
+        return $"{GoneUpstreamBranchMarker}{GoneUpstreamBranchLabelOpen}{branchName}{GoneUpstreamBranchLabelClose}";
+    }
+
     internal static string BranchLabelWithOperation(string branchLabel, string operation)
     {
         return branchLabel.Replace(NormalBranchLabelClose, $"|{operation}{NormalBranchLabelClose}", StringComparison.Ordinal);

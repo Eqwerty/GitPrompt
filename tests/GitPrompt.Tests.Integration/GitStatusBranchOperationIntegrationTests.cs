@@ -266,7 +266,7 @@ public sealed class GitStatusBranchOperationIntegrationTests
         var gitStatusSegment = GitStatusSegmentBuilder.Build(localRepositoryPath);
 
         // Assert
-        gitStatusSegment.Should().Contain(TestHelpers.TrackedBranchLabel("feature"));
+        gitStatusSegment.Should().Contain(TestHelpers.GoneUpstreamBranchLabel("feature"));
         gitStatusSegment.Should().Contain(TestHelpers.Indicator(PromptIcons.IconAhead, 2));
     }
 }

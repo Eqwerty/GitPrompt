@@ -94,11 +94,14 @@ Customise the icon characters shown in the git status segment. Set any key to a 
 | `icons.dirtyStaged` | `•` | Dirty indicator — shown when all changes are staged but not yet committed (compact mode only) |
 | `icons.clean` | `✓` | Clean indicator (compact mode only) |
 | `icons.noUpstreamMarker` | `*` | Prefix on branch name when there is no upstream |
+| `icons.goneUpstreamMarker` | `!` | Prefix on branch name when the upstream is configured but the remote branch is gone |
 | `icons.detachedHeadMarker` | `:` | Prefix on branch name when HEAD is detached |
 | `icons.branchLabelOpenNormal` | `(` | Opening bracket for a normal (tracked) branch |
 | `icons.branchLabelCloseNormal` | `)` | Closing bracket for a normal (tracked) branch |
 | `icons.branchLabelOpenNoUpstream` | `(` | Opening bracket when there is no upstream |
 | `icons.branchLabelCloseNoUpstream` | `)` | Closing bracket when there is no upstream |
+| `icons.branchLabelOpenGoneUpstream` | `(` | Opening bracket when the upstream is configured but gone |
+| `icons.branchLabelCloseGoneUpstream` | `)` | Closing bracket when the upstream is configured but gone |
 | `icons.branchLabelOpenDetached` | `[` | Opening bracket when HEAD is detached |
 | `icons.branchLabelCloseDetached` | `]` | Closing bracket when HEAD is detached |
 | `icons.branchOperationSeparator` | `\|` | Separator between branch name and operation (e.g. `REBASE`) inside the label |
@@ -115,6 +118,7 @@ Customise the color of each prompt segment using `#RRGGBB` hex strings. Set any 
 | `colors.commandDuration` | `#CB06B2` | Last command duration |
 | `colors.branch` | `#48A8CD` | Branch name (tracked upstream) |
 | `colors.branchNoUpstream` | `#48A8CD` | Branch name (no upstream) |
+| `colors.branchGoneUpstream` | `#48A8CD` | Branch name (upstream configured but remote branch is gone) |
 | `colors.branchDetached` | `#DDDD00` | Branch name (detached HEAD) |
 | `colors.ahead` | `#48A8CD` | Commits ahead indicator |
 | `colors.behind` | `#48A8CD` | Commits behind indicator |

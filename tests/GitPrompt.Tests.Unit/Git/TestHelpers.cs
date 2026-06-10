@@ -27,6 +27,11 @@ internal static class TestHelpers
         return new BranchLabelInfo($"{NoUpstreamBranchMarker}{NoUpstreamBranchLabelOpen}{branchName}{NoUpstreamBranchLabelClose}", BranchState.NoUpstream);
     }
 
+    internal static BranchLabelInfo GoneUpstreamBranchLabel(string branchName)
+    {
+        return new BranchLabelInfo($"{GoneUpstreamBranchMarker}{GoneUpstreamBranchLabelOpen}{branchName}{GoneUpstreamBranchLabelClose}", BranchState.GoneUpstream);
+    }
+
     internal static BranchLabelInfo DetachedBranchLabel(string branchLabel)
     {
         return new BranchLabelInfo($"{DetachedHeadBranchMarker}{DetachedBranchLabelOpen}{branchLabel}{DetachedBranchLabelClose}", BranchState.Detached);
@@ -38,6 +43,7 @@ internal static class TestHelpers
         {
             BranchState.Detached => DetachedBranchLabelClose,
             BranchState.NoUpstream => NoUpstreamBranchLabelClose,
+            BranchState.GoneUpstream => GoneUpstreamBranchLabelClose,
             _ => NormalBranchLabelClose
         };
 

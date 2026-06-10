@@ -66,6 +66,7 @@ Example: `(main) ↑2 ↓1 +1 ~2 +3 -1 ?4 !1 @1` — `+1 ~2` is staged, `+3 -1` 
 |---|---|
 | `(main)` | Tracked branch |
 | `*(feature)` | No upstream tracking branch |
+| `!(feature)` | Upstream configured but remote branch is gone |
 | `:[abc1234...]` | Detached HEAD |
 | `:[origin/main abc1234...]` | Detached HEAD matching one remote ref |
 

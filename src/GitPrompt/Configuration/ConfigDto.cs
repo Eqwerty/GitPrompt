@@ -197,6 +197,10 @@ internal sealed record ConfigDto
         internal string? NoUpstreamMarker { get; init; }
 
         [JsonInclude]
+        [JsonPropertyName("goneUpstreamMarker")]
+        internal string? GoneUpstreamMarker { get; init; }
+
+        [JsonInclude]
         [JsonPropertyName("detachedHeadMarker")]
         internal string? DetachedHeadMarker { get; init; }
 
@@ -215,6 +219,14 @@ internal sealed record ConfigDto
         [JsonInclude]
         [JsonPropertyName("branchLabelCloseNoUpstream")]
         internal string? BranchLabelCloseNoUpstream { get; init; }
+
+        [JsonInclude]
+        [JsonPropertyName("branchLabelOpenGoneUpstream")]
+        internal string? BranchLabelOpenGoneUpstream { get; init; }
+
+        [JsonInclude]
+        [JsonPropertyName("branchLabelCloseGoneUpstream")]
+        internal string? BranchLabelCloseGoneUpstream { get; init; }
 
         [JsonInclude]
         [JsonPropertyName("branchLabelOpenDetached")]
@@ -254,6 +266,10 @@ internal sealed record ConfigDto
         [JsonInclude]
         [JsonPropertyName("branchNoUpstream")]
         internal string? BranchNoUpstream { get; init; }
+
+        [JsonInclude]
+        [JsonPropertyName("branchGoneUpstream")]
+        internal string? BranchGoneUpstream { get; init; }
 
         [JsonInclude]
         [JsonPropertyName("branchDetached")]

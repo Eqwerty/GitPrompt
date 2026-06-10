@@ -37,12 +37,15 @@
     "dirty": {iconDirty},  // compact mode only
     "clean": {iconClean},  // compact mode only
     "noUpstreamMarker": {iconNoUpstreamMarker},  // prefix before the branch label when no upstream is set
+    "goneUpstreamMarker": {iconGoneUpstreamMarker},  // prefix before the branch label when upstream is configured but gone
     "detachedHeadMarker": {iconDetachedHeadMarker},  // prefix before the branch label when HEAD is detached
     "branchOperationSeparator": {iconBranchOperationSeparator},  // between branch name and active operation (e.g., rebase)
     "branchLabelOpenNormal": {iconBranchLabelOpenNormal},
     "branchLabelCloseNormal": {iconBranchLabelCloseNormal},
     "branchLabelOpenNoUpstream": {iconBranchLabelOpenNoUpstream},
     "branchLabelCloseNoUpstream": {iconBranchLabelCloseNoUpstream},
+    "branchLabelOpenGoneUpstream": {iconBranchLabelOpenGoneUpstream},
+    "branchLabelCloseGoneUpstream": {iconBranchLabelCloseGoneUpstream},
     "branchLabelOpenDetached": {iconBranchLabelOpenDetached},
     "branchLabelCloseDetached": {iconBranchLabelCloseDetached}
   },
@@ -53,6 +56,7 @@
     "commandDuration": {colorCommandDuration},
     "branch": {colorBranch},
     "branchNoUpstream": {colorBranchNoUpstream},
+    "branchGoneUpstream": {colorBranchGoneUpstream},
     "branchDetached": {colorBranchDetached},
     "ahead": {colorAhead},
     "behind": {colorBehind},

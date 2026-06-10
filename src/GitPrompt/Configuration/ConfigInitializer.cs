@@ -73,12 +73,15 @@ internal static class ConfigInitializer
             .Replace("{iconDirty}", JsonValue(config.Icons.Dirty))
             .Replace("{iconClean}", JsonValue(config.Icons.Clean))
             .Replace("{iconNoUpstreamMarker}", JsonValue(config.Icons.NoUpstreamMarker))
+            .Replace("{iconGoneUpstreamMarker}", JsonValue(config.Icons.GoneUpstreamMarker))
             .Replace("{iconDetachedHeadMarker}", JsonValue(config.Icons.DetachedHeadMarker))
             .Replace("{iconBranchOperationSeparator}", JsonValue(config.Icons.BranchOperationSeparator))
             .Replace("{iconBranchLabelOpenNormal}", JsonValue(config.Icons.BranchLabelOpenNormal))
             .Replace("{iconBranchLabelCloseNormal}", JsonValue(config.Icons.BranchLabelCloseNormal))
             .Replace("{iconBranchLabelOpenNoUpstream}", JsonValue(config.Icons.BranchLabelOpenNoUpstream))
             .Replace("{iconBranchLabelCloseNoUpstream}", JsonValue(config.Icons.BranchLabelCloseNoUpstream))
+            .Replace("{iconBranchLabelOpenGoneUpstream}", JsonValue(config.Icons.BranchLabelOpenGoneUpstream))
+            .Replace("{iconBranchLabelCloseGoneUpstream}", JsonValue(config.Icons.BranchLabelCloseGoneUpstream))
             .Replace("{iconBranchLabelOpenDetached}", JsonValue(config.Icons.BranchLabelOpenDetached))
             .Replace("{iconBranchLabelCloseDetached}", JsonValue(config.Icons.BranchLabelCloseDetached))
             .Replace("{colorUser}", JsonValue(config.Colors.User))
@@ -87,6 +90,7 @@ internal static class ConfigInitializer
             .Replace("{colorCommandDuration}", JsonValue(config.Colors.CommandDuration))
             .Replace("{colorBranch}", JsonValue(config.Colors.Branch))
             .Replace("{colorBranchNoUpstream}", JsonValue(config.Colors.BranchNoUpstream))
+            .Replace("{colorBranchGoneUpstream}", JsonValue(config.Colors.BranchGoneUpstream))
             .Replace("{colorBranchDetached}", JsonValue(config.Colors.BranchDetached))
             .Replace("{colorAhead}", JsonValue(config.Colors.Ahead))
             .Replace("{colorBehind}", JsonValue(config.Colors.Behind))
@@ -233,11 +237,14 @@ internal static class ConfigInitializer
                 DirtyStaged = userConfig.Icons?.DirtyStaged ?? userConfig.Icons?.Dirty ?? PromptIcons.IconDirty.ToString(),
                 Clean = userConfig.Icons?.Clean ?? PromptIcons.IconClean.ToString(),
                 NoUpstreamMarker = userConfig.Icons?.NoUpstreamMarker ?? BranchLabelTokens.NoUpstreamBranchMarker,
+                GoneUpstreamMarker = userConfig.Icons?.GoneUpstreamMarker ?? BranchLabelTokens.GoneUpstreamBranchMarker,
                 DetachedHeadMarker = userConfig.Icons?.DetachedHeadMarker ?? BranchLabelTokens.DetachedHeadBranchMarker,
                 BranchLabelOpenNormal = userConfig.Icons?.BranchLabelOpenNormal ?? BranchLabelTokens.NormalBranchLabelOpen,
                 BranchLabelCloseNormal = userConfig.Icons?.BranchLabelCloseNormal ?? BranchLabelTokens.NormalBranchLabelClose,
                 BranchLabelOpenNoUpstream = userConfig.Icons?.BranchLabelOpenNoUpstream ?? BranchLabelTokens.NoUpstreamBranchLabelOpen,
                 BranchLabelCloseNoUpstream = userConfig.Icons?.BranchLabelCloseNoUpstream ?? BranchLabelTokens.NoUpstreamBranchLabelClose,
+                BranchLabelOpenGoneUpstream = userConfig.Icons?.BranchLabelOpenGoneUpstream ?? BranchLabelTokens.GoneUpstreamBranchLabelOpen,
+                BranchLabelCloseGoneUpstream = userConfig.Icons?.BranchLabelCloseGoneUpstream ?? BranchLabelTokens.GoneUpstreamBranchLabelClose,
                 BranchLabelOpenDetached = userConfig.Icons?.BranchLabelOpenDetached ?? BranchLabelTokens.DetachedBranchLabelOpen,
                 BranchLabelCloseDetached = userConfig.Icons?.BranchLabelCloseDetached ?? BranchLabelTokens.DetachedBranchLabelClose,
                 BranchOperationSeparator = userConfig.Icons?.BranchOperationSeparator ?? BranchLabelTokens.BranchOperationSeparator
@@ -250,6 +257,7 @@ internal static class ConfigInitializer
                 CommandDuration = userConfig.Colors?.CommandDuration ?? ColorDisplayValue(AnsiColors.Magenta),
                 Branch = userConfig.Colors?.Branch ?? ColorDisplayValue(AnsiColors.BoldCyan),
                 BranchNoUpstream = userConfig.Colors?.BranchNoUpstream ?? ColorDisplayValue(AnsiColors.BoldCyan),
+                BranchGoneUpstream = userConfig.Colors?.BranchGoneUpstream ?? ColorDisplayValue(AnsiColors.BoldCyan),
                 BranchDetached = userConfig.Colors?.BranchDetached ?? ColorDisplayValue(AnsiColors.NormalYellow),
                 Ahead = userConfig.Colors?.Ahead ?? ColorDisplayValue(AnsiColors.BoldCyan),
                 Behind = userConfig.Colors?.Behind ?? ColorDisplayValue(AnsiColors.BoldCyan),

@@ -4,5 +4,6 @@ internal enum BranchState
 {
     Normal,
     NoUpstream,
+    GoneUpstream,
     Detached,
 }
