@@ -127,10 +127,8 @@ alias gmc="git merge --continue" # Continue a merge after resolving conflicts
 alias gms="git merge --squash" # Squash commits during a merge
 
 # ============================ Fetch ============================
-alias gf="git fetch" # Fetch changes from the remote
-alias gfa="git fetch --all" # Fetch changes from all remotes
-alias gfp="git fetch --prune" # Fetch changes from the remote and prune deleted branches
-alias gfs="git fetch && git status" # Fetch changes and show the status
+alias gf="git fetch --prune" # Fetch changes from the remote and prune deleted branches
+alias gfa="git fetch --all --prune" # Fetch changes from all remotes and prune deleted branches
 
 # ============================ Pull ============================
 alias gpl="git pull" # Pull changes from the remote
