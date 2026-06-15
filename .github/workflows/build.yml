@@ -8,7 +8,6 @@ on:
       - "src/**"
       - "tests/**"
       - "GitPrompt.slnx"
-      - "git_aliases.sh"
       - "docs/gitprompt.1"
       - ".github/workflows/build.yml"
       - ".github/workflows/publish.yml"
