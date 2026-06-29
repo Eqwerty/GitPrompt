@@ -108,32 +108,34 @@ Customise the icon characters shown in the git status segment. Set any key to a 
 
 ## Colors
 
-Customise the color of each prompt segment using `#RRGGBB` hex strings. Set any key to a hex color to override it; `null` restores the default. Use any color picker to choose a value.
+Customise the color of each prompt segment using `#RRGGBB` hex strings or raw ANSI codes (e.g. `[32m`). Set any key to override it; `null` restores the default.
+
+> **Note:** Default colors use the terminal's standard 16-color palette and adapt to your terminal's color scheme.
 
 | Key | Default | Description |
 |---|---|---|
-| `colors.user` | `#00BB00` | Username |
-| `colors.host` | `#CB06B2` | Hostname |
-| `colors.path` | `#D78700` | Working directory path |
-| `colors.commandDuration` | `#CB06B2` | Last command duration |
-| `colors.branch` | `#48A8CD` | Branch name (tracked upstream) |
-| `colors.branchNoUpstream` | `#48A8CD` | Branch name (no upstream) |
-| `colors.branchGoneUpstream` | `#48A8CD` | Branch name (upstream configured but remote branch is gone) |
-| `colors.branchDetached` | `#DDDD00` | Branch name (detached HEAD) |
-| `colors.ahead` | `#48A8CD` | Commits ahead indicator |
-| `colors.behind` | `#48A8CD` | Commits behind indicator |
-| `colors.staged` | `#00BB00` | Staged changes |
-| `colors.unstaged` | `#CC0000` | Unstaged changes |
-| `colors.untracked` | `#CC0000` | Untracked files |
-| `colors.stash` | `#CB06B2` | Stash entries |
-| `colors.conflict` | `#FF5555` | Merge conflicts |
-| `colors.dirty` | `#D78700` | Dirty indicator — shown when there are unstaged, untracked, or conflict changes (compact mode only) |
-| `colors.dirtyStaged` | `#00BB00` | Dirty indicator — shown when all changes are staged but not yet committed (compact mode only) |
-| `colors.clean` | `#00BB00` | Clean indicator (compact mode only) |
-| `colors.missingPath` | `#FF5555` | Missing working directory |
-| `colors.timeout` | `#FFA002` | Git timeout indicator |
-| `colors.promptSymbol` | `#AAAAAA` | Prompt symbol (`$`, `#`, `❯`) |
-| `colors.prefix` | `#AAAAAA` | Prefix string set by `layout.prefix` |
+| `colors.user` | green | Username |
+| `colors.host` | bright magenta | Hostname |
+| `colors.path` | orange | Working directory path |
+| `colors.commandDuration` | bright magenta | Last command duration |
+| `colors.branch` | bold cyan | Branch name (tracked upstream) |
+| `colors.branchNoUpstream` | bold cyan | Branch name (no upstream) |
+| `colors.branchGoneUpstream` | bold cyan | Branch name (upstream configured but remote branch is gone) |
+| `colors.branchDetached` | yellow | Branch name (detached HEAD) |
+| `colors.ahead` | bold cyan | Commits ahead indicator |
+| `colors.behind` | bold cyan | Commits behind indicator |
+| `colors.staged` | green | Staged changes |
+| `colors.unstaged` | red | Unstaged changes |
+| `colors.untracked` | red | Untracked files |
+| `colors.stash` | bright magenta | Stash entries |
+| `colors.conflict` | red | Merge conflicts |
+| `colors.dirty` | orange | Dirty indicator — shown when there are unstaged, untracked, or conflict changes (compact mode only) |
+| `colors.dirtyStaged` | green | Dirty indicator — shown when all changes are staged but not yet committed (compact mode only) |
+| `colors.clean` | green | Clean indicator (compact mode only) |
+| `colors.missingPath` | red | Missing working directory |
+| `colors.timeout` | yellow | Git timeout indicator |
+| `colors.promptSymbol` | white | Prompt symbol (`$`, `#`, `❯`) |
+| `colors.prefix` | white | Prefix string set by `layout.prefix` |
 
 > **Note:** `colors.promptSymbol` controls the *color* of the prompt symbol. To change the symbol character itself, use [`layout.symbol`](#prompt-layout).
 
