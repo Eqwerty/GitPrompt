@@ -116,7 +116,7 @@ Customise the color of each prompt segment using `#RRGGBB` hex strings or raw AN
 |---|---|---|
 | `colors.user` | green | Username |
 | `colors.host` | bright magenta | Hostname |
-| `colors.path` | bright yellow | Working directory path |
+| `colors.path` | yellow | Working directory path |
 | `colors.commandDuration` | bright magenta | Last command duration |
 | `colors.branch` | bold cyan | Branch name (tracked upstream) |
 | `colors.branchNoUpstream` | bold cyan | Branch name (no upstream) |
@@ -129,7 +129,7 @@ Customise the color of each prompt segment using `#RRGGBB` hex strings or raw AN
 | `colors.untracked` | red | Untracked files |
 | `colors.stash` | bright magenta | Stash entries |
 | `colors.conflict` | red | Merge conflicts |
-| `colors.dirty` | bright yellow | Dirty indicator — shown when there are unstaged, untracked, or conflict changes (compact mode only) |
+| `colors.dirty` | yellow | Dirty indicator — shown when there are unstaged, untracked, or conflict changes (compact mode only) |
 | `colors.dirtyStaged` | green | Dirty indicator — shown when all changes are staged but not yet committed (compact mode only) |
 | `colors.clean` | green | Clean indicator (compact mode only) |
 | `colors.missingPath` | red | Missing working directory |

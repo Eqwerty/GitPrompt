@@ -30,7 +30,7 @@ internal static class PromptColors
 
     internal static PromptColor ColorHost => ResolveColor(ConfigReader.Config.Colors.Host, AnsiColors.Magenta);
 
-    internal static PromptColor ColorPath => ResolveColor(ConfigReader.Config.Colors.Path, AnsiColors.BrightYellow);
+    internal static PromptColor ColorPath => ResolveColor(ConfigReader.Config.Colors.Path, AnsiColors.Yellow);
 
     internal static PromptColor ColorCommandDuration => ResolveColor(ConfigReader.Config.Colors.CommandDuration, AnsiColors.Magenta);
 
@@ -56,7 +56,7 @@ internal static class PromptColors
 
     internal static PromptColor ColorConflict => ResolveColor(ConfigReader.Config.Colors.Conflict, AnsiColors.Red);
 
-    internal static PromptColor ColorDirty => ResolveColor(ConfigReader.Config.Colors.Dirty, AnsiColors.BrightYellow);
+    internal static PromptColor ColorDirty => ResolveColor(ConfigReader.Config.Colors.Dirty, AnsiColors.Yellow);
 
     internal static PromptColor ColorDirtyStaged => ResolveColor(ConfigReader.Config.Colors.DirtyStaged, AnsiColors.Green);
 

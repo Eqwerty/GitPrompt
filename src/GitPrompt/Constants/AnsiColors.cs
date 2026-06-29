@@ -4,7 +4,6 @@ internal static class AnsiColors
 {
     internal const string Green = "\e[32m";
     internal const string Magenta = "\e[95m";
-    internal const string BrightYellow = "\e[93m";
     internal const string Red = "\e[31m";
     internal const string White = "\e[37m";
     internal const string Yellow = "\e[33m";

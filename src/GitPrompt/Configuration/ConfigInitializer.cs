@@ -253,7 +253,7 @@ internal static class ConfigInitializer
             {
                 User = userConfig.Colors?.User ?? ColorDisplayValue(AnsiColors.Green),
                 Host = userConfig.Colors?.Host ?? ColorDisplayValue(AnsiColors.Magenta),
-                Path = userConfig.Colors?.Path ?? ColorDisplayValue(AnsiColors.BrightYellow),
+                Path = userConfig.Colors?.Path ?? ColorDisplayValue(AnsiColors.Yellow),
                 CommandDuration = userConfig.Colors?.CommandDuration ?? ColorDisplayValue(AnsiColors.Magenta),
                 Branch = userConfig.Colors?.Branch ?? ColorDisplayValue(AnsiColors.BoldCyan),
                 BranchNoUpstream = userConfig.Colors?.BranchNoUpstream ?? ColorDisplayValue(AnsiColors.BoldCyan),
@@ -266,7 +266,7 @@ internal static class ConfigInitializer
                 Untracked = userConfig.Colors?.Untracked ?? ColorDisplayValue(AnsiColors.Red),
                 Stash = userConfig.Colors?.Stash ?? ColorDisplayValue(AnsiColors.Magenta),
                 Conflict = userConfig.Colors?.Conflict ?? ColorDisplayValue(AnsiColors.Red),
-                Dirty = userConfig.Colors?.Dirty ?? ColorDisplayValue(AnsiColors.BrightYellow),
+                Dirty = userConfig.Colors?.Dirty ?? ColorDisplayValue(AnsiColors.Yellow),
                 DirtyStaged = userConfig.Colors?.DirtyStaged ?? ColorDisplayValue(AnsiColors.Green),
                 Clean = userConfig.Colors?.Clean ?? ColorDisplayValue(AnsiColors.Green),
                 MissingPath = userConfig.Colors?.MissingPath ?? ColorDisplayValue(AnsiColors.Red),

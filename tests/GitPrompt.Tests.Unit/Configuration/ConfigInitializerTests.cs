@@ -400,7 +400,7 @@ public sealed class ConfigInitializerTests
         // Assert — color slots render as actual ANSI color codes
         content.Should().Contain("\"user\": \"[32m\"");
         content.Should().Contain("\"host\": \"[95m\"");
-        content.Should().Contain("\"path\": \"[93m\"");
+        content.Should().Contain("\"path\": \"[33m\"");
         content.Should().Contain("\"branch\": \"[1;36m\"");
         content.Should().Contain("\"branchDetached\": \"[0;33m\"");
         content.Should().Contain("\"promptSymbol\": \"[37m\"");
