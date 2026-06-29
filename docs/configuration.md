@@ -121,7 +121,7 @@ Customise the color of each prompt segment using `#RRGGBB` hex strings or raw AN
 | `colors.branch` | bold cyan | Branch name (tracked upstream) |
 | `colors.branchNoUpstream` | bold cyan | Branch name (no upstream) |
 | `colors.branchGoneUpstream` | bold cyan | Branch name (upstream configured but remote branch is gone) |
-| `colors.branchDetached` | yellow | Branch name (detached HEAD) |
+| `colors.branchDetached` | bright yellow | Branch name (detached HEAD) |
 | `colors.ahead` | bold cyan | Commits ahead indicator |
 | `colors.behind` | bold cyan | Commits behind indicator |
 | `colors.staged` | green | Staged changes |

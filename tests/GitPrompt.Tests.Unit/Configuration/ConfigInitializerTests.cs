@@ -402,7 +402,7 @@ public sealed class ConfigInitializerTests
         content.Should().Contain("\"host\": \"[95m\"");
         content.Should().Contain("\"path\": \"[33m\"");
         content.Should().Contain("\"branch\": \"[1;36m\"");
-        content.Should().Contain("\"branchDetached\": \"[0;33m\"");
+        content.Should().Contain("\"branchDetached\": \"[93m\"");
         content.Should().Contain("\"promptSymbol\": \"[37m\"");
     }
 

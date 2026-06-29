@@ -258,7 +258,7 @@ internal static class ConfigInitializer
                 Branch = userConfig.Colors?.Branch ?? ColorDisplayValue(AnsiColors.BoldCyan),
                 BranchNoUpstream = userConfig.Colors?.BranchNoUpstream ?? ColorDisplayValue(AnsiColors.BoldCyan),
                 BranchGoneUpstream = userConfig.Colors?.BranchGoneUpstream ?? ColorDisplayValue(AnsiColors.BoldCyan),
-                BranchDetached = userConfig.Colors?.BranchDetached ?? ColorDisplayValue(AnsiColors.NormalYellow),
+                BranchDetached = userConfig.Colors?.BranchDetached ?? ColorDisplayValue(AnsiColors.BrightYellow),
                 Ahead = userConfig.Colors?.Ahead ?? ColorDisplayValue(AnsiColors.BoldCyan),
                 Behind = userConfig.Colors?.Behind ?? ColorDisplayValue(AnsiColors.BoldCyan),
                 Staged = userConfig.Colors?.Staged ?? ColorDisplayValue(AnsiColors.Green),

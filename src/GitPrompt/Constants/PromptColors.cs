@@ -40,7 +40,7 @@ internal static class PromptColors
 
     internal static PromptColor ColorBranchGoneUpstream => ResolveColor(ConfigReader.Config.Colors.BranchGoneUpstream, AnsiColors.BoldCyan);
 
-    internal static PromptColor ColorBranchDetached => ResolveColor(ConfigReader.Config.Colors.BranchDetached, AnsiColors.NormalYellow);
+    internal static PromptColor ColorBranchDetached => ResolveColor(ConfigReader.Config.Colors.BranchDetached, AnsiColors.BrightYellow);
 
     internal static PromptColor ColorAhead => ResolveColor(ConfigReader.Config.Colors.Ahead, AnsiColors.BoldCyan);
 
