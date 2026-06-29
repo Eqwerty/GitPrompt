@@ -9,6 +9,9 @@ internal static class AnsiColors
     internal const string White = "\e[37m";
     internal const string Yellow = "\e[33m";
     internal const string BoldCyan = "\e[1;36m";
+    internal const string Cyan = "\e[0;36m";
+    internal const string BrightBlack = "\e[1;30m";
+    internal const string DarkGray = "\e[90m";
 
     internal const string Reset = "\e[0m";
 }

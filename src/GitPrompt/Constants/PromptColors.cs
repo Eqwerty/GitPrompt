@@ -36,11 +36,11 @@ internal static class PromptColors
 
     internal static PromptColor ColorBranch => ResolveColor(ConfigReader.Config.Colors.Branch, AnsiColors.BoldCyan);
 
-    internal static PromptColor ColorBranchNoUpstream => ResolveColor(ConfigReader.Config.Colors.BranchNoUpstream, AnsiColors.BoldCyan);
+    internal static PromptColor ColorBranchNoUpstream => ResolveColor(ConfigReader.Config.Colors.BranchNoUpstream, AnsiColors.Cyan);
 
-    internal static PromptColor ColorBranchGoneUpstream => ResolveColor(ConfigReader.Config.Colors.BranchGoneUpstream, AnsiColors.BoldCyan);
+    internal static PromptColor ColorBranchGoneUpstream => ResolveColor(ConfigReader.Config.Colors.BranchGoneUpstream, AnsiColors.Cyan);
 
-    internal static PromptColor ColorBranchDetached => ResolveColor(ConfigReader.Config.Colors.BranchDetached, AnsiColors.BrightYellow);
+    internal static PromptColor ColorBranchDetached => ResolveColor(ConfigReader.Config.Colors.BranchDetached, AnsiColors.DarkGray);
 
     internal static PromptColor ColorAhead => ResolveColor(ConfigReader.Config.Colors.Ahead, AnsiColors.BoldCyan);
 
@@ -52,7 +52,7 @@ internal static class PromptColors
 
     internal static PromptColor ColorUntracked => ResolveColor(ConfigReader.Config.Colors.Untracked, AnsiColors.Red);
 
-    internal static PromptColor ColorStash => ResolveColor(ConfigReader.Config.Colors.Stash, AnsiColors.Magenta);
+    internal static PromptColor ColorStash => ResolveColor(ConfigReader.Config.Colors.Stash, AnsiColors.BrightBlack);
 
     internal static PromptColor ColorConflict => ResolveColor(ConfigReader.Config.Colors.Conflict, AnsiColors.Red);
 
