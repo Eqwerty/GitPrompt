@@ -42,7 +42,7 @@ alias gcob="git checkout -b" # Create and switch to a new branch
 # List branches with verbose information and colors
 function gbv() {
   local _red=$'\e[31m' _magenta=$'\e[95m' _boldcyan=$'\e[1;36m'
-  git branch --color=always --format='%(color:bold cyan)%(HEAD)%(color:reset) %(color:bold cyan)%(objectname:short)%(color:reset) %(if)%(HEAD)%(then)%(color:bold green)%(else)%(color:yellow)%(end)%(refname:short)%(color:reset)%(if)%(upstream)%(then) %(color:brightmagenta)[%(upstream:short)%(if)%(upstream:track,nobracket)%(then): %(upstream:track,nobracket)%(end)]%(color:reset)%(end) %(color:white)%(subject)%(color:reset)' \
+  git branch --color=always --format='%(color:bold cyan)%(HEAD)%(color:reset) %(color:bold cyan)%(objectname:short)%(color:reset) %(if)%(HEAD)%(then)%(color:bold green)%(else)%(color:brightblack)%(end)%(refname:short)%(color:reset)%(if)%(upstream)%(then) %(color:brightmagenta)[%(upstream:short)%(if)%(upstream:track,nobracket)%(then): %(upstream:track,nobracket)%(end)]%(color:reset)%(end) %(color:white)%(subject)%(color:reset)' \
     | sed -e "s/: gone\]/: ${_red}gone${_magenta}]/g" \
           -e "s/ahead \([0-9]*\)/${_boldcyan}ahead \1${_magenta}/g" \
           -e "s/behind \([0-9]*\)/${_boldcyan}behind \1${_magenta}/g"
