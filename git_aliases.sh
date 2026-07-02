@@ -476,6 +476,39 @@ function __git_web_url() {
   esac
 }
 
+# Open a URL with the OS-appropriate default browser handler
+function __git_open_url() {
+  local url="$1"
+
+  if [[ "$(uname -s)" == "Darwin" ]]; then
+    open "$url"
+    return
+  fi
+
+  if grep -qi microsoft /proc/version 2>/dev/null || [[ -n "$WSL_DISTRO_NAME" ]] || [[ "$(uname -s)" =~ ^(MINGW|MSYS|CYGWIN) ]]; then
+    local pwsh=""
+    if command -v powershell.exe >/dev/null 2>&1; then
+      pwsh="powershell.exe"
+    elif [[ -x /mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe ]]; then
+      pwsh="/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
+    fi
+
+    if [[ -n "$pwsh" ]]; then
+      "$pwsh" -NoProfile -Command "Start-Process '$url'" >/dev/null 2>&1
+      return
+    fi
+  fi
+
+  if command -v xdg-open >/dev/null 2>&1; then
+    xdg-open "$url" >/dev/null 2>&1 &
+    return
+  fi
+
+  echo "Error: could not determine how to open a URL on this platform." >&2
+  echo "Please open this URL manually: $url"
+  return 1
+}
+
 # Create a pull request and open it in the default browser
 function gpr() {
   local base_url branch_name main_branch pr_url
@@ -489,12 +522,12 @@ function gpr() {
   [[ -n "$main_branch" ]] || { echo "Error: could not determine default branch"; return 1; }
 
   if [[ "$base_url" == *dev.azure.com* || "$base_url" == *visualstudio.com* ]]; then
-    pr_url="$base_url/pullrequestcreate?sourceRef=refs/heads/$branch_name&targetRef=refs/heads/$main_branch"
+    pr_url="$base_url/pullrequestcreate?sourceRef=$branch_name&targetRef=$main_branch"
   else
     pr_url="$base_url/compare/$main_branch...$branch_name"
   fi
 
-  explorer.exe "$pr_url"
+  __git_open_url "$pr_url"
 }
 
 # Open the current branch or the main branch in the repository
@@ -518,7 +551,7 @@ function grepo() {
     fi
   fi
 
-  explorer.exe "$url"
+  __git_open_url "$url"
 }
 
 # ============================ Utils ============================
