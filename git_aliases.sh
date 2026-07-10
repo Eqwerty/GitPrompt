@@ -152,6 +152,7 @@ alias gri="git rebase -i" # Start an interactive rebase
 alias grias="git rebase -i --autosquash" # Interactive rebase with autosquash enabled
 alias gra="git rebase --abort" # Abort a rebase
 alias grc="git rebase --continue" # Continue a rebase after resolving conflicts
+alias grs="git rebase --skip" # Skip the current commit during a rebase
 
 # ============================ Stash ============================
 alias gsu="git stash push -u" # Stash untracked changes
