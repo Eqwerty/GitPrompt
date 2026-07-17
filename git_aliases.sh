@@ -128,6 +128,94 @@ function gcorbm() {
   git checkout "${selected[0]}"
 }
 
+# ============================ Worktree ============================
+alias gw="git worktree" # Manage multiple working trees
+alias gwa="git worktree add" # Add a new worktree for an existing branch/commit
+alias gwab="git worktree add -b" # Create a new branch and add a worktree for it
+alias gwr="git worktree remove" # Remove a worktree
+alias gwrf="git worktree remove --force" # Force-remove a worktree (even if dirty/locked)
+alias gwp="git worktree prune" # Clean up stale worktree administrative data
+alias gwm="git worktree move" # Move a worktree to a new path
+
+# List worktrees with colors: current worktree marked, path/hash/branch highlighted, locked/prunable flagged
+function gwl() {
+  local current_path
+  current_path=$(git rev-parse --show-toplevel 2>/dev/null)
+
+  local _boldcyan=$'\e[1;36m' _boldgreen=$'\e[1;32m' _brightyellow=$'\e[93m' _brightblack=$'\e[90m' _red=$'\e[31m' _reset=$'\e[0m'
+
+  git worktree list --porcelain | awk -v current="$current_path" \
+    -v boldcyan="$_boldcyan" -v boldgreen="$_boldgreen" -v yellow="$_brightyellow" -v grey="$_brightblack" -v red="$_red" -v reset="$_reset" '
+    /^worktree /  { n++; path[n] = substr($0, 10); if (length(path[n]) > maxlen) maxlen = length(path[n]) }
+    /^HEAD /      { hash[n] = substr($0, 6, 7) }
+    /^branch /    { b = substr($0, 8); sub("refs/heads/", "", b); branch[n] = b }
+    /^bare$/      { bare[n] = 1 }
+    /^detached$/  { detached[n] = 1 }
+    /^locked/     { locked[n] = 1 }
+    /^prunable/   { prunable[n] = 1 }
+    END {
+      for (i = 1; i <= n; i++) {
+        is_current = (path[i] == current)
+        marker = is_current ? "*" : " "
+        if (bare[i])          state = grey "(bare)" reset
+        else if (detached[i])  state = grey "(detached HEAD)" reset
+        else if (is_current)  state = boldgreen "[" branch[i] "]" reset
+        else                  state = grey "[" branch[i] "]" reset
+        extra = ""
+        if (locked[i])   extra = extra " " yellow "[locked]" reset
+        if (prunable[i]) extra = extra " " red "[prunable]" reset
+        printf "%s %-*s  %s%s%s  %s%s\n", marker, maxlen, path[i], boldcyan, hash[i], reset, state, extra
+      }
+    }
+  '
+}
+
+# List other worktrees as "path [branch]", one per line, excluding the current one
+function __git_worktree_others() {
+  local current_path
+  current_path=$(git rev-parse --show-toplevel 2>/dev/null)
+
+  git worktree list --porcelain | awk -v current="$current_path" '
+    /^worktree / { path = substr($0, 10) }
+    /^branch /   { branch = substr($0, 8); sub("refs/heads/", "", branch); if (path != current) print path " [" branch "]"; path=""; branch="" }
+    /^detached$/ { if (path != current) print path " [detached]"; path="" }
+  '
+}
+
+# Interactively select worktree(s) to remove (menu, current worktree excluded)
+function gwrm() {
+  local -a entries selected paths
+  mapfile -t entries < <(__git_worktree_others)
+
+  if [[ ${#entries[@]} -eq 0 ]]; then
+    echo "No other worktrees to remove"
+    return 1
+  fi
+
+  mapfile -t selected < <(printf '%s\n' "${entries[@]}" | __git_select --multi)
+  [[ ${#selected[@]} -eq 0 ]] && return 0
+
+  mapfile -t paths < <(printf '%s\n' "${selected[@]}" | sed -E 's/ \[[^]]*\]$//')
+  git worktree remove "${paths[@]}"
+}
+
+# Interactively select a worktree to switch into (menu, current worktree excluded)
+function gwcm() {
+  local -a entries selected
+  mapfile -t entries < <(__git_worktree_others)
+
+  if [[ ${#entries[@]} -eq 0 ]]; then
+    echo "No other worktrees to switch to"
+    return 1
+  fi
+
+  mapfile -t selected < <(printf '%s\n' "${entries[@]}" | __git_select)
+  [[ ${#selected[@]} -eq 0 ]] && return 0
+
+  local path="${selected[0]% \[*\]}"
+  cd "$path" || return
+}
+
 # ============================ Merge ============================
 alias gm="git merge --no-edit" # Merge branches without opening an editor
 alias gma="git merge --abort" # Abort a merge
@@ -726,5 +814,10 @@ if type __git_complete >/dev/null 2>&1; then
   __git_complete gri _git_rebase
   __git_complete gsh _git_show
   __git_complete gtd _git_tag
+  __git_complete gwa _git_worktree
+  __git_complete gwab _git_worktree
+  __git_complete gwr _git_worktree
+  __git_complete gwrf _git_worktree
+  __git_complete gwm _git_worktree
 fi
 
