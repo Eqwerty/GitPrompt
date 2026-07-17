@@ -143,31 +143,56 @@ function gwl() {
   current_path=$(git rev-parse --show-toplevel 2>/dev/null)
 
   local _boldcyan=$'\e[1;36m' _boldgreen=$'\e[1;32m' _brightyellow=$'\e[93m' _brightblack=$'\e[90m' _red=$'\e[31m' _reset=$'\e[0m'
+  local fs=$'\x1f' # unit separator: unlike tab, bash's `read` never collapses consecutive occurrences into one delimiter
 
-  git worktree list --porcelain | awk -v current="$current_path" \
-    -v boldcyan="$_boldcyan" -v boldgreen="$_boldgreen" -v yellow="$_brightyellow" -v grey="$_brightblack" -v red="$_red" -v reset="$_reset" '
-    /^worktree /  { n++; path[n] = substr($0, 10); if (length(path[n]) > maxlen) maxlen = length(path[n]) }
-    /^HEAD /      { hash[n] = substr($0, 6, 7) }
-    /^branch /    { b = substr($0, 8); sub("refs/heads/", "", b); branch[n] = b }
-    /^bare$/      { bare[n] = 1 }
-    /^detached$/  { detached[n] = 1 }
-    /^locked/     { locked[n] = 1 }
-    /^prunable/   { prunable[n] = 1 }
-    END {
-      for (i = 1; i <= n; i++) {
-        is_current = (path[i] == current)
-        marker = is_current ? "*" : " "
-        if (bare[i])          state = grey "(bare)" reset
-        else if (detached[i])  state = grey "(detached HEAD)" reset
-        else if (is_current)  state = boldgreen "[" branch[i] "]" reset
-        else                  state = grey "[" branch[i] "]" reset
-        extra = ""
-        if (locked[i])   extra = extra " " yellow "[locked]" reset
-        if (prunable[i]) extra = extra " " red "[prunable]" reset
-        printf "%s %-*s  %s%s%s  %s%s\n", marker, maxlen, path[i], boldcyan, hash[i], reset, state, extra
-      }
+  local -a records
+  mapfile -t records < <(git worktree list --porcelain | awk -v current="$current_path" -v fs="$fs" '
+    /^worktree /  { path = substr($0, 10); if (length(path) > maxlen) maxlen = length(path) }
+    /^HEAD /      { fullhash = substr($0, 6) }
+    /^branch /    { b = substr($0, 8); sub("refs/heads/", "", b); branch = b }
+    /^bare$/      { bare = 1 }
+    /^detached$/  { detached = 1 }
+    /^locked/     { locked = 1 }
+    /^prunable/   { prunable = 1 }
+    /^$/          {
+      is_current = (path == current) ? 1 : 0
+      printf "%s%s%s%s%s%s%d%s%d%s%d%s%d%s%d\n", path, fs, fullhash, fs, branch, fs, bare?1:0, fs, detached?1:0, fs, is_current, fs, locked?1:0, fs, prunable?1:0
+      path=""; fullhash=""; branch=""; bare=0; detached=0; locked=0; prunable=0
     }
-  '
+    END { print "MAXLEN" fs maxlen }
+  ')
+
+  local maxlen=0
+  local -a lines
+  local record
+  for record in "${records[@]}"; do
+    if [[ "$record" == MAXLEN"$fs"* ]]; then
+      maxlen="${record#MAXLEN"$fs"}"
+    else
+      lines+=("$record")
+    fi
+  done
+
+  local path fullhash branch bare detached is_current locked prunable shorthash marker state extra
+  for record in "${lines[@]}"; do
+    IFS="$fs" read -r path fullhash branch bare detached is_current locked prunable <<< "$record"
+    shorthash=$(git rev-parse --short "$fullhash" 2>/dev/null)
+    marker=" "
+    [[ "$is_current" == "1" ]] && marker="*"
+    if [[ "$bare" == "1" ]]; then
+      state="${_brightblack}(bare)${_reset}"
+    elif [[ "$detached" == "1" ]]; then
+      state="${_brightblack}(detached HEAD)${_reset}"
+    elif [[ "$is_current" == "1" ]]; then
+      state="${_boldgreen}[${branch}]${_reset}"
+    else
+      state="${_brightblack}[${branch}]${_reset}"
+    fi
+    extra=""
+    [[ "$locked" == "1" ]] && extra="${extra} ${_brightyellow}[locked]${_reset}"
+    [[ "$prunable" == "1" ]] && extra="${extra} ${_red}[prunable]${_reset}"
+    printf '%s %-*s  %s%s%s  %s%s\n' "$marker" "$maxlen" "$path" "$_boldcyan" "$shorthash" "$_reset" "$state" "$extra"
+  done
 }
 
 # List other worktrees as "path [branch]", one per line, excluding the current one.
@@ -177,20 +202,22 @@ function __git_worktree_others() {
   local current_path
   current_path=$(git rev-parse --show-toplevel 2>/dev/null)
 
+  local sep=$'\x01'
   local -a records
-  mapfile -t records < <(git worktree list --porcelain | awk -v current="$current_path" '
+  mapfile -t records < <(git worktree list --porcelain | awk -v current="$current_path" -v sep="$sep" '
     /^worktree /  { path = substr($0, 10) }
     /^HEAD /      { head = substr($0, 6) }
     /^branch /    { branch = substr($0, 8); sub("refs/heads/", "", branch); if (path != current) print path "\t" branch; path=""; head=""; branch="" }
-    /^detached$/  { if (path != current) print path "\t\x01" head; path=""; head="" }
+    /^bare$/      { if (path != current) print path "\tbare"; path=""; head="" }
+    /^detached$/  { if (path != current) print path "\t" sep head; path=""; head="" }
   ')
 
   local record path label head remote_ref
   for record in "${records[@]}"; do
     path="${record%%$'\t'*}"
     label="${record#*$'\t'}"
-    if [[ "$label" == $'\x01'* ]]; then
-      head="${label#$'\x01'}"
+    if [[ "$label" == "$sep"* ]]; then
+      head="${label#"$sep"}"
       remote_ref=$(git for-each-ref --points-at="$head" --format='%(refname)' refs/remotes 2>/dev/null | grep -v '/HEAD$' | head -n1)
       label="${remote_ref#refs/remotes/}"
       label="${label:-detached}"
@@ -831,6 +858,7 @@ if type __git_complete >/dev/null 2>&1; then
   __git_complete gri _git_rebase
   __git_complete gsh _git_show
   __git_complete gtd _git_tag
+  __git_complete gw _git_worktree
   __git_complete gwa _git_worktree
   __git_complete gwab _git_worktree
   __git_complete gwr _git_worktree
