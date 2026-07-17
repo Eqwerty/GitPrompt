@@ -170,16 +170,33 @@ function gwl() {
   '
 }
 
-# List other worktrees as "path [branch]", one per line, excluding the current one
+# List other worktrees as "path [branch]", one per line, excluding the current one.
+# Detached worktrees are resolved to a matching remote-tracking ref when possible (e.g. "origin/master"),
+# falling back to "detached" when the commit isn't pointed at by any remote-tracking branch.
 function __git_worktree_others() {
   local current_path
   current_path=$(git rev-parse --show-toplevel 2>/dev/null)
 
-  git worktree list --porcelain | awk -v current="$current_path" '
-    /^worktree / { path = substr($0, 10) }
-    /^branch /   { branch = substr($0, 8); sub("refs/heads/", "", branch); if (path != current) print path " [" branch "]"; path=""; branch="" }
-    /^detached$/ { if (path != current) print path " [detached]"; path="" }
-  '
+  local -a records
+  mapfile -t records < <(git worktree list --porcelain | awk -v current="$current_path" '
+    /^worktree /  { path = substr($0, 10) }
+    /^HEAD /      { head = substr($0, 6) }
+    /^branch /    { branch = substr($0, 8); sub("refs/heads/", "", branch); if (path != current) print path "\t" branch; path=""; head=""; branch="" }
+    /^detached$/  { if (path != current) print path "\t\x01" head; path=""; head="" }
+  ')
+
+  local record path label head remote_ref
+  for record in "${records[@]}"; do
+    path="${record%%$'\t'*}"
+    label="${record#*$'\t'}"
+    if [[ "$label" == $'\x01'* ]]; then
+      head="${label#$'\x01'}"
+      remote_ref=$(git for-each-ref --points-at="$head" --format='%(refname)' refs/remotes 2>/dev/null | grep -v '/HEAD$' | head -n1)
+      label="${remote_ref#refs/remotes/}"
+      label="${label:-detached}"
+    fi
+    printf '%s [%s]\n' "$path" "$label"
+  done
 }
 
 # Interactively select worktree(s) to remove (menu, current worktree excluded)
