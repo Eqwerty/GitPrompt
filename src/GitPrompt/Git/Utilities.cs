@@ -41,6 +41,37 @@ internal static class Utilities
         return Path.GetFullPath(path);
     }
 
+    internal static string ResolveCommonGitDirectoryPath(string normalizedGitDirectoryPath)
+    {
+        try
+        {
+            var commonDirFilePath = Path.Combine(normalizedGitDirectoryPath, "commondir");
+            if (!File.Exists(commonDirFilePath))
+            {
+                return normalizedGitDirectoryPath;
+            }
+
+            using var commonDirReader = new StreamReader(commonDirFilePath);
+            var commonDirValue = commonDirReader.ReadLine()?.Trim();
+            if (string.IsNullOrEmpty(commonDirValue))
+            {
+                return normalizedGitDirectoryPath;
+            }
+
+            var resolvedCommonDirPath = Path.IsPathRooted(commonDirValue)
+                ? commonDirValue
+                : Path.GetFullPath(Path.Combine(normalizedGitDirectoryPath, commonDirValue));
+
+            return Directory.Exists(resolvedCommonDirPath)
+                ? NormalizePath(resolvedCommonDirPath)
+                : normalizedGitDirectoryPath;
+        }
+        catch
+        {
+            return normalizedGitDirectoryPath;
+        }
+    }
+
     internal static string EscapeCommandLineArgument(string argument)
     {
         if (argument.Length is 0)

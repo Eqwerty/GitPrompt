@@ -142,7 +142,9 @@ internal static class GitOperationDetector
             return matchingRemoteReferences;
         }
 
-        var remoteReferencesDirectoryPath = Path.Combine(gitDirectoryPath, "refs", "remotes");
+        var commonGitDirectoryPath = Utilities.ResolveCommonGitDirectoryPath(gitDirectoryPath);
+
+        var remoteReferencesDirectoryPath = Path.Combine(commonGitDirectoryPath, "refs", "remotes");
         if (Directory.Exists(remoteReferencesDirectoryPath))
         {
             try
@@ -172,7 +174,7 @@ internal static class GitOperationDetector
             }
         }
 
-        var packedReferencesPath = Path.Combine(gitDirectoryPath, "packed-refs");
+        var packedReferencesPath = Path.Combine(commonGitDirectoryPath, "packed-refs");
         if (File.Exists(packedReferencesPath))
         {
             try

@@ -342,4 +342,32 @@ public sealed class GitOperationDetectorTests
         // Assert
         matchingRemoteReferences.Should().BeEmpty();
     }
+
+    [Fact]
+    public async Task FindMatchingRemoteReferences_WhenGitDirectoryPathIsLinkedWorktree_ShouldResolveReferencesFromCommonDirectory()
+    {
+        // Arrange — simulate a linked worktree: a private admin directory containing only a
+        // "commondir" pointer, with refs/remotes and packed-refs living in the common (main) git directory.
+        using var commonGitDirectory = new TemporaryDirectory();
+        using var worktreeGitDirectory = new TemporaryDirectory();
+
+        var remoteDirectoryPath = Path.Combine(commonGitDirectory.DirectoryPath, "refs", "remotes", "origin");
+        Directory.CreateDirectory(remoteDirectoryPath);
+        await File.WriteAllTextAsync(Path.Combine(remoteDirectoryPath, "main"), "abcdef1234567890\n");
+        await File.WriteAllTextAsync(
+            Path.Combine(commonGitDirectory.DirectoryPath, "packed-refs"),
+            """
+            # pack-refs with: peeled fully-peeled sorted
+            abcdef1234567890 refs/remotes/origin/release
+            """
+        );
+        await File.WriteAllTextAsync(Path.Combine(worktreeGitDirectory.DirectoryPath, "commondir"), commonGitDirectory.DirectoryPath + "\n");
+
+        // Act
+        var matchingRemoteReferences = GitOperationDetector.FindMatchingRemoteReferences(worktreeGitDirectory.DirectoryPath, "abcdef1234567890");
+
+        // Assert
+        matchingRemoteReferences.Should().Contain("origin/main");
+        matchingRemoteReferences.Should().Contain("origin/release");
+    }
 }
