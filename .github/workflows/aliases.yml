@@ -39,15 +39,23 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    concurrency:
+      group: gh-release-latest
+      cancel-in-progress: false
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+
+      - name: Move latest tag to this commit
+        run: |
+          git tag -f latest "${{ github.sha }}"
+          git push origin refs/tags/latest --force
 
       - name: Upload aliases to latest release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if ! gh release view latest >/dev/null 2>&1; then
-            gh release create latest --title "Git Aliases" --notes "Latest git aliases, auto-updated on push to master."
+            gh release create latest --title "Latest" --target "${{ github.sha }}" --notes "Latest git aliases, auto-updated on push to master."
           fi
           gh release upload latest git_aliases.sh --clobber
