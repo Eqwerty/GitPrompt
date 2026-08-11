@@ -119,15 +119,15 @@ Customise the color of each prompt segment using `#RRGGBB` hex strings or raw AN
 | `colors.path` | yellow | Working directory path |
 | `colors.commandDuration` | bright magenta | Last command duration |
 | `colors.branch` | bold cyan | Branch name (tracked upstream) |
-| `colors.branchNoUpstream` | bold cyan | Branch name (no upstream) |
-| `colors.branchGoneUpstream` | bold cyan | Branch name (upstream configured but remote branch is gone) |
-| `colors.branchDetached` | bright yellow | Branch name (detached HEAD) |
+| `colors.branchNoUpstream` | cyan | Branch name (no upstream) |
+| `colors.branchGoneUpstream` | cyan | Branch name (upstream configured but remote branch is gone) |
+| `colors.branchDetached` | bright black | Branch name (detached HEAD) |
 | `colors.ahead` | bold cyan | Commits ahead indicator |
 | `colors.behind` | bold cyan | Commits behind indicator |
 | `colors.staged` | green | Staged changes |
 | `colors.unstaged` | red | Unstaged changes |
 | `colors.untracked` | red | Untracked files |
-| `colors.stash` | bright magenta | Stash entries |
+| `colors.stash` | bold black | Stash entries |
 | `colors.conflict` | red | Merge conflicts |
 | `colors.dirty` | yellow | Dirty indicator — shown when there are unstaged, untracked, or conflict changes (compact mode only) |
 | `colors.dirtyStaged` | green | Dirty indicator — shown when all changes are staged but not yet committed (compact mode only) |
