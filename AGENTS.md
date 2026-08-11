@@ -32,6 +32,7 @@ GitPrompt is a personal tool that replaces the default shell prompt with a fast,
 - **Naming:** `MethodName_WhenCondition_ShouldExpectedOutcome` — e.g. `GetEditor_WhenNeitherEditorNorVisualIsSet_ShouldReturnVim`.
 - **Structure:** Arrange / Act / Assert comments in every test. Combine into `// Act & Assert` only for genuine one-liners with no separate arrange.
 - **Class modifier:** Test classes are `sealed`.
+- **Favor unit tests.** Default to a unit test with a hand-built fixture; only write an integration test when the behavior genuinely depends on real `git` subprocess output. Integration tests spawn real `git` processes, which is comparatively expensive on Windows — see [.agents/testing.md](.agents/testing.md) for the mechanics and current numbers.
 
 ## Human Docs (canonical for the user-facing surface)
 
@@ -50,5 +51,9 @@ The files below are agent-facing detail on parts of the codebase that aren't sel
 | Topic | File |
 |---|---|
 | Cache & invalidation design (repo-location cache, git-status cache, fingerprinting) | [.agents/architecture.md](.agents/architecture.md) |
-| Shell ↔ binary contract (`bash-init.sh` hooks, cache invalidation timing, aliases loading) | [.agents/shell-contract.md](.agents/shell-contract.md) |
+| Shell ↔ binary contract (`bash-init.sh` hooks, cache invalidation timing, aliases loading, Windows/MSYS detection) | [.agents/shell-contract.md](.agents/shell-contract.md) |
 | Hidden commands `docs/commands.md` can't show | [.agents/internal-commands.md](.agents/internal-commands.md) |
+| Testing conventions (isolation collections, unit vs. integration split) | [.agents/testing.md](.agents/testing.md) |
+| Cross-platform branching (Windows/Linux/macOS, build matrix, versioning) | [.agents/platform.md](.agents/platform.md) |
+| Adding/changing a `config.jsonc` field (the 4 places that must stay in sync) | [.agents/config-schema.md](.agents/config-schema.md) |
+| CI/CD pipeline (build → publish → release, what CI does and doesn't verify) | [.agents/ci-cd.md](.agents/ci-cd.md) |

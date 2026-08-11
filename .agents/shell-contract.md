@@ -38,6 +38,10 @@ This means:
 - Adding a new *sub-command* (a verb containing a space) also needs a new hardcoded `case` arm added to `_gitprompt_complete` by hand — it won't pick it up from `CommandRegistry` automatically the way top-level verbs do.
 - Adding a new hidden flag needs no completion work at all, by design.
 
+## Git Bash / MSYS on Windows
+
+`bash-init.sh` detects Windows at the very top via `[[ "$OSTYPE" == msys || "$OSTYPE" == cygwin ]]` (lines 4–5) and switches `_GITPROMPT_BIN` to `gitprompt.exe` (and the fallback `PS1` to a backslash-escaped one). The same check is repeated near the bottom (line 99) to also register tab completion for `gitprompt.exe`, not just `gitprompt`. Both checks need to move together — see [platform.md](platform.md) for the rest of the Windows-specific branching on the C# side (env var resolution, path comparisons, the running-`.exe` delete workaround).
+
 ## `--migrate-config` runs on every session start
 
 `InitCommand.Run` calls `ConfigInitializer.InitializeDefaultConfig()` unconditionally before printing the init script — i.e. on every new shell that does `eval "$(gitprompt init bash)"`. This silently upgrades an old `config.jsonc` to the latest schema while preserving existing values. `--migrate-config` as a standalone flag exists mainly for manual recovery/testing, not for interactive use.
