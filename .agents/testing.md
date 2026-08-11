@@ -2,18 +2,18 @@
 
 Read this before writing a test that touches shared static state (`ConfigReader`, the two shared caches, `PromptDiagnostics`), or before deciding whether a new test belongs in the unit or integration project.
 
-## Isolation collections — one per shared static, and they don't fully work today
+## Isolation collections — one per shared static
 
-`GitPrompt.Tests.Unit` has four `[CollectionDefinition(..., DisableParallelization = true)]` classes, each meant to serialize tests that mutate one specific piece of shared static state (xUnit disables parallelism *within* a collection, but collections still run concurrently *with each other*):
+`GitPrompt.Tests.Unit` has two `[CollectionDefinition(..., DisableParallelization = true)]` classes, each serializing every test that mutates one specific piece of shared static state (xUnit disables parallelism *within* a collection, but collections still run concurrently *with each other* — so anything that touches the same static must join the same collection, not just a similarly-named one):
 
 | Collection | `Name` | File | Guards |
 |---|---|---|---|
-| `CacheIsolationCollection` | `"CacheIsolation"` | `Git/CacheIsolationCollection.cs` | `GitRepositorySharedCache` / `GitStatusSharedCache` static overrides (time provider, cache directory, cleanup schedule) |
+| `ConfigIsolationCollection` | `"ConfigIsolation"` | `ConfigIsolationCollection.cs` (test project root — not under `Git/` or `Prompting/`) | `ConfigReader`'s static override, plus `GitRepositorySharedCache`/`GitStatusSharedCache`'s testing overrides (time provider, cache directory, cleanup schedule) |
 | `DiagnosticsIsolationCollection` | `"DiagnosticsIsolation"` | `Diagnostics/DiagnosticsIsolationCollection.cs` | `PromptDiagnostics` statics |
-| `ConfigIsolationCollection` | `"GitConfigIsolation"` | `Git/ConfigIsolationCollection.cs` | `ConfigReader`'s static override |
-| `ConfigIsolationCollection` | `"ConfigIsolation"` | `Prompting/ConfigIsolationCollection.cs` | `ConfigReader`'s static override |
 
-**Known bug, not just a naming quirk:** the last two rows are two separately-defined classes that happen to share a name but have different `Name` strings (`"GitConfigIsolation"` vs `"ConfigIsolation"`) — and both exist to guard the exact same `ConfigReader.OverrideForTesting` static. Because they're different xUnit collections, tests in one CAN run concurrently with tests in the other, so this doesn't actually isolate the static it's meant to protect. Confirmed by grep: `Git/GitStatusDisplayFormatter*Tests.cs` (in `"GitConfigIsolation"`) and `Prompting/{PromptSymbolBuilder,PromptResult,CommandDurationSegmentBuilder,ContextSegmentBuilder}Tests.cs` (in `"ConfigIsolation"`) all call `ConfigReader.OverrideForTesting` — and `Git/GitRepositorySharedCacheTests.cs`/`GitStatusSharedCacheTests.cs` call it too, from inside a *third* collection (`CacheIsolationCollection`). So three collections currently step on the same static. This should eventually be collapsed into one real collection — until then, if you add a test that calls `ConfigReader.OverrideForTesting`, pick one of the three existing collections rather than inventing a fourth.
+`ConfigIsolationCollection` lives at the test project root rather than inside `Git/` or `Prompting/` because it's shared by test classes in both: `Git/GitStatusDisplayFormatter*Tests.cs`, `Git/GitRepositorySharedCacheTests.cs`, `Git/GitStatusSharedCacheTests.cs` (the cache tests also join it because they configure TTLs through `ConfigReader`), and `Prompting/{PromptSymbolBuilder,PromptResult,CommandDurationSegmentBuilder,ContextSegmentBuilder}Tests.cs`. C# resolves the unqualified `ConfigIsolationCollection.Name` reference in files under both `.Git` and `.Prompting` without a `using`, since `GitPrompt.Tests.Unit` is their common enclosing namespace.
+
+If you add a test that calls `ConfigReader.OverrideForTesting` — directly, or indirectly by exercising a cache class that reads TTLs from config — join `ConfigIsolationCollection`. Don't create a new isolation collection for it.
 
 **What actually happens if a test mutates one of these statics without joining the right collection:** not a compile error, not a crash — xUnit runs test *classes* in parallel by default, so another parallel test reading the same static mid-mutation gets a flaky, hard-to-reproduce wrong result. If a new test in this area behaves inconsistently between runs, suspect a missing/mismatched collection attribute before anything else.
 
@@ -26,7 +26,7 @@ When adding a test: if it needs to prove behavior against real git plumbing (ref
 
 ## Default to unit tests — this is a real performance decision, not just style
 
-Spawning a process is comparatively expensive on Windows (`CreateProcess`) versus Unix (`fork`+`exec`), and every integration test spawns several real `git` processes. Today the suite is ~453 unit tests vs. 15 integration tests, and those 15 tests already make roughly 110 `git` subprocess calls between them (some individual tests, like the fetch/ahead-behind scenario in `GitStatusCacheIntegrationTests`, make 10+). That ratio — heavily unit-weighted, integration used sparingly — is intentional and should stay that way: **treat "can this be a unit test with a hand-built fixture?" as the default question**, and only add an integration test when the behavior genuinely can't be verified without real `git` output.
+Spawning a process is comparatively expensive on Windows (`CreateProcess`) versus Unix (`fork`+`exec`), and every integration test spawns several real `git` processes — some individual tests, like the fetch/ahead-behind scenario in `GitStatusCacheIntegrationTests`, spawn 10+ on their own. The suite is deliberately unit-heavy as a result: unit tests vastly outnumber integration tests, and that balance is intentional and should stay that way. **Treat "can this be a unit test with a hand-built fixture?" as the default question**, and only add an integration test when the behavior genuinely can't be verified without real `git` output.
 
 When you do need an integration test, keep its process-spawn count down rather than writing one assertion per freshly-created repo:
 
