@@ -28,6 +28,26 @@ GitPrompt is a personal tool that replaces the default shell prompt with a fast,
 ## Test Conventions
 
 - **Assertion library:** FluentAssertions (already referenced in the unit test project).
-- **Naming:** `MethodName_WhenCondition_ShouldExpectedOutcome` — e.g. `GetEditor_WhenNeitherEditorNorVisualIsSet_ShouldReturnVi`.
+- **Naming:** `MethodName_WhenCondition_ShouldExpectedOutcome` — e.g. `GetEditor_WhenNeitherEditorNorVisualIsSet_ShouldReturnVim`.
 - **Structure:** Arrange / Act / Assert comments in every test. Combine into `// Act & Assert` only for genuine one-liners with no separate arrange.
 - **Class modifier:** Test classes are `sealed`.
+
+## Human Docs (canonical for the user-facing surface)
+
+These are the source of truth for anything user-facing — check them before assuming a command, flag, or config option's behavior; don't duplicate their content elsewhere.
+
+| Topic | File |
+|---|---|
+| Project overview, install, git aliases | [README.md](README.md) |
+| Full visible command reference | [docs/commands.md](docs/commands.md) |
+| Full config schema | [docs/configuration.md](docs/configuration.md) |
+
+## Deep Dives
+
+The files below are agent-facing detail on parts of the codebase that aren't self-explanatory from the code alone. Read the relevant one before working in that area; don't load them otherwise.
+
+| Topic | File |
+|---|---|
+| Cache & invalidation design (repo-location cache, git-status cache, fingerprinting) | [.agents/architecture.md](.agents/architecture.md) |
+| Shell ↔ binary contract (`bash-init.sh` hooks, cache invalidation timing, aliases loading) | [.agents/shell-contract.md](.agents/shell-contract.md) |
+| Hidden commands `docs/commands.md` can't show | [.agents/internal-commands.md](.agents/internal-commands.md) |
