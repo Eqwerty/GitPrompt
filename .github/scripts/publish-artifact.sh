@@ -36,7 +36,6 @@ if [[ "$TARGET_OS" == "windows" ]]; then
     7z a "${ARCHIVE_BASENAME}.zip" "$BIN_NAME" > /dev/null
   )
 else
-  cp "docs/gitprompt.1" "$DIST_DIR/gitprompt.1"
-  tar -C "$DIST_DIR" -czf "$DIST_DIR/${ARCHIVE_BASENAME}.tar.gz" "$BIN_NAME" "gitprompt.1"
+  tar -C "$DIST_DIR" -czf "$DIST_DIR/${ARCHIVE_BASENAME}.tar.gz" "$BIN_NAME"
 fi
 

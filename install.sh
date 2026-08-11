@@ -117,16 +117,6 @@ add_to_shell_config() {
   printf "${R}"
 }
 
-install_man_page() {
-  _man_src="$TEMPORARY_DIRECTORY/gitprompt.1"
-  if [ ! -f "$_man_src" ]; then
-    return 0
-  fi
-  _man_dir="$HOME/.local/share/man/man1"
-  mkdir -p "$_man_dir"
-  cp "$_man_src" "$_man_dir/gitprompt.1"
-}
-
 download_git_completion() {
   mkdir -p "$ALIASES_DIR"
   # shellcheck disable=SC2086
@@ -219,10 +209,6 @@ if [ -z "${_INSTALL_SOURCED:-}" ]; then
     printf "\r${GREEN}✓${R} Installing to %s...\n" "$FINAL_BINARY_PATH"
   else
     printf '\n'; cat "$TEMPORARY_DIRECTORY/install.log" >&2; exit 1
-  fi
-
-  if [ "$TARGET_OS" != "windows" ]; then
-    install_man_page
   fi
 
   add_to_shell_config
