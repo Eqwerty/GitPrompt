@@ -16,3 +16,4 @@
 | `gitprompt debug` | Show a diagnostic report for the current directory |
 | `gitprompt paths` | Show paths to the binary, config, aliases, cache, and shell config |
 | `gitprompt --help` | Show help |
+| `gitprompt --version` | Show the installed version (commit hash) |
