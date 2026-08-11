@@ -18,6 +18,7 @@ GitPrompt is a personal tool that replaces the default shell prompt with a fast,
 - **Performance first.** The binary runs on every shell prompt render. Avoid unnecessary allocations, I/O, and latency.
 - **No external dependencies** in the main project. The binary must stay lean and AOT-compatible.
 - **Good practices, always.** Follow clean code, SOLID principles, and proper testing even though this is a personal project.
+- **No backwards compatibility.** There's no external installed base to protect, so breaking changes are always fine. Don't add migration shims, dual code paths, or versioned formats to keep old behavior alive — replace it outright.
 
 ## Dev Workflow
 

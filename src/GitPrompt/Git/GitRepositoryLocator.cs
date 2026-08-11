@@ -38,7 +38,7 @@ internal static class GitRepositoryLocator
                 if (TryGetValidSharedCachedRepositoryContext(current, out var sharedCachedContext))
                 {
                     GitRepositorySharedCache.Set(scannedPaths, sharedCachedContext);
-                    PromptDiagnostics.RecordRepoCacheL2Hit();
+                    PromptDiagnostics.RecordRepoCacheHit();
 
                     return sharedCachedContext;
                 }

@@ -28,7 +28,7 @@ internal static class GitRepositorySharedCache
             var cacheFilePath = GetCacheFilePath(normalizedStartDirectoryPath);
             if (!File.Exists(cacheFilePath))
             {
-                PromptDiagnostics.RecordRepoCacheL2Miss(RepoCacheMissReason.NoEntry);
+                PromptDiagnostics.RecordRepoCacheMiss(RepoCacheMissReason.NoEntry);
 
                 return false;
             }
@@ -37,7 +37,7 @@ internal static class GitRepositorySharedCache
             if (!TryParseRecord(cacheContent, out var cacheRecord) ||
                 !string.Equals(cacheRecord.StartDirectoryPath, normalizedStartDirectoryPath, Utilities.FileSystemPathComparison))
             {
-                PromptDiagnostics.RecordRepoCacheL2Miss(RepoCacheMissReason.ParseError);
+                PromptDiagnostics.RecordRepoCacheMiss(RepoCacheMissReason.ParseError);
 
                 return false;
             }
@@ -46,7 +46,7 @@ internal static class GitRepositorySharedCache
             var cacheAge = GetUtcNow() - new DateTimeOffset(cacheRecord.CachedAtUtcTicks, TimeSpan.Zero);
             if (cacheTtl <= TimeSpan.Zero || cacheAge > cacheTtl)
             {
-                PromptDiagnostics.RecordRepoCacheL2Miss(cacheTtl <= TimeSpan.Zero ? RepoCacheMissReason.Disabled : RepoCacheMissReason.TtlExpired);
+                PromptDiagnostics.RecordRepoCacheMiss(cacheTtl <= TimeSpan.Zero ? RepoCacheMissReason.Disabled : RepoCacheMissReason.TtlExpired);
 
                 return false;
             }

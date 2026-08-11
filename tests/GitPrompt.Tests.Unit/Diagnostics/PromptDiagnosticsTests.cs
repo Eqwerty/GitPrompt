@@ -13,7 +13,7 @@ public sealed class PromptDiagnosticsTests
     {
         // Arrange
         using var scope = PromptDiagnostics.EnableForTesting();
-        PromptDiagnostics.RecordRepoCacheL2Hit();
+        PromptDiagnostics.RecordRepoCacheHit();
         PromptDiagnostics.RecordStatusCacheHit(age: TimeSpan.FromSeconds(2), ttl: TimeSpan.FromSeconds(5));
         var result = new PromptResult("user host ~/repo", string.Empty, "(main)", "$",
             TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(3), TimeSpan.FromMilliseconds(4));
@@ -33,7 +33,7 @@ public sealed class PromptDiagnosticsTests
     {
         // Arrange
         using var scope = PromptDiagnostics.EnableForTesting();
-        PromptDiagnostics.RecordRepoCacheL2Hit();
+        PromptDiagnostics.RecordRepoCacheHit();
         PromptDiagnostics.RecordStatusCacheMiss(StatusCacheMissReason.FingerprintChanged);
         PromptDiagnostics.RecordGitSubprocessElapsed(TimeSpan.FromMilliseconds(50));
         var result = new PromptResult("user host ~/repo", string.Empty, "(main) ~2", "$",
@@ -53,7 +53,7 @@ public sealed class PromptDiagnosticsTests
     {
         // Arrange
         using var scope = PromptDiagnostics.EnableForTesting();
-        PromptDiagnostics.RecordRepoCacheL2Hit();
+        PromptDiagnostics.RecordRepoCacheHit();
         PromptDiagnostics.RecordStatusCacheMiss(
             StatusCacheMissReason.TtlExpired,
             age: TimeSpan.FromSeconds(6),
@@ -95,7 +95,7 @@ public sealed class PromptDiagnosticsTests
     {
         // Arrange
         using var scope = PromptDiagnostics.EnableForTesting();
-        PromptDiagnostics.RecordRepoCacheL2Miss(RepoCacheMissReason.NoEntry);
+        PromptDiagnostics.RecordRepoCacheMiss(RepoCacheMissReason.NoEntry);
         PromptDiagnostics.RecordRepoCacheWalk(dirsWalked: 4, repoFound: false);
         var result = new PromptResult("user host ~/documents", string.Empty, string.Empty, "$",
             TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(2));
@@ -110,11 +110,11 @@ public sealed class PromptDiagnosticsTests
     }
 
     [Fact]
-    public void GetReport_WhenRepoCacheL2Hit_ShouldShowDiskHit()
+    public void GetReport_WhenRepoCacheHit_ShouldShowDiskHit()
     {
         // Arrange
         using var scope = PromptDiagnostics.EnableForTesting();
-        PromptDiagnostics.RecordRepoCacheL2Hit();
+        PromptDiagnostics.RecordRepoCacheHit();
         PromptDiagnostics.RecordStatusCacheHit(age: TimeSpan.FromSeconds(1), ttl: TimeSpan.FromSeconds(5));
         var result = new PromptResult("user host ~/repo", string.Empty, "(main)", "$",
             TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(2), TimeSpan.FromMilliseconds(3));
@@ -131,7 +131,7 @@ public sealed class PromptDiagnosticsTests
     {
         // Arrange
         using var scope = PromptDiagnostics.EnableForTesting();
-        PromptDiagnostics.RecordRepoCacheL2Miss(RepoCacheMissReason.NoEntry);
+        PromptDiagnostics.RecordRepoCacheMiss(RepoCacheMissReason.NoEntry);
         PromptDiagnostics.RecordRepoCacheWalk(dirsWalked: 3, repoFound: true);
         PromptDiagnostics.RecordStatusCacheMiss(StatusCacheMissReason.NoEntry);
         var result = new PromptResult("user host ~/repo", string.Empty, "(main)", "$",
@@ -150,7 +150,7 @@ public sealed class PromptDiagnosticsTests
     {
         // Arrange
         using var scope = PromptDiagnostics.EnableForTesting();
-        PromptDiagnostics.RecordRepoCacheL2Hit();
+        PromptDiagnostics.RecordRepoCacheHit();
         PromptDiagnostics.RecordStatusCacheMiss(StatusCacheMissReason.Disabled);
         var result = new PromptResult("user host ~/repo", string.Empty, string.Empty, "$",
             TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(2));
@@ -273,7 +273,7 @@ public sealed class PromptDiagnosticsTests
     {
         // Arrange — simulate a real prompt line with \u0001...\u0002 readline markers wrapping ANSI codes
         using var scope = PromptDiagnostics.EnableForTesting();
-        PromptDiagnostics.RecordRepoCacheL2Hit();
+        PromptDiagnostics.RecordRepoCacheHit();
         PromptDiagnostics.RecordStatusCacheHit(age: TimeSpan.FromSeconds(1), ttl: TimeSpan.FromSeconds(5));
 
         const string color = "\u0001\x1b[0;32m\u0002";

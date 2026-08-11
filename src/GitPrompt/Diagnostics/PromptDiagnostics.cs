@@ -69,7 +69,7 @@ internal static class PromptDiagnostics
         _configLoadResult = result;
     }
 
-    internal static void RecordRepoCacheL2Hit()
+    internal static void RecordRepoCacheHit()
     {
         if (!IsEnabled)
         {
@@ -79,7 +79,7 @@ internal static class PromptDiagnostics
         _repoCacheHit = true;
     }
 
-    internal static void RecordRepoCacheL2Miss(RepoCacheMissReason reason)
+    internal static void RecordRepoCacheMiss(RepoCacheMissReason reason)
     {
         if (!IsEnabled)
         {

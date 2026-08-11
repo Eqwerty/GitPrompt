@@ -18,8 +18,6 @@ Avoids re-walking parent directories looking for `.git` on every prompt render (
 - A cache hit is **not** trusted blindly: `IsRepositoryContextValid` re-verifies the cached worktree/git-dir still resolves the same way before using it. This is what makes worktree removal, branch-switch-via-worktree, and repo deletion self-heal instead of serving stale data — see the "worktree" bug-fix commits in git history for the motivating cases.
 - Stale entries (untouched for 7 days) are swept opportunistically, at most once per 5 minutes process-wide, via a static "next cleanup due" timestamp (`TryCleanupStaleEntries`) — there is no background timer; cleanup only runs as a side effect of a `Set` call.
 
-**Naming quirk:** diagnostics call a hit here `RecordRepoCacheL2Hit`/`RecordRepoCacheL2Miss`. There is currently no "L1" anywhere in the codebase — this is not an active two-tier cache today. Don't infer a missing layer from the name; it's either a naming leftover or reserved for a future in-process layer.
-
 ## Git status cache (`GitStatusSharedCache`)
 
 Avoids re-running and re-parsing `git status` (and related plumbing) on every prompt render when nothing in the repo has actually changed.
