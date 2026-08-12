@@ -31,27 +31,7 @@ internal static class GitStatusDisplayFormatter
 
         var statusBuilder = new StringBuilder();
 
-        var labelWithOp = AppendOperationToBranchLabel(branchLabel, operationName);
-
-        var branchColor = branchLabel.State switch
-        {
-            BranchState.NoUpstream => ColorBranchNoUpstream,
-            BranchState.GoneUpstream => ColorBranchGoneUpstream,
-            BranchState.Detached => ColorBranchDetached,
-            _ => ColorBranch
-        };
-
-        statusBuilder.Append(branchColor.Wrap(labelWithOp));
-
-        if (commitsAhead > 0)
-        {
-            statusBuilder.Append(' ').Append(ColorAhead.Wrap($"{aheadIcon}{commitsAhead}"));
-        }
-
-        if (commitsBehind > 0)
-        {
-            statusBuilder.Append(' ').Append(ColorBehind.Wrap($"{behindIcon}{commitsBehind}"));
-        }
+        AppendBranchAndAheadBehind(statusBuilder, branchLabel, operationName, commitsAhead, commitsBehind, aheadIcon, behindIcon);
 
         AppendCountIndicators(
             statusBuilder,
@@ -101,27 +81,7 @@ internal static class GitStatusDisplayFormatter
 
         var statusBuilder = new StringBuilder();
 
-        var labelWithOp = AppendOperationToBranchLabel(branchLabel, operationName);
-
-        var branchColor = branchLabel.State switch
-        {
-            BranchState.NoUpstream => ColorBranchNoUpstream,
-            BranchState.GoneUpstream => ColorBranchGoneUpstream,
-            BranchState.Detached => ColorBranchDetached,
-            _ => ColorBranch
-        };
-
-        statusBuilder.Append(branchColor.Wrap(labelWithOp));
-
-        if (commitsAhead > 0)
-        {
-            statusBuilder.Append(' ').Append(ColorAhead.Wrap($"{aheadIcon}{commitsAhead}"));
-        }
-
-        if (commitsBehind > 0)
-        {
-            statusBuilder.Append(' ').Append(ColorBehind.Wrap($"{behindIcon}{commitsBehind}"));
-        }
+        AppendBranchAndAheadBehind(statusBuilder, branchLabel, operationName, commitsAhead, commitsBehind, aheadIcon, behindIcon);
 
         if (gitStatusCounts.IsDirtyStaged)
         {
@@ -173,6 +133,38 @@ internal static class GitStatusDisplayFormatter
         };
 
         return new BranchLabelInfo($"{prefix}{open}{branchName}{close}", state);
+    }
+
+    private static void AppendBranchAndAheadBehind(
+        StringBuilder statusBuilder,
+        BranchLabelInfo branchLabel,
+        string operationName,
+        int commitsAhead,
+        int commitsBehind,
+        string aheadIcon,
+        string behindIcon)
+    {
+        var labelWithOp = AppendOperationToBranchLabel(branchLabel, operationName);
+
+        var branchColor = branchLabel.State switch
+        {
+            BranchState.NoUpstream => ColorBranchNoUpstream,
+            BranchState.GoneUpstream => ColorBranchGoneUpstream,
+            BranchState.Detached => ColorBranchDetached,
+            _ => ColorBranch
+        };
+
+        statusBuilder.Append(branchColor.Wrap(labelWithOp));
+
+        if (commitsAhead > 0)
+        {
+            statusBuilder.Append(' ').Append(ColorAhead.Wrap($"{aheadIcon}{commitsAhead}"));
+        }
+
+        if (commitsBehind > 0)
+        {
+            statusBuilder.Append(' ').Append(ColorBehind.Wrap($"{behindIcon}{commitsBehind}"));
+        }
     }
 
     private static string AppendOperationToBranchLabel(BranchLabelInfo branchLabel, string operationName)
