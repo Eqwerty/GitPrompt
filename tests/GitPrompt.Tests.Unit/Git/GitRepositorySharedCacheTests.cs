@@ -83,7 +83,8 @@ public sealed class GitRepositorySharedCacheTests
         Directory.CreateDirectory(startDirectoryPath);
         Directory.CreateDirectory(gitDirectoryPath);
 
-        // Set is a no-op when TTL is 0, but call it anyway to confirm nothing is stored.
+        // Set is expected to be a no-op when disabled (see Set_WhenCacheIsDisabled_ShouldNotWriteCacheFile
+        // for the direct assertion on that); call it here too to make sure TryGet still misses regardless.
         GitRepositorySharedCache.Set(
             [startDirectoryPath],
             new GitRepositoryLocator.RepositoryContext(workingTreePath, gitDirectoryPath));
@@ -93,6 +94,30 @@ public sealed class GitRepositorySharedCacheTests
 
         // Assert
         found.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Set_WhenCacheIsDisabled_ShouldNotWriteCacheFile()
+    {
+        // Arrange
+        using var cacheDirectory = new TemporaryDirectory();
+        using var configOverride = ConfigReader.OverrideForTesting(new ConfigDto { Cache = new ConfigDto.CacheConfig { RepositoryTtlSeconds = 0 } });
+        using var cacheDirectoryOverride = GitRepositorySharedCache.OverrideCacheDirectoryForTesting(cacheDirectory.DirectoryPath);
+
+        var startDirectoryPath = Path.Combine(cacheDirectory.DirectoryPath, "work");
+        var workingTreePath = Path.Combine(cacheDirectory.DirectoryPath, "repo");
+        var gitDirectoryPath = Path.Combine(workingTreePath, ".git");
+
+        Directory.CreateDirectory(startDirectoryPath);
+        Directory.CreateDirectory(gitDirectoryPath);
+
+        // Act
+        GitRepositorySharedCache.Set(
+            [startDirectoryPath],
+            new GitRepositoryLocator.RepositoryContext(workingTreePath, gitDirectoryPath));
+
+        // Assert — disabling the cache must prevent writes, not just make reads always miss
+        Directory.GetFiles(cacheDirectory.DirectoryPath, "*.cache").Should().BeEmpty();
     }
 
     [Fact]

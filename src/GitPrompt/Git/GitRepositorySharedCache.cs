@@ -61,6 +61,11 @@ internal static class GitRepositorySharedCache
     {
         try
         {
+            if (!IsCacheEnabled())
+            {
+                return;
+            }
+
             var cacheDirectoryPath = GetCacheDirectoryPath();
             Directory.CreateDirectory(cacheDirectoryPath);
 
@@ -104,6 +109,11 @@ internal static class GitRepositorySharedCache
     internal static IDisposable OverrideCacheDirectoryForTesting(string cacheDirectoryPath)
     {
         return RuntimeState.OverrideCacheDirectoryForTesting(cacheDirectoryPath);
+    }
+
+    private static bool IsCacheEnabled()
+    {
+        return GetCacheTtl() > TimeSpan.Zero;
     }
 
     private static TimeSpan GetCacheTtl()
