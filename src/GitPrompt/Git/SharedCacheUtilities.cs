@@ -91,6 +91,56 @@ internal static class SharedCacheUtilities
         }
     }
 
+    internal sealed class CacheRuntimeState(TimeSpan staleCacheEntryThreshold, TimeSpan cleanupInterval)
+    {
+        private TimeProvider _timeProvider = TimeProvider.System;
+        private string? _cacheDirectoryOverride;
+        private long _nextCleanupUtcTicks;
+
+        internal DateTimeOffset GetUtcNow()
+        {
+            return _timeProvider.GetUtcNow();
+        }
+
+        internal string GetCacheDirectoryPath(string defaultCacheDirectoryPath)
+        {
+            return _cacheDirectoryOverride ?? defaultCacheDirectoryPath;
+        }
+
+        internal void TryCleanupStaleEntries(string cacheDirectoryPath)
+        {
+            var utcNow = GetUtcNow();
+            var nextCleanupUtcTicks = Interlocked.Read(ref _nextCleanupUtcTicks);
+            if (utcNow.UtcTicks < nextCleanupUtcTicks)
+            {
+                return;
+            }
+
+            Interlocked.Exchange(ref _nextCleanupUtcTicks, utcNow.Add(cleanupInterval).UtcTicks);
+            CleanupStaleEntries(cacheDirectoryPath, utcNow.UtcDateTime - staleCacheEntryThreshold);
+        }
+
+        internal IDisposable OverrideTimeProviderForTesting(TimeProvider timeProvider)
+        {
+            var previousTimeProvider = _timeProvider;
+            _timeProvider = timeProvider;
+
+            return new Utilities.RestoreAction(() => _timeProvider = previousTimeProvider);
+        }
+
+        internal IDisposable OverrideCacheDirectoryForTesting(string cacheDirectoryPath)
+        {
+            _cacheDirectoryOverride = cacheDirectoryPath;
+
+            return new Utilities.RestoreAction(() => _cacheDirectoryOverride = null);
+        }
+
+        internal void ResetCleanupScheduleForTesting()
+        {
+            Interlocked.Exchange(ref _nextCleanupUtcTicks, 0);
+        }
+    }
+
     internal struct FingerprintHasher()
     {
         private const ulong OffsetBasis = 14695981039346656037UL;

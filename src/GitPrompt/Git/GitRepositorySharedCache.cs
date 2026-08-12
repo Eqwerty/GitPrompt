@@ -7,11 +7,7 @@ namespace GitPrompt.Git;
 internal static class GitRepositorySharedCache
 {
     private const string CacheDirectoryName = "repository-cache";
-    private static readonly TimeSpan StaleCacheEntryThreshold = TimeSpan.FromDays(7);
-    private static readonly TimeSpan CleanupInterval = TimeSpan.FromMinutes(5);
-    private static TimeProvider _timeProvider = TimeProvider.System;
-    private static string? _cacheDirectoryOverride;
-    private static long _nextCleanupUtcTicks;
+    private static readonly SharedCacheUtilities.CacheRuntimeState RuntimeState = new(TimeSpan.FromDays(7), TimeSpan.FromMinutes(5));
 
     internal static bool TryGet(string startDirectoryPath, out GitRepositoryLocator.RepositoryContext repositoryContext)
     {
@@ -43,7 +39,7 @@ internal static class GitRepositorySharedCache
             }
 
             var cacheTtl = GetCacheTtl();
-            var cacheAge = GetUtcNow() - new DateTimeOffset(cacheRecord.CachedAtUtcTicks, TimeSpan.Zero);
+            var cacheAge = RuntimeState.GetUtcNow() - new DateTimeOffset(cacheRecord.CachedAtUtcTicks, TimeSpan.Zero);
             if (cacheTtl <= TimeSpan.Zero || cacheAge > cacheTtl)
             {
                 PromptDiagnostics.RecordRepoCacheMiss(cacheTtl <= TimeSpan.Zero ? RepoCacheMissReason.Disabled : RepoCacheMissReason.TtlExpired);
@@ -68,7 +64,7 @@ internal static class GitRepositorySharedCache
             var cacheDirectoryPath = GetCacheDirectoryPath();
             Directory.CreateDirectory(cacheDirectoryPath);
 
-            var cachedAtUtcTicks = GetUtcNow().Ticks;
+            var cachedAtUtcTicks = RuntimeState.GetUtcNow().Ticks;
             foreach (var startDirectoryPath in startDirectoryPaths)
             {
                 var normalizedStartDirectoryPath = SharedCacheUtilities.NormalizePathOrEmpty(startDirectoryPath);
@@ -87,7 +83,7 @@ internal static class GitRepositorySharedCache
                 SharedCacheUtilities.WriteAtomically(cacheFilePath, SerializeRecord(cacheRecord));
             }
 
-            TryCleanupStaleEntries(cacheDirectoryPath);
+            RuntimeState.TryCleanupStaleEntries(cacheDirectoryPath);
         }
         catch
         {
@@ -95,37 +91,19 @@ internal static class GitRepositorySharedCache
         }
     }
 
-    private static void TryCleanupStaleEntries(string cacheDirectoryPath)
-    {
-        var utcNow = GetUtcNow();
-        var nextCleanupUtcTicks = Interlocked.Read(ref _nextCleanupUtcTicks);
-        if (utcNow.UtcTicks < nextCleanupUtcTicks)
-        {
-            return;
-        }
-
-        Interlocked.Exchange(ref _nextCleanupUtcTicks, utcNow.Add(CleanupInterval).UtcTicks);
-        SharedCacheUtilities.CleanupStaleEntries(cacheDirectoryPath, utcNow.UtcDateTime - StaleCacheEntryThreshold);
-    }
-
     internal static void ResetCleanupScheduleForTesting()
     {
-        Interlocked.Exchange(ref _nextCleanupUtcTicks, 0);
+        RuntimeState.ResetCleanupScheduleForTesting();
     }
 
     internal static IDisposable OverrideTimeProviderForTesting(TimeProvider timeProvider)
     {
-        var previousTimeProvider = _timeProvider;
-        _timeProvider = timeProvider;
-
-        return new Utilities.RestoreAction(() => _timeProvider = previousTimeProvider);
+        return RuntimeState.OverrideTimeProviderForTesting(timeProvider);
     }
 
     internal static IDisposable OverrideCacheDirectoryForTesting(string cacheDirectoryPath)
     {
-        _cacheDirectoryOverride = cacheDirectoryPath;
-
-        return new Utilities.RestoreAction(() => _cacheDirectoryOverride = null);
+        return RuntimeState.OverrideCacheDirectoryForTesting(cacheDirectoryPath);
     }
 
     private static TimeSpan GetCacheTtl()
@@ -135,14 +113,9 @@ internal static class GitRepositorySharedCache
         return ttl > TimeSpan.Zero ? ttl : TimeSpan.Zero;
     }
 
-    private static DateTimeOffset GetUtcNow()
-    {
-        return _timeProvider.GetUtcNow();
-    }
-
     private static string GetCacheDirectoryPath()
     {
-        return _cacheDirectoryOverride ?? Path.Combine(XdgPaths.GetCacheDirectory(), CacheDirectoryName);
+        return RuntimeState.GetCacheDirectoryPath(Path.Combine(XdgPaths.GetCacheDirectory(), CacheDirectoryName));
     }
 
     private static string GetCacheFilePath(string normalizedStartDirectoryPath)
