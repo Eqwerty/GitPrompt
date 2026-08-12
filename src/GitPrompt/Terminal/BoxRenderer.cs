@@ -17,8 +17,8 @@ internal static class BoxRenderer
     internal static string Render(string title, IReadOnlyList<string?> lines)
     {
         var innerWidth = ComputeInnerWidth(title, lines);
-        var ansiColor = AnsiColors.White;
-        var reset = AnsiColors.Reset;
+        var ansiColor = AnsiColorSupport.IsEnabled ? AnsiColors.White : string.Empty;
+        var reset = AnsiColorSupport.IsEnabled ? AnsiColors.Reset : string.Empty;
 
         var sb = new StringBuilder();
 

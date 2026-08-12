@@ -1,3 +1,5 @@
+using GitPrompt.Constants;
+
 namespace GitPrompt.Terminal;
 
 internal static class AnsiTerminal
@@ -18,21 +20,6 @@ internal static class AnsiTerminal
 
     private static bool DetectColors()
     {
-        if (Console.IsErrorRedirected)
-        {
-            return false;
-        }
-
-        if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("NO_COLOR")))
-        {
-            return false;
-        }
-
-        if (Environment.GetEnvironmentVariable("TERM") is "dumb")
-        {
-            return false;
-        }
-
-        return true;
+        return !Console.IsErrorRedirected && AnsiColorSupport.IsEnabled;
     }
 }

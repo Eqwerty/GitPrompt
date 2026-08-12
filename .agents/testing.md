@@ -1,15 +1,16 @@
 # Testing Conventions
 
-Read this before writing a test that touches shared static state (`ConfigReader`, the two shared caches, `PromptDiagnostics`), or before deciding whether a new test belongs in the unit or integration project.
+Read this before writing a test that touches shared static state (`ConfigReader`, the two shared caches, `PromptDiagnostics`, the `NO_COLOR`/`TERM` environment variables), or before deciding whether a new test belongs in the unit or integration project.
 
 ## Isolation collections — one per shared static
 
-`GitPrompt.Tests.Unit` has two `[CollectionDefinition(..., DisableParallelization = true)]` classes, each serializing every test that mutates one specific piece of shared static state (xUnit disables parallelism *within* a collection, but collections still run concurrently *with each other* — so anything that touches the same static must join the same collection, not just a similarly-named one):
+`GitPrompt.Tests.Unit` has three `[CollectionDefinition(..., DisableParallelization = true)]` classes, each serializing every test that mutates one specific piece of shared static state (xUnit disables parallelism *within* a collection, but collections still run concurrently *with each other* — so anything that touches the same static must join the same collection, not just a similarly-named one):
 
 | Collection | `Name` | File | Guards |
 |---|---|---|---|
 | `ConfigIsolationCollection` | `"ConfigIsolation"` | `ConfigIsolationCollection.cs` (test project root — not under `Git/` or `Prompting/`) | `ConfigReader`'s static override, plus `GitRepositorySharedCache`/`GitStatusSharedCache`'s testing overrides (time provider, cache directory, cleanup schedule) |
 | `DiagnosticsIsolationCollection` | `"DiagnosticsIsolation"` | `Diagnostics/DiagnosticsIsolationCollection.cs` | `PromptDiagnostics` statics |
+| `AnsiColorIsolationCollection` | `"AnsiColorIsolation"` | `AnsiColorIsolationCollection.cs` (test project root) | The process-wide `NO_COLOR`/`TERM` environment variables, read by `AnsiColorSupport.IsEnabled` (and transitively `PromptColors`, `BoxRenderer`) — joined by `Constants/AnsiColorSupportTests.cs`, `Constants/PromptColorsTests.cs`, and `Diagnostics/BoxRendererTests.cs` |
 
 `ConfigIsolationCollection` lives at the test project root rather than inside `Git/` or `Prompting/` because it's shared by test classes in both: `Git/GitStatusDisplayFormatter*Tests.cs`, `Git/GitRepositorySharedCacheTests.cs`, `Git/GitStatusSharedCacheTests.cs` (the cache tests also join it because they configure TTLs through `ConfigReader`), and `Prompting/{PromptSymbolBuilder,PromptResult,CommandDurationSegmentBuilder,ContextSegmentBuilder}Tests.cs`. C# resolves the unqualified `ConfigIsolationCollection.Name` reference in files under both `.Git` and `.Prompting` without a `using`, since `GitPrompt.Tests.Unit` is their common enclosing namespace.
 

@@ -14,6 +14,11 @@ internal static class PromptColors
 
     private static PromptColor ResolveColor(string configColor, string defaultColor)
     {
+        if (!AnsiColorSupport.IsEnabled)
+        {
+            return new PromptColor(string.Empty);
+        }
+
         var color = configColor ?? defaultColor;
 
         try
@@ -70,5 +75,5 @@ internal static class PromptColors
 
     internal static PromptColor ColorPrefix => ResolveColor(ConfigReader.Config.Colors.Prefix, AnsiColors.White);
 
-    internal static readonly string ColorReset = FormatAnsi(AnsiColors.Reset);
+    internal static string ColorReset => AnsiColorSupport.IsEnabled ? FormatAnsi(AnsiColors.Reset) : string.Empty;
 }

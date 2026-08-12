@@ -112,6 +112,8 @@ Customise the color of each prompt segment using `#RRGGBB` hex strings or raw AN
 
 > **Note:** Default colors use the terminal's standard 16-color palette and adapt to your terminal's color scheme.
 
+> **Note:** Setting the [`NO_COLOR`](https://no-color.org) environment variable to any non-empty value, or `TERM=dumb`, disables all color output regardless of these settings.
+
 | Key | Default | Description |
 |---|---|---|
 | `colors.user` | green | Username |

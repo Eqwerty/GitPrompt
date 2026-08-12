@@ -4,6 +4,7 @@ using GitPrompt.Terminal;
 
 namespace GitPrompt.Tests.Unit.Diagnostics;
 
+[Collection(AnsiColorIsolationCollection.Name)]
 public sealed class BoxRendererTests
 {
     [Fact]
@@ -99,6 +100,8 @@ public sealed class BoxRendererTests
     public void Render_WhenBorderColorProvided_ShouldIncludeAnsiEscapeAndResetSequences()
     {
         // Arrange
+        Environment.SetEnvironmentVariable("NO_COLOR", null);
+        Environment.SetEnvironmentVariable("TERM", null);
         var lines = new List<string?> { "  content" };
 
         // Act
@@ -107,6 +110,52 @@ public sealed class BoxRendererTests
         // Assert
         result.Should().Contain(AnsiColorConverter.ToAnsi(AnsiColors.White));
         result.Should().Contain(AnsiColors.Reset);
+    }
+
+    [Fact]
+    public void Render_WhenNoColorIsSet_ShouldNotIncludeAnsiEscapeSequences()
+    {
+        // Arrange
+        Environment.SetEnvironmentVariable("NO_COLOR", "1");
+        Environment.SetEnvironmentVariable("TERM", null);
+        var lines = new List<string?> { "  content" };
+
+        try
+        {
+            // Act
+            var result = BoxRenderer.Render("Title", lines);
+
+            // Assert
+            result.Should().NotContain(AnsiColorConverter.ToAnsi(AnsiColors.White));
+            result.Should().NotContain(AnsiColors.Reset);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("NO_COLOR", null);
+        }
+    }
+
+    [Fact]
+    public void Render_WhenTermIsDumb_ShouldNotIncludeAnsiEscapeSequences()
+    {
+        // Arrange
+        Environment.SetEnvironmentVariable("NO_COLOR", null);
+        Environment.SetEnvironmentVariable("TERM", "dumb");
+        var lines = new List<string?> { "  content" };
+
+        try
+        {
+            // Act
+            var result = BoxRenderer.Render("Title", lines);
+
+            // Assert
+            result.Should().NotContain(AnsiColorConverter.ToAnsi(AnsiColors.White));
+            result.Should().NotContain(AnsiColors.Reset);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("TERM", null);
+        }
     }
 
     [Fact]
