@@ -37,6 +37,7 @@ internal static class UninstallCommand
     private static bool IsCwdInsideAnyDirectory(params string[] directories)
     {
         var cwd = Directory.GetCurrentDirectory();
+        var normalizedCwd = Path.GetFullPath(cwd).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
         foreach (var dir in directories)
         {
@@ -45,7 +46,6 @@ internal static class UninstallCommand
                 continue;
             }
 
-            var normalizedCwd = Path.GetFullPath(cwd).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
             var normalizedDir = Path.GetFullPath(dir).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
             var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
 

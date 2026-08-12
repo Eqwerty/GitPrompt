@@ -35,7 +35,7 @@ internal static class GitRepositoryLocator
             {
                 scannedPaths.Add(current);
 
-                if (TryGetValidSharedCachedRepositoryContext(current, out var sharedCachedContext))
+                if (GitRepositorySharedCache.TryGet(current, out var sharedCachedContext) && IsRepositoryContextValid(current, sharedCachedContext))
                 {
                     GitRepositorySharedCache.Set(scannedPaths, sharedCachedContext);
                     PromptDiagnostics.RecordRepoCacheHit();
@@ -119,16 +119,6 @@ internal static class GitRepositoryLocator
         {
             return null;
         }
-    }
-
-    private static bool TryGetValidSharedCachedRepositoryContext(string path, out RepositoryContext repositoryContext)
-    {
-        if (GitRepositorySharedCache.TryGet(path, out repositoryContext) && IsRepositoryContextValid(path, repositoryContext))
-        {
-            return true;
-        }
-
-        return false;
     }
 
     private static bool IsRepositoryContextValid(string startDirectoryPath, RepositoryContext repositoryContext)

@@ -89,39 +89,6 @@ internal static class GitHistoryCalculator
         return string.Empty;
     }
 
-    internal static (int Ahead, int Behind) ComputeAheadBehindAgainstUpstream(string repositoryRootPath, string upstreamReference)
-    {
-        if (string.IsNullOrEmpty(upstreamReference))
-        {
-            return (Ahead: 0, Behind: 0);
-        }
-
-        var leftRightCountsOutput = RunGitCommand(
-            repositoryRootPath,
-            "rev-list",
-            "--left-right",
-            "--count",
-            $"{upstreamReference}...HEAD"
-        );
-
-        if (string.IsNullOrWhiteSpace(leftRightCountsOutput))
-        {
-            return (Ahead: 0, Behind: 0);
-        }
-
-        var countParts = leftRightCountsOutput.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-        if (countParts.Length is not 2)
-        {
-            return (Ahead: 0, Behind: 0);
-        }
-
-        _ = int.TryParse(countParts[0], out var commitsBehind);
-        _ = int.TryParse(countParts[1], out var commitsAhead);
-
-        return (commitsAhead, commitsBehind);
-    }
-
     private static string ResolveBaseReference(string repositoryRootPath, string currentBranchName)
     {
         var baseReference = RunGitCommand(repositoryRootPath, "symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD");
