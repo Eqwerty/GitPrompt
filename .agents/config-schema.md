@@ -17,6 +17,10 @@ Read this before adding, renaming, or removing a `config.jsonc` field. The schem
 
 `MigrateConfigIfNeeded` upgrades an old `config.jsonc` in place to add newly-introduced keys, preserving the user's existing values for keys that already existed. It does **not** preserve multiple schema versions — there is exactly one current schema at any time. See the "No backwards compatibility" principle in [AGENTS.md](../AGENTS.md#principles).
 
+## The triple-parse in MigrateConfigIfNeeded is deliberate, not an oversight
+
+`MigrateConfigIfNeeded` parses the config file up to three times: once as a raw `JsonDocument` (diffed against a freshly-built default to detect missing keys via `HasMissingKeys`), once via `JsonSerializer.Deserialize` into `ConfigDto` (to actually read the user's values), and once more for the freshly rebuilt default template it diffs against. This looks like an easy win to collapse into fewer parses — resist that unless you add tests for it first. It's not on the hot path (never runs during prompt render, only on `init`/`update`), and collapsing it risks conflating "does this file need rewriting" with "what are the values," a distinction no existing test isolates.
+
 ## Don't forget the human doc
 
 `docs/configuration.md` is the canonical human-facing reference for the schema (see [AGENTS.md](../AGENTS.md#human-docs-canonical-for-the-user-facing-surface)) and covers none of the internal wiring above — update it too when adding a field.
