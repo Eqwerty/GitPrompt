@@ -29,7 +29,6 @@ public sealed class GitStatusParserTests
         // Assert
         gitStatusSnapshot.BranchHeadName.Should().BeEmpty();
         gitStatusSnapshot.HeadObjectId.Should().BeEmpty();
-        gitStatusSnapshot.UpstreamReference.Should().BeEmpty();
         gitStatusSnapshot.HasUpstream.Should().BeFalse();
         gitStatusSnapshot.HasAheadBehindCounts.Should().BeFalse();
         gitStatusSnapshot.CommitsAhead.Should().Be(0);
@@ -64,7 +63,6 @@ public sealed class GitStatusParserTests
         // Assert
         gitStatusSnapshot.BranchHeadName.Should().Be("master");
         gitStatusSnapshot.HeadObjectId.Should().Be("1234567890abcdef1234567890abcdef12345678");
-        gitStatusSnapshot.UpstreamReference.Should().Be("origin/master");
         gitStatusSnapshot.HasUpstream.Should().BeTrue();
         gitStatusSnapshot.HasAheadBehindCounts.Should().BeTrue();
         gitStatusSnapshot.CommitsAhead.Should().Be(3);
@@ -224,7 +222,6 @@ public sealed class GitStatusParserTests
         gitStatusSnapshot.HasAheadBehindCounts.Should().BeTrue();
         gitStatusSnapshot.CommitsAhead.Should().Be(4);
         gitStatusSnapshot.CommitsBehind.Should().Be(1);
-        gitStatusSnapshot.UpstreamReference.Should().BeEmpty();
         gitStatusSnapshot.StashEntryCount.Should().Be(0);
         gitStatusSnapshot.BranchHeadName.Should().BeEmpty();
         gitStatusSnapshot.HeadObjectId.Should().BeEmpty();
@@ -259,7 +256,6 @@ public sealed class GitStatusParserTests
         var gitStatusSnapshot = GitStatusParser.Parse(statusOutput);
 
         // Assert
-        gitStatusSnapshot.UpstreamReference.Should().Be("origin/main");
         gitStatusSnapshot.HasUpstream.Should().BeTrue();
         gitStatusSnapshot.HasAheadBehindCounts.Should().BeFalse();
         gitStatusSnapshot.CommitsAhead.Should().Be(0);
@@ -291,7 +287,6 @@ public sealed class GitStatusParserTests
         // Assert
         gitStatusSnapshot.BranchHeadName.Should().Be("new");
         gitStatusSnapshot.HeadObjectId.Should().Be("newoid");
-        gitStatusSnapshot.UpstreamReference.Should().Be("origin/new");
         gitStatusSnapshot.HasUpstream.Should().BeTrue();
         gitStatusSnapshot.HasAheadBehindCounts.Should().BeTrue();
         gitStatusSnapshot.CommitsAhead.Should().Be(7);

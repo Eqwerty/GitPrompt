@@ -6,7 +6,6 @@ internal sealed record GitStatusSnapshot(
     int CommitsAhead,
     int CommitsBehind,
     int StashEntryCount,
-    string UpstreamReference,
     bool HasUpstream,
     bool HasAheadBehindCounts,
     GitStatusCounts GitStatusCounts);

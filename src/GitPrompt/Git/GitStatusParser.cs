@@ -15,7 +15,6 @@ internal static class GitStatusParser
         var commitsAhead = 0;
         var commitsBehind = 0;
         var stashEntryCount = 0;
-        var upstreamReference = string.Empty;
         var hasUpstream = false;
         var hasAheadBehindCounts = false;
         var stagedAdded = 0;
@@ -51,7 +50,6 @@ internal static class GitStatusParser
 
             if (line.StartsWith(BranchUpstreamPrefix, StringComparison.Ordinal))
             {
-                upstreamReference = line[BranchUpstreamPrefix.Length..];
                 hasUpstream = true;
                 continue;
             }
@@ -110,7 +108,6 @@ internal static class GitStatusParser
             commitsAhead,
             commitsBehind,
             stashEntryCount,
-            upstreamReference,
             hasUpstream,
             hasAheadBehindCounts,
             new GitStatusCounts(
