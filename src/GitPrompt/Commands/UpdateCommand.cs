@@ -70,22 +70,9 @@ internal static class UpdateCommand
 
         try
         {
-            bool aliasesOk;
-            using (var spinner = TerminalSpinner.Start("Downloading git aliases"))
-            {
-                aliasesOk = DownloadFile(AliasesUrl, aliasesPath, curlSslArgs);
-                if (aliasesOk)
-                {
-                    spinner.Complete();
-                }
-            }
+            var aliasesOk = DownloadWithSpinner("Downloading git aliases", AliasesUrl, aliasesPath, curlSslArgs);
 
-            if (cancelled)
-            {
-                Console.Error.Write($"\n{AnsiTerminal.Red}error:{AnsiTerminal.Reset} Cancelled.");
-
-                Environment.Exit(130);
-            }
+            ExitIfCancelled(cancelled);
 
             if (!aliasesOk)
             {
@@ -97,23 +84,9 @@ internal static class UpdateCommand
 
             if (File.Exists(completionPath))
             {
-                bool completionOk;
-                using (var spinner = TerminalSpinner.Start("Updating git completions"))
-                {
-                    completionOk = DownloadFile(GitCompletionUrl, completionPath, curlSslArgs);
+                var completionOk = DownloadWithSpinner("Updating git completions", GitCompletionUrl, completionPath, curlSslArgs);
 
-                    if (completionOk)
-                    {
-                        spinner.Complete();
-                    }
-                }
-
-                if (cancelled)
-                {
-                    Console.Error.Write($"\n{AnsiTerminal.Red}error:{AnsiTerminal.Reset} Cancelled.");
-
-                    Environment.Exit(130);
-                }
+                ExitIfCancelled(cancelled);
 
                 if (!completionOk)
                 {
@@ -136,6 +109,30 @@ internal static class UpdateCommand
 
         var escapedPath = aliasesPath.Replace("'", "'\\''");
         Console.WriteLine($". '{escapedPath}'");
+    }
+
+    private static bool DownloadWithSpinner(string spinnerLabel, string url, string outputPath, string[] curlSslArgs)
+    {
+        using var spinner = TerminalSpinner.Start(spinnerLabel);
+        var ok = DownloadFile(url, outputPath, curlSslArgs);
+        if (ok)
+        {
+            spinner.Complete();
+        }
+
+        return ok;
+    }
+
+    private static void ExitIfCancelled(bool cancelled)
+    {
+        if (!cancelled)
+        {
+            return;
+        }
+
+        Console.Error.Write($"\n{AnsiTerminal.Red}error:{AnsiTerminal.Reset} Cancelled.");
+
+        Environment.Exit(130);
     }
 
     private static bool DownloadFile(string url, string outputPath, string[] curlSslArgs)
