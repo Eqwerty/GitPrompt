@@ -15,6 +15,13 @@ internal static class GitRepositorySharedCache
 
         try
         {
+            if (!IsCacheEnabled())
+            {
+                PromptDiagnostics.RecordRepoCacheMiss(RepoCacheMissReason.Disabled);
+
+                return false;
+            }
+
             var normalizedStartDirectoryPath = SharedCacheUtilities.NormalizePathOrEmpty(startDirectoryPath);
             if (string.IsNullOrEmpty(normalizedStartDirectoryPath))
             {
@@ -38,11 +45,10 @@ internal static class GitRepositorySharedCache
                 return false;
             }
 
-            var cacheTtl = GetCacheTtl();
             var cacheAge = RuntimeState.GetUtcNow() - new DateTimeOffset(cacheRecord.CachedAtUtcTicks, TimeSpan.Zero);
-            if (cacheTtl <= TimeSpan.Zero || cacheAge > cacheTtl)
+            if (cacheAge > GetCacheTtl())
             {
-                PromptDiagnostics.RecordRepoCacheMiss(cacheTtl <= TimeSpan.Zero ? RepoCacheMissReason.Disabled : RepoCacheMissReason.TtlExpired);
+                PromptDiagnostics.RecordRepoCacheMiss(RepoCacheMissReason.TtlExpired);
 
                 return false;
             }
