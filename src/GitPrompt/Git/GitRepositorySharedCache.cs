@@ -19,7 +19,7 @@ internal static class GitRepositorySharedCache
 
         try
         {
-            var normalizedStartDirectoryPath = NormalizePathOrEmpty(startDirectoryPath);
+            var normalizedStartDirectoryPath = SharedCacheUtilities.NormalizePathOrEmpty(startDirectoryPath);
             if (string.IsNullOrEmpty(normalizedStartDirectoryPath))
             {
                 return false;
@@ -71,7 +71,7 @@ internal static class GitRepositorySharedCache
             var cachedAtUtcTicks = GetUtcNow().Ticks;
             foreach (var startDirectoryPath in startDirectoryPaths)
             {
-                var normalizedStartDirectoryPath = NormalizePathOrEmpty(startDirectoryPath);
+                var normalizedStartDirectoryPath = SharedCacheUtilities.NormalizePathOrEmpty(startDirectoryPath);
                 if (string.IsNullOrEmpty(normalizedStartDirectoryPath))
                 {
                     continue;
@@ -79,8 +79,8 @@ internal static class GitRepositorySharedCache
 
                 var cacheRecord = new RepositorySharedCacheRecord(
                     normalizedStartDirectoryPath,
-                    NormalizePathOrEmpty(repositoryContext.WorkingTreePath),
-                    NormalizePathOrEmpty(repositoryContext.GitDirectoryPath),
+                    SharedCacheUtilities.NormalizePathOrEmpty(repositoryContext.WorkingTreePath),
+                    SharedCacheUtilities.NormalizePathOrEmpty(repositoryContext.GitDirectoryPath),
                     cachedAtUtcTicks);
 
                 var cacheFilePath = GetCacheFilePath(normalizedStartDirectoryPath);
@@ -150,19 +150,14 @@ internal static class GitRepositorySharedCache
         return Path.Combine(GetCacheDirectoryPath(), SharedCacheUtilities.HashPath(normalizedStartDirectoryPath) + ".cache");
     }
 
-    private static string NormalizePathOrEmpty(string path)
-    {
-        return SharedCacheUtilities.NormalizePathOrEmpty(path);
-    }
-
     private static string[] SerializeRecord(RepositorySharedCacheRecord cacheRecord)
     {
         return
         [
             cacheRecord.CachedAtUtcTicks.ToString(),
-            Encode(cacheRecord.StartDirectoryPath),
-            Encode(cacheRecord.WorkingTreePath),
-            Encode(cacheRecord.GitDirectoryPath)
+            SharedCacheUtilities.Encode(cacheRecord.StartDirectoryPath),
+            SharedCacheUtilities.Encode(cacheRecord.WorkingTreePath),
+            SharedCacheUtilities.Encode(cacheRecord.GitDirectoryPath)
         ];
     }
 
@@ -182,9 +177,9 @@ internal static class GitRepositorySharedCache
             return false;
         }
 
-        var startDirectoryPath = Decode(startDirEncoded);
-        var workingTreePath = Decode(workingTreeEncoded);
-        var gitDirectoryPath = Decode(gitDirEncoded);
+        var startDirectoryPath = SharedCacheUtilities.Decode(startDirEncoded);
+        var workingTreePath = SharedCacheUtilities.Decode(workingTreeEncoded);
+        var gitDirectoryPath = SharedCacheUtilities.Decode(gitDirEncoded);
         if (string.IsNullOrEmpty(startDirectoryPath) || string.IsNullOrEmpty(workingTreePath) || string.IsNullOrEmpty(gitDirectoryPath))
         {
             return false;
@@ -201,15 +196,6 @@ internal static class GitRepositorySharedCache
         string? NextLine() => i < lines.Length ? lines[i++].TrimEnd('\r') : null;
     }
 
-    private static string Encode(string value)
-    {
-        return SharedCacheUtilities.Encode(value);
-    }
-
-    private static string Decode(string encoded)
-    {
-        return SharedCacheUtilities.Decode(encoded);
-    }
 
     private readonly record struct RepositorySharedCacheRecord(
         string StartDirectoryPath,

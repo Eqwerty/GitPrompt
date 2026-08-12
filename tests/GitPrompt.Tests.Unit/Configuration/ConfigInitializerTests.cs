@@ -383,10 +383,10 @@ public sealed class ConfigInitializerTests
         content.Should().Contain($"\"noUpstreamMarker\": \"{BranchLabelTokens.NoUpstreamBranchMarker}\"");
         content.Should().Contain($"\"detachedHeadMarker\": \"{BranchLabelTokens.DetachedHeadBranchMarker}\"");
         content.Should().Contain($"\"branchOperationSeparator\": \"{BranchLabelTokens.BranchOperationSeparator}\"");
-        content.Should().Contain($"\"branchLabelOpenNormal\": \"{BranchLabelTokens.NormalBranchLabelOpen}\"");
-        content.Should().Contain($"\"branchLabelCloseNormal\": \"{BranchLabelTokens.NormalBranchLabelClose}\"");
-        content.Should().Contain($"\"branchLabelOpenNoUpstream\": \"{BranchLabelTokens.NoUpstreamBranchLabelOpen}\"");
-        content.Should().Contain($"\"branchLabelCloseNoUpstream\": \"{BranchLabelTokens.NoUpstreamBranchLabelClose}\"");
+        content.Should().Contain($"\"branchLabelOpenNormal\": \"{BranchLabelTokens.BranchLabelOpen}\"");
+        content.Should().Contain($"\"branchLabelCloseNormal\": \"{BranchLabelTokens.BranchLabelClose}\"");
+        content.Should().Contain($"\"branchLabelOpenNoUpstream\": \"{BranchLabelTokens.BranchLabelOpen}\"");
+        content.Should().Contain($"\"branchLabelCloseNoUpstream\": \"{BranchLabelTokens.BranchLabelClose}\"");
         content.Should().Contain($"\"branchLabelOpenDetached\": \"{BranchLabelTokens.DetachedBranchLabelOpen}\"");
         content.Should().Contain($"\"branchLabelCloseDetached\": \"{BranchLabelTokens.DetachedBranchLabelClose}\"");
     }
@@ -398,12 +398,12 @@ public sealed class ConfigInitializerTests
         var content = ConfigInitializer.BuildDefaultConfigContent();
 
         // Assert — color slots render as actual ANSI color codes
-        content.Should().Contain("\"user\": \"[32m\"");
-        content.Should().Contain("\"host\": \"[95m\"");
-        content.Should().Contain("\"path\": \"[33m\"");
-        content.Should().Contain("\"branch\": \"[1;36m\"");
-        content.Should().Contain("\"branchDetached\": \"[90m\"");
-        content.Should().Contain("\"promptSymbol\": \"[37m\"");
+        content.Should().Contain("\"user\": \"32\"");
+        content.Should().Contain("\"host\": \"95\"");
+        content.Should().Contain("\"path\": \"33\"");
+        content.Should().Contain("\"branch\": \"1;36\"");
+        content.Should().Contain("\"branchDetached\": \"90\"");
+        content.Should().Contain("\"promptSymbol\": \"37\"");
     }
 
     [Fact]
@@ -524,10 +524,10 @@ public sealed class ConfigInitializerTests
         // Act
         var result = ConfigInitializer.MergeWithDefaults(empty);
 
-        // Assert — colors are resolved to config-file format (no leading ESC)
-        result.Colors.User.Should().Be("[32m");
-        result.Colors.Branch.Should().Be("[1;36m");
-        result.Colors.PromptSymbol.Should().Be("[37m");
+        // Assert — colors are resolved to config-file format (bare numeric ANSI code)
+        result.Colors.User.Should().Be("32");
+        result.Colors.Branch.Should().Be("1;36");
+        result.Colors.PromptSymbol.Should().Be("37");
     }
 
     [Fact]
@@ -544,6 +544,6 @@ public sealed class ConfigInitializerTests
 
         // Assert
         result.Colors.User.Should().Be("#FF0000");
-        result.Colors.Branch.Should().Be("[1;36m"); // unchanged default
+        result.Colors.Branch.Should().Be("1;36"); // unchanged default
     }
 }

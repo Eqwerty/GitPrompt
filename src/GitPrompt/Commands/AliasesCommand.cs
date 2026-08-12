@@ -8,16 +8,14 @@ internal static class AliasesCommand
 {
     internal static void Run(string? aliasesPath = null, TextWriter? errorOutput = null)
     {
-        aliasesPath ??= AppPaths.GetAliasesFilePath();
         errorOutput ??= Console.Error;
 
-        if (!File.Exists(aliasesPath))
+        if (!TryResolveAliasesFile(aliasesPath, errorOutput, out var resolvedAliasesPath))
         {
-            errorOutput.WriteLine($"gitprompt: git aliases not found at: {aliasesPath}");
-            errorOutput.WriteLine("gitprompt: run 'gitprompt update aliases' to install them");
-
             return;
         }
+
+        aliasesPath = resolvedAliasesPath;
 
         var editor = EditorResolver.GetEditor();
 
@@ -39,17 +37,15 @@ internal static class AliasesCommand
 
     internal static void RunEnable(string? aliasesPath = null, TextWriter? scriptOutput = null, TextWriter? errorOutput = null)
     {
-        aliasesPath ??= AppPaths.GetAliasesFilePath();
         scriptOutput ??= Console.Out;
         errorOutput ??= Console.Error;
 
-        if (!File.Exists(aliasesPath))
+        if (!TryResolveAliasesFile(aliasesPath, errorOutput, out var resolvedAliasesPath))
         {
-            errorOutput.WriteLine($"gitprompt: git aliases not found at: {aliasesPath}");
-            errorOutput.WriteLine("gitprompt: run 'gitprompt update aliases' to install them");
-
             return;
         }
+
+        aliasesPath = resolvedAliasesPath;
 
         var escapedPath = aliasesPath.Replace("'", "'\\''");
         scriptOutput.WriteLine($". '{escapedPath}'");
@@ -58,17 +54,15 @@ internal static class AliasesCommand
 
     internal static void RunDisable(string? aliasesPath = null, TextWriter? scriptOutput = null, TextWriter? errorOutput = null)
     {
-        aliasesPath ??= AppPaths.GetAliasesFilePath();
         scriptOutput ??= Console.Out;
         errorOutput ??= Console.Error;
 
-        if (!File.Exists(aliasesPath))
+        if (!TryResolveAliasesFile(aliasesPath, errorOutput, out var resolvedAliasesPath))
         {
-            errorOutput.WriteLine($"gitprompt: git aliases not found at: {aliasesPath}");
-            errorOutput.WriteLine("gitprompt: run 'gitprompt update aliases' to install them");
-
             return;
         }
+
+        aliasesPath = resolvedAliasesPath;
 
         var content = File.ReadAllText(aliasesPath);
 
@@ -91,5 +85,20 @@ internal static class AliasesCommand
         }
 
         scriptOutput.WriteLine("_GITPROMPT_ALIASES_ENABLED=0");
+    }
+
+    private static bool TryResolveAliasesFile(string? aliasesPath, TextWriter errorOutput, out string resolvedAliasesPath)
+    {
+        resolvedAliasesPath = aliasesPath ?? AppPaths.GetAliasesFilePath();
+
+        if (File.Exists(resolvedAliasesPath))
+        {
+            return true;
+        }
+
+        errorOutput.WriteLine($"gitprompt: git aliases not found at: {resolvedAliasesPath}");
+        errorOutput.WriteLine("gitprompt: run 'gitprompt update aliases' to install them");
+
+        return false;
     }
 }

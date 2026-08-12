@@ -28,8 +28,8 @@ internal static class GitStatusSharedCache
                 return false;
             }
 
-            var normalizedRepositoryRootPath = NormalizePathOrEmpty(repositoryRootPath);
-            var normalizedGitDirectoryPath = NormalizePathOrEmpty(gitDirectoryPath);
+            var normalizedRepositoryRootPath = SharedCacheUtilities.NormalizePathOrEmpty(repositoryRootPath);
+            var normalizedGitDirectoryPath = SharedCacheUtilities.NormalizePathOrEmpty(gitDirectoryPath);
             if (string.IsNullOrEmpty(normalizedRepositoryRootPath) || string.IsNullOrEmpty(normalizedGitDirectoryPath))
             {
                 return false;
@@ -97,8 +97,8 @@ internal static class GitStatusSharedCache
                 return;
             }
 
-            var normalizedRepositoryRootPath = NormalizePathOrEmpty(repositoryRootPath);
-            var normalizedGitDirectoryPath = NormalizePathOrEmpty(gitDirectoryPath);
+            var normalizedRepositoryRootPath = SharedCacheUtilities.NormalizePathOrEmpty(repositoryRootPath);
+            var normalizedGitDirectoryPath = SharedCacheUtilities.NormalizePathOrEmpty(gitDirectoryPath);
             if (string.IsNullOrEmpty(normalizedRepositoryRootPath) || string.IsNullOrEmpty(normalizedGitDirectoryPath))
             {
                 return;
@@ -453,20 +453,15 @@ internal static class GitStatusSharedCache
         hasher.AppendInt64(fileInfo.LastWriteTimeUtc.Ticks);
     }
 
-    private static string NormalizePathOrEmpty(string path)
-    {
-        return SharedCacheUtilities.NormalizePathOrEmpty(path);
-    }
-
     private static string[] SerializeRecord(GitStatusSharedCacheRecord cacheRecord)
     {
         return
         [
             cacheRecord.CachedAtUtcTicks.ToString(),
-            Encode(cacheRecord.RepositoryRootPath),
-            Encode(cacheRecord.Fingerprint),
-            Encode(cacheRecord.Segment),
-            Encode(cacheRecord.InvalidationTokenValue)
+            SharedCacheUtilities.Encode(cacheRecord.RepositoryRootPath),
+            SharedCacheUtilities.Encode(cacheRecord.Fingerprint),
+            SharedCacheUtilities.Encode(cacheRecord.Segment),
+            SharedCacheUtilities.Encode(cacheRecord.InvalidationTokenValue)
         ];
     }
 
@@ -490,10 +485,10 @@ internal static class GitStatusSharedCache
             return false;
         }
 
-        var repositoryRootPath = Decode(repoEncoded);
-        var fingerprint = Decode(fingerprintEncoded);
-        var segment = Decode(segmentEncoded);
-        var invalidationTokenValue = Decode(tokenEncoded);
+        var repositoryRootPath = SharedCacheUtilities.Decode(repoEncoded);
+        var fingerprint = SharedCacheUtilities.Decode(fingerprintEncoded);
+        var segment = SharedCacheUtilities.Decode(segmentEncoded);
+        var invalidationTokenValue = SharedCacheUtilities.Decode(tokenEncoded);
         if (string.IsNullOrEmpty(repositoryRootPath) || string.IsNullOrEmpty(fingerprint))
         {
             return false;
@@ -503,16 +498,6 @@ internal static class GitStatusSharedCache
         return true;
 
         string? NextLine() => i < lines.Length ? lines[i++].TrimEnd('\r') : null;
-    }
-
-    private static string Encode(string value)
-    {
-        return SharedCacheUtilities.Encode(value);
-    }
-
-    private static string Decode(string encoded)
-    {
-        return SharedCacheUtilities.Decode(encoded);
     }
 
     private readonly record struct GitStatusSharedCacheRecord(

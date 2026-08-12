@@ -89,22 +89,22 @@ internal static class TestHelpers
 
     internal static string TrackedBranchLabel(string branchName)
     {
-        return $"{NormalBranchLabelOpen}{branchName}{NormalBranchLabelClose}";
+        return $"{BranchLabelOpen}{branchName}{BranchLabelClose}";
     }
 
     internal static string NoUpstreamBranchLabel(string branchName)
     {
-        return $"{NoUpstreamBranchMarker}{NoUpstreamBranchLabelOpen}{branchName}{NoUpstreamBranchLabelClose}";
+        return $"{NoUpstreamBranchMarker}{BranchLabelOpen}{branchName}{BranchLabelClose}";
     }
 
     internal static string GoneUpstreamBranchLabel(string branchName)
     {
-        return $"{GoneUpstreamBranchMarker}{GoneUpstreamBranchLabelOpen}{branchName}{GoneUpstreamBranchLabelClose}";
+        return $"{GoneUpstreamBranchMarker}{BranchLabelOpen}{branchName}{BranchLabelClose}";
     }
 
     internal static string BranchLabelWithOperation(string branchLabel, string operation)
     {
-        return branchLabel.Replace(NormalBranchLabelClose, $"|{operation}{NormalBranchLabelClose}", StringComparison.Ordinal);
+        return branchLabel.Replace(BranchLabelClose, $"|{operation}{BranchLabelClose}", StringComparison.Ordinal);
     }
 
     internal static string Indicator(char icon, int count)

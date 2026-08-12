@@ -19,17 +19,17 @@ internal static class TestHelpers
 
     internal static BranchLabelInfo TrackedBranchLabel(string branchName)
     {
-        return new BranchLabelInfo($"{NormalBranchLabelOpen}{branchName}{NormalBranchLabelClose}", BranchState.Normal);
+        return new BranchLabelInfo($"{BranchLabelOpen}{branchName}{BranchLabelClose}", BranchState.Normal);
     }
 
     internal static BranchLabelInfo NoUpstreamBranchLabel(string branchName)
     {
-        return new BranchLabelInfo($"{NoUpstreamBranchMarker}{NoUpstreamBranchLabelOpen}{branchName}{NoUpstreamBranchLabelClose}", BranchState.NoUpstream);
+        return new BranchLabelInfo($"{NoUpstreamBranchMarker}{BranchLabelOpen}{branchName}{BranchLabelClose}", BranchState.NoUpstream);
     }
 
     internal static BranchLabelInfo GoneUpstreamBranchLabel(string branchName)
     {
-        return new BranchLabelInfo($"{GoneUpstreamBranchMarker}{GoneUpstreamBranchLabelOpen}{branchName}{GoneUpstreamBranchLabelClose}", BranchState.GoneUpstream);
+        return new BranchLabelInfo($"{GoneUpstreamBranchMarker}{BranchLabelOpen}{branchName}{BranchLabelClose}", BranchState.GoneUpstream);
     }
 
     internal static BranchLabelInfo DetachedBranchLabel(string branchLabel)
@@ -42,9 +42,7 @@ internal static class TestHelpers
         var close = branchLabel.State switch
         {
             BranchState.Detached => DetachedBranchLabelClose,
-            BranchState.NoUpstream => NoUpstreamBranchLabelClose,
-            BranchState.GoneUpstream => GoneUpstreamBranchLabelClose,
-            _ => NormalBranchLabelClose
+            _ => BranchLabelClose
         };
 
         return branchLabel.Label.Replace(close, $"{BranchOperationSeparator}{operation}{close}", StringComparison.Ordinal);

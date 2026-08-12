@@ -119,12 +119,24 @@ internal static class ConfigInitializer
 
     private static string ColorDisplayValue(string ansiColor)
     {
-        if (ansiColor.Length > 0 && ansiColor[0] is '\e')
+        var code = ansiColor;
+
+        if (code.Length > 0 && code[0] is '\e')
         {
-            return ansiColor[1..];
+            code = code[1..];
         }
 
-        return ansiColor;
+        if (code.Length > 0 && code[0] is '[')
+        {
+            code = code[1..];
+        }
+
+        if (code.Length > 0 && code[^1] is 'm')
+        {
+            code = code[..^1];
+        }
+
+        return code;
     }
 
     internal static void MigrateConfigIfNeeded(string configPath)
@@ -239,12 +251,12 @@ internal static class ConfigInitializer
                 NoUpstreamMarker = userConfig.Icons?.NoUpstreamMarker ?? BranchLabelTokens.NoUpstreamBranchMarker,
                 GoneUpstreamMarker = userConfig.Icons?.GoneUpstreamMarker ?? BranchLabelTokens.GoneUpstreamBranchMarker,
                 DetachedHeadMarker = userConfig.Icons?.DetachedHeadMarker ?? BranchLabelTokens.DetachedHeadBranchMarker,
-                BranchLabelOpenNormal = userConfig.Icons?.BranchLabelOpenNormal ?? BranchLabelTokens.NormalBranchLabelOpen,
-                BranchLabelCloseNormal = userConfig.Icons?.BranchLabelCloseNormal ?? BranchLabelTokens.NormalBranchLabelClose,
-                BranchLabelOpenNoUpstream = userConfig.Icons?.BranchLabelOpenNoUpstream ?? BranchLabelTokens.NoUpstreamBranchLabelOpen,
-                BranchLabelCloseNoUpstream = userConfig.Icons?.BranchLabelCloseNoUpstream ?? BranchLabelTokens.NoUpstreamBranchLabelClose,
-                BranchLabelOpenGoneUpstream = userConfig.Icons?.BranchLabelOpenGoneUpstream ?? BranchLabelTokens.GoneUpstreamBranchLabelOpen,
-                BranchLabelCloseGoneUpstream = userConfig.Icons?.BranchLabelCloseGoneUpstream ?? BranchLabelTokens.GoneUpstreamBranchLabelClose,
+                BranchLabelOpenNormal = userConfig.Icons?.BranchLabelOpenNormal ?? BranchLabelTokens.BranchLabelOpen,
+                BranchLabelCloseNormal = userConfig.Icons?.BranchLabelCloseNormal ?? BranchLabelTokens.BranchLabelClose,
+                BranchLabelOpenNoUpstream = userConfig.Icons?.BranchLabelOpenNoUpstream ?? BranchLabelTokens.BranchLabelOpen,
+                BranchLabelCloseNoUpstream = userConfig.Icons?.BranchLabelCloseNoUpstream ?? BranchLabelTokens.BranchLabelClose,
+                BranchLabelOpenGoneUpstream = userConfig.Icons?.BranchLabelOpenGoneUpstream ?? BranchLabelTokens.BranchLabelOpen,
+                BranchLabelCloseGoneUpstream = userConfig.Icons?.BranchLabelCloseGoneUpstream ?? BranchLabelTokens.BranchLabelClose,
                 BranchLabelOpenDetached = userConfig.Icons?.BranchLabelOpenDetached ?? BranchLabelTokens.DetachedBranchLabelOpen,
                 BranchLabelCloseDetached = userConfig.Icons?.BranchLabelCloseDetached ?? BranchLabelTokens.DetachedBranchLabelClose,
                 BranchOperationSeparator = userConfig.Icons?.BranchOperationSeparator ?? BranchLabelTokens.BranchOperationSeparator
