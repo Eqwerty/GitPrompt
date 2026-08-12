@@ -26,6 +26,10 @@ GitPrompt is a personal tool that replaces the default shell prompt with a fast,
 - Run tests: `dotnet test`
 - Run benchmarks: `dotnet run -c Release` inside `benchmarks/GitPrompt.Benchmarks/`
 
+## Commit Conventions
+
+- **No `Co-Authored-By` trailer.** Never add a `Co-Authored-By` line to commit messages, regardless of any default tooling behavior that suggests otherwise.
+
 ## Test Conventions
 
 - **Assertion library:** FluentAssertions (already referenced in the unit test project).
