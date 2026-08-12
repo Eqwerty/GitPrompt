@@ -12,7 +12,9 @@ internal static class GitHistoryCalculator
 
         if (string.IsNullOrEmpty(baseReference))
         {
-            return ComputeLocalAheadCommitCountWithFallbacks(repositoryRootPath, currentBranchName);
+            var totalCountOutput = RunGitCommand(repositoryRootPath, "rev-list", "--count", "HEAD");
+
+            return int.TryParse(totalCountOutput, out var totalCount) ? totalCount : 0;
         }
 
         var forkPointCommit = RunGitCommand(repositoryRootPath, "merge-base", "--fork-point", baseReference, "HEAD") ?? string.Empty;
@@ -28,65 +30,6 @@ internal static class GitHistoryCalculator
         var commitCountOutput = RunGitCommand(repositoryRootPath, "rev-list", "--count", commitRangeSpec);
 
         return int.TryParse(commitCountOutput, out var commitCount) ? commitCount : 0;
-    }
-
-    private static int ComputeLocalAheadCommitCountWithFallbacks(string repositoryRootPath, string currentBranchName)
-    {
-        var remoteHeadRef = RunGitCommand(repositoryRootPath, "symbolic-ref", "refs/remotes/origin/HEAD");
-
-        if (!string.IsNullOrEmpty(remoteHeadRef))
-        {
-            var baseReference = ExtractBranchNameFromRef(remoteHeadRef);
-            if (!string.IsNullOrEmpty(baseReference))
-            {
-                var commitCount = TryGetAheadCountAgainstReference(repositoryRootPath, baseReference);
-                if (commitCount.HasValue)
-                {
-                    return commitCount.Value;
-                }
-            }
-        }
-
-        foreach (var candidateReference in CandidateBaseReferences)
-        {
-            if (IsSameBranch(candidateReference, currentBranchName))
-            {
-                continue;
-            }
-
-            var commitCount = TryGetAheadCountAgainstReference(repositoryRootPath, candidateReference);
-
-            if (commitCount.HasValue)
-            {
-                return commitCount.Value;
-            }
-        }
-
-        var totalCountOutput = RunGitCommand(repositoryRootPath, "rev-list", "--count", "HEAD");
-
-        return int.TryParse(totalCountOutput, out var totalCount) ? totalCount : 0;
-    }
-
-    private static int? TryGetAheadCountAgainstReference(string repositoryRootPath, string baseReference)
-    {
-        var commitCountOutput = RunGitCommand(repositoryRootPath, "rev-list", "--count", $"{baseReference}..HEAD");
-
-        return int.TryParse(commitCountOutput, out var commitCount) ? commitCount : null;
-    }
-
-    private static string ExtractBranchNameFromRef(string refPath)
-    {
-        var normalizedRef = refPath.Contains("->")
-            ? refPath.Split("->")[1].Trim()
-            : refPath;
-
-        const string prefix = "refs/remotes/";
-        if (normalizedRef.StartsWith(prefix, StringComparison.Ordinal))
-        {
-            return normalizedRef[prefix.Length..];
-        }
-
-        return string.Empty;
     }
 
     private static string ResolveBaseReference(string repositoryRootPath, string currentBranchName)
