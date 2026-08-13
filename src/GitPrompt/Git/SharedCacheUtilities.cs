@@ -4,32 +4,6 @@ namespace GitPrompt.Git;
 
 internal static class SharedCacheUtilities
 {
-    internal static void WriteAtomically(string targetFilePath, string[] lines)
-    {
-        var tempFilePath = targetFilePath + "." + Path.GetRandomFileName() + ".tmp";
-
-        try
-        {
-            File.WriteAllLines(tempFilePath, lines);
-            File.Move(tempFilePath, targetFilePath, overwrite: true);
-            tempFilePath = null;
-        }
-        finally
-        {
-            if (tempFilePath is not null)
-            {
-                try
-                {
-                    File.Delete(tempFilePath);
-                }
-                catch (Exception)
-                {
-                    /* best-effort temp file cleanup */
-                }
-            }
-        }
-    }
-
     internal static void CleanupStaleEntries(string cacheDirectoryPath, DateTime staleBeforeUtc)
     {
         foreach (var cacheFilePath in Directory.EnumerateFiles(cacheDirectoryPath, "*.cache"))
@@ -176,7 +150,7 @@ internal static class SharedCacheUtilities
         {
             try
             {
-                WriteAtomically(schedulePath, [ticks.ToString()]);
+                AtomicFileWriter.WriteAtomically(schedulePath, [ticks.ToString()]);
             }
             catch
             {

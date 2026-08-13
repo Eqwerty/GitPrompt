@@ -91,7 +91,7 @@ internal static class GitRepositorySharedCache
                     cachedAtUtcTicks);
 
                 var cacheFilePath = GetCacheFilePath(normalizedStartDirectoryPath);
-                SharedCacheUtilities.WriteAtomically(cacheFilePath, SerializeRecord(cacheRecord));
+                AtomicFileWriter.WriteAtomically(cacheFilePath, SerializeRecord(cacheRecord));
             }
 
             RuntimeState.TryCleanupStaleEntries(cacheDirectoryPath);

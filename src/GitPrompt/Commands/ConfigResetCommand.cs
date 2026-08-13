@@ -25,7 +25,7 @@ internal static class ConfigResetCommand
         }
 
         Directory.CreateDirectory(Path.GetDirectoryName(configPath)!);
-        File.WriteAllText(configPath, ConfigInitializer.BuildDefaultConfigContent());
+        AtomicFileWriter.WriteAtomically(configPath, ConfigInitializer.BuildDefaultConfigContent());
 
         output.WriteLine("Config reset to defaults.");
     }

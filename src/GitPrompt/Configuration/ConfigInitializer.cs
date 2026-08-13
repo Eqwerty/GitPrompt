@@ -30,7 +30,7 @@ internal static class ConfigInitializer
 
         Directory.CreateDirectory(Path.GetDirectoryName(configPath)!);
 
-        File.WriteAllText(configPath, BuildDefaultConfigContent());
+        AtomicFileWriter.WriteAtomically(configPath, BuildDefaultConfigContent());
     }
 
     internal static string BuildDefaultConfigContent() => BuildConfigContent(new ConfigDto());
@@ -192,7 +192,7 @@ internal static class ConfigInitializer
 
             try
             {
-                File.WriteAllText(configPath, BuildConfigContent(userConfig));
+                AtomicFileWriter.WriteAtomically(configPath, BuildConfigContent(userConfig));
             }
             catch
             {

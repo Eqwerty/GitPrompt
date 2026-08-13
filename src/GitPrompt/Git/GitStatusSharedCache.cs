@@ -111,7 +111,7 @@ internal static class GitStatusSharedCache
                 ReadInvalidationTokenValue());
 
             var cacheFilePath = GetCacheFilePath(normalizedRepositoryRootPath);
-            SharedCacheUtilities.WriteAtomically(cacheFilePath, SerializeRecord(cacheRecord));
+            AtomicFileWriter.WriteAtomically(cacheFilePath, SerializeRecord(cacheRecord));
             RuntimeState.TryCleanupStaleEntries(cacheDirectoryPath);
         }
         catch
