@@ -104,7 +104,11 @@ internal static class TestHelpers
 
     internal static string BranchLabelWithOperation(string branchLabel, string operation)
     {
-        return branchLabel.Replace(BranchLabelClose, $"|{operation}{BranchLabelClose}", StringComparison.Ordinal);
+        var close = branchLabel.EndsWith(DetachedBranchLabelClose, StringComparison.Ordinal)
+            ? DetachedBranchLabelClose
+            : BranchLabelClose;
+
+        return branchLabel.Replace(close, $"|{operation}{close}", StringComparison.Ordinal);
     }
 
     internal static string Indicator(char icon, int count)
