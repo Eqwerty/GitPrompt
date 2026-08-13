@@ -227,4 +227,43 @@ public sealed class GitRepositorySharedCacheTests
         // Assert – stale file should still be there because cleanup was skipped.
         File.Exists(staleCachePath).Should().BeTrue();
     }
+
+    [Fact]
+    public void Set_WhenCleanupScheduleWasPersistedByAPriorProcess_ShouldSkipCleanupUntilIntervalExpires()
+    {
+        // Arrange
+        using var cacheDirectory = new TemporaryDirectory();
+        using var configOverride = ConfigReader.OverrideForTesting(new ConfigDto { Cache = new ConfigDto.CacheConfig { RepositoryTtlSeconds = 60.0 } });
+        using var cacheDirectoryOverride = GitRepositorySharedCache.OverrideCacheDirectoryForTesting(cacheDirectory.DirectoryPath);
+        var fakeClock = new FakeTimeProvider(DateTimeOffset.UtcNow.AddYears(1));
+        using var timeOverride = GitRepositorySharedCache.OverrideTimeProviderForTesting(fakeClock);
+        GitRepositorySharedCache.ResetCleanupScheduleForTesting();
+
+        // Hand-write the schedule marker as if a *different, prior* process wrote it — this test
+        // process never calls TryCleanupStaleEntries before this point, so honoring this value can
+        // only come from disk, never from in-memory state (there is none left to lean on).
+        var schedulePath = Path.Combine(cacheDirectory.DirectoryPath, "cleanup-schedule.token");
+        var futureNextCleanupUtcTicks = fakeClock.GetUtcNow().AddMinutes(5).UtcTicks;
+        File.WriteAllText(schedulePath, futureNextCleanupUtcTicks.ToString());
+
+        var staleCachePath = Path.Combine(cacheDirectory.DirectoryPath, "stale.cache");
+        File.WriteAllText(staleCachePath, "stale");
+        File.SetLastWriteTimeUtc(staleCachePath, fakeClock.GetUtcNow().UtcDateTime.AddDays(-8));
+
+        var startDirectoryPath = Path.Combine(cacheDirectory.DirectoryPath, "work");
+        var workingTreePath = Path.Combine(cacheDirectory.DirectoryPath, "repo");
+        var gitDirectoryPath = Path.Combine(workingTreePath, ".git");
+
+        Directory.CreateDirectory(startDirectoryPath);
+        Directory.CreateDirectory(gitDirectoryPath);
+
+        // Act – this test process's first and only Set call; a purely in-memory schedule would
+        // default to "due now" here and delete the stale file, so this proves the skip came from disk.
+        GitRepositorySharedCache.Set(
+            [startDirectoryPath],
+            new GitRepositoryLocator.RepositoryContext(workingTreePath, gitDirectoryPath));
+
+        // Assert
+        File.Exists(staleCachePath).Should().BeTrue();
+    }
 }

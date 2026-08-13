@@ -104,7 +104,7 @@ internal static class GitRepositorySharedCache
 
     internal static void ResetCleanupScheduleForTesting()
     {
-        RuntimeState.ResetCleanupScheduleForTesting();
+        RuntimeState.ResetCleanupScheduleForTesting(GetCacheDirectoryPath());
     }
 
     internal static IDisposable OverrideTimeProviderForTesting(TimeProvider timeProvider)

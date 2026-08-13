@@ -93,9 +93,10 @@ internal static class SharedCacheUtilities
 
     internal sealed class CacheRuntimeState(TimeSpan staleCacheEntryThreshold, TimeSpan cleanupInterval)
     {
+        private const string CleanupScheduleFileName = "cleanup-schedule.token";
+
         private TimeProvider _timeProvider = TimeProvider.System;
         private string? _cacheDirectoryOverride;
-        private long _nextCleanupUtcTicks;
 
         internal DateTimeOffset GetUtcNow()
         {
@@ -110,14 +111,15 @@ internal static class SharedCacheUtilities
         internal void TryCleanupStaleEntries(string cacheDirectoryPath)
         {
             var utcNow = GetUtcNow();
-            var nextCleanupUtcTicks = Interlocked.Read(ref _nextCleanupUtcTicks);
+            var schedulePath = GetCleanupSchedulePath(cacheDirectoryPath);
+            var nextCleanupUtcTicks = ReadNextCleanupUtcTicks(schedulePath);
             if (utcNow.UtcTicks < nextCleanupUtcTicks)
             {
                 return;
             }
 
-            Interlocked.Exchange(ref _nextCleanupUtcTicks, utcNow.Add(cleanupInterval).UtcTicks);
             CleanupStaleEntries(cacheDirectoryPath, utcNow.UtcDateTime - staleCacheEntryThreshold);
+            WriteNextCleanupUtcTicks(schedulePath, utcNow.Add(cleanupInterval).UtcTicks);
         }
 
         internal IDisposable OverrideTimeProviderForTesting(TimeProvider timeProvider)
@@ -135,9 +137,51 @@ internal static class SharedCacheUtilities
             return new Utilities.RestoreAction(() => _cacheDirectoryOverride = null);
         }
 
-        internal void ResetCleanupScheduleForTesting()
+        internal void ResetCleanupScheduleForTesting(string cacheDirectoryPath)
         {
-            Interlocked.Exchange(ref _nextCleanupUtcTicks, 0);
+            try
+            {
+                var schedulePath = GetCleanupSchedulePath(cacheDirectoryPath);
+                if (File.Exists(schedulePath))
+                {
+                    File.Delete(schedulePath);
+                }
+            }
+            catch
+            {
+                // Best-effort; matches this type's best-effort philosophy elsewhere.
+            }
+        }
+
+        private static string GetCleanupSchedulePath(string cacheDirectoryPath)
+        {
+            return Path.Combine(cacheDirectoryPath, CleanupScheduleFileName);
+        }
+
+        private static long ReadNextCleanupUtcTicks(string schedulePath)
+        {
+            try
+            {
+                return File.Exists(schedulePath) && long.TryParse(File.ReadAllText(schedulePath), out var ticks)
+                    ? ticks
+                    : 0;
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+
+        private static void WriteNextCleanupUtcTicks(string schedulePath, long ticks)
+        {
+            try
+            {
+                WriteAtomically(schedulePath, [ticks.ToString()]);
+            }
+            catch
+            {
+                // Best-effort; a failed write here just means cleanup may run again next time.
+            }
         }
     }
 

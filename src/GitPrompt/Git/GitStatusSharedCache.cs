@@ -160,7 +160,7 @@ internal static class GitStatusSharedCache
 
     internal static void ResetCleanupScheduleForTesting()
     {
-        RuntimeState.ResetCleanupScheduleForTesting();
+        RuntimeState.ResetCleanupScheduleForTesting(GetCacheDirectoryPath());
     }
 
     private static string GetCacheDirectoryPath()
