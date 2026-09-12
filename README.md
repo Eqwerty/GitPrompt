@@ -12,6 +12,8 @@ Default install location: `~/.local/bin/gitprompt` (Linux/macOS) or `~/.local/bi
 
 ## Bash Setup
 
+Requires Bash 4+. macOS ships Bash 3.2 as `/bin/bash` (frozen there for licensing reasons) — install a newer one (e.g. `brew install bash`) and set it as your default shell (`chsh -s /opt/homebrew/bin/bash`) before continuing.
+
 Add to your Bash startup file (`~/.bashrc`, or `~/.bash_profile` on macOS):
 
 ```sh

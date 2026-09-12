@@ -45,13 +45,6 @@ __gitprompt_debug_trap() {
 
 __gitprompt_prompt_sp() {
   [ -t 1 ] || return
-  # Stock macOS /bin/bash is 3.2, which rejects fractional `read -t` values
-  # outright ("invalid timeout specification") instead of just not honoring
-  # them. That makes every read below fail immediately without consuming
-  # anything, while the terminal still answers the \e[6n query we send —
-  # so the reply leaks onto the next prompt as literal "^[[row;colR" text
-  # on every render, deterministically, regardless of terminal or timing.
-  [ "${BASH_VERSINFO[0]}" -ge 4 ] || return
   local pos _d
   while IFS= read -d R -rs -t 0.02 _d 2>/dev/null; do :; done
   printf '\e[6n' >&1
