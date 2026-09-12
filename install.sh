@@ -147,7 +147,14 @@ esac
 
 case "$CPU_ARCHITECTURE" in
   x86_64|amd64) TARGET_ARCHITECTURE="amd64" ;;
-  *) die "Unsupported architecture: $CPU_ARCHITECTURE. Supported: amd64 only." ;;
+  arm64|aarch64)
+    if [ "$TARGET_OS" = "darwin" ]; then
+      TARGET_ARCHITECTURE="arm64"
+    else
+      die "Unsupported architecture: $CPU_ARCHITECTURE on $TARGET_OS. Supported: amd64 (Linux/macOS/Windows), arm64 (macOS only)."
+    fi
+    ;;
+  *) die "Unsupported architecture: $CPU_ARCHITECTURE. Supported: amd64 (all platforms), arm64 (macOS only)." ;;
 esac
 
 BIN_DIR="$HOME/.local/bin"

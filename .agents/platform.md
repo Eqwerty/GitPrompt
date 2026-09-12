@@ -12,9 +12,9 @@ GitPrompt ships for Linux, macOS, and Windows (via Git Bash) — see the build m
 
 The shell side has its own Windows branch too — see [shell-contract.md](shell-contract.md)'s "Git Bash / MSYS" section for `bash-init.sh`'s `$OSTYPE` detection.
 
-## Build matrix — amd64 only, three OSes
+## Build matrix — amd64 everywhere, plus native arm64 on macOS
 
-`.github/workflows/publish.yml`'s matrix publishes exactly three combinations, all `amd64`: `linux-x64` (`ubuntu-latest`), `osx-x64` (`macos-latest`), `win-x64` (`windows-latest`). There is no arm64 build for any OS — no Apple Silicon–native binary, no ARM Linux, no ARM Windows. `install.sh`'s own architecture check (`x86_64|amd64` else `die`) matches this and will refuse to install on anything else. Don't assume this runs natively on Apple Silicon or ARM Linux.
+`.github/workflows/publish.yml`'s matrix publishes four combinations: `linux-x64` (`ubuntu-latest`), `osx-x64` and `osx-arm64` (both `macos-latest`), and `win-x64` (`windows-latest`). `macos-latest` runners are themselves Apple Silicon (arm64) hardware, so `osx-arm64` is a native build, not a cross-compile — that's why macOS was the easy case to add arm64 for. There is still no arm64 build for Linux or Windows — no ARM Linux, no ARM Windows. `install.sh`'s architecture check accepts `arm64`/`aarch64` only when `TARGET_OS` is `darwin`; it still `die`s on arm64 for Linux/Windows and on anything other than `x86_64`/`amd64`/`arm64`/`aarch64` everywhere else. Don't assume this runs natively on ARM Linux or ARM Windows.
 
 ## Versioning: `--version`'s "commit hash"
 

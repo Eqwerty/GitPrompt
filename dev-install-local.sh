@@ -49,7 +49,11 @@ if [ "$TARGET_OS" = "windows" ]; then
   RUNTIME_IDENTIFIER="win-x64"
   PUBLISHED_BINARY_NAME="GitPrompt.exe"
 elif [ "$TARGET_OS" = "darwin" ]; then
-  RUNTIME_IDENTIFIER="osx-x64"
+  if [ "$TARGET_ARCHITECTURE" = "arm64" ]; then
+    RUNTIME_IDENTIFIER="osx-arm64"
+  else
+    RUNTIME_IDENTIFIER="osx-x64"
+  fi
   PUBLISHED_BINARY_NAME="GitPrompt"
 else
   RUNTIME_IDENTIFIER="linux-x64"

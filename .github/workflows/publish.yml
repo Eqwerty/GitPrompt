@@ -25,6 +25,11 @@ jobs:
             runtime_identifier: osx-x64
             extension: ""
             runner: macos-latest
+          - target_os: darwin
+            target_architecture: arm64
+            runtime_identifier: osx-arm64
+            extension: ""
+            runner: macos-latest
           - target_os: windows
             target_architecture: amd64
             runtime_identifier: win-x64
