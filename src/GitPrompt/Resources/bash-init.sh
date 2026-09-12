@@ -45,16 +45,24 @@ __gitprompt_debug_trap() {
 
 __gitprompt_prompt_sp() {
   [ -t 1 ] || return
-  local pos _d
+  local pos _d _saved_stty
+  _saved_stty=$(stty -g 2>/dev/null) || return
+  # Each `read -s` only disables echo for its own call, then restores it —
+  # leaving gaps (between the drain loop, the query, and the reply read)
+  # where echo is back on. If the terminal's reply lands in one of those
+  # gaps, the kernel echoes the raw bytes to the screen right then, even
+  # though the read afterward still consumes them fine — that's what shows
+  # up as literal "^[[row;colR" text. Holding echo off for the whole probe
+  # closes those gaps.
+  stty -echo -icanon 2>/dev/null
   while IFS= read -d R -rs -t 0.02 _d 2>/dev/null; do :; done
   printf '\e[6n' >&1
   if ! IFS='[;' read -d R -a pos -rs -t 0.3 2>/dev/null; then
-    # The terminal can still answer after our read gives up (seen on Apple
-    # Terminal). Left undrained, those bytes land on stdin and get echoed
-    # into the very next prompt as literal "^[[row;colR" text.
     while IFS= read -d R -rs -t 0.2 _d 2>/dev/null; do :; done
+    stty "$_saved_stty" 2>/dev/null
     return
   fi
+  stty "$_saved_stty" 2>/dev/null
   local col="${pos[2]:-1}"
   [ "${col}" -gt 1 ] && printf '\n'
 }
