@@ -48,7 +48,13 @@ __gitprompt_prompt_sp() {
   local pos _d
   while IFS= read -d R -rs -t 0.02 _d 2>/dev/null; do :; done
   printf '\e[6n' >&1
-  IFS='[;' read -d R -a pos -rs -t 0.3 2>/dev/null || return
+  if ! IFS='[;' read -d R -a pos -rs -t 0.3 2>/dev/null; then
+    # The terminal can still answer after our read gives up (seen on Apple
+    # Terminal). Left undrained, those bytes land on stdin and get echoed
+    # into the very next prompt as literal "^[[row;colR" text.
+    while IFS= read -d R -rs -t 0.2 _d 2>/dev/null; do :; done
+    return
+  fi
   local col="${pos[2]:-1}"
   [ "${col}" -gt 1 ] && printf '\n'
 }
