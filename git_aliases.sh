@@ -849,6 +849,7 @@ if type __git_complete >/dev/null 2>&1; then
   __git_complete gco _git_checkout
   __git_complete gcot _git_checkout
   __git_complete gd _git_diff
+  __git_complete gdno _git_diff
   __git_complete gds _git_diff
   __git_complete ggr _git_grep
   __git_complete glh _git_log
