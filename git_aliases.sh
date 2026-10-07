@@ -507,6 +507,8 @@ function grch() {
 # ============================ Diff ============================
 alias gd="git diff" # Show changes between commits, branches, or the working directory
 alias gdno="git diff --name-only" # Show names of changed files
+alias gduh="git diff @{u}...HEAD" # Show the diff of commits not pushed to the upstream branch
+alias gduhno="git diff @{u}...HEAD --name-only" # Show names of files changed in commits not pushed to the upstream branch
 alias gds="git diff --staged" # Show changes in the staging area
 alias gdsno="git diff --staged --name-only" # Show names of staged files
 alias gdfu="git diff --name-only --diff-filter=U" # Show files with unmerged changes or conflicts
@@ -850,6 +852,8 @@ if type __git_complete >/dev/null 2>&1; then
   __git_complete gcot _git_checkout
   __git_complete gd _git_diff
   __git_complete gdno _git_diff
+  __git_complete gduh _git_diff
+  __git_complete gduhno _git_diff
   __git_complete gds _git_diff
   __git_complete ggr _git_grep
   __git_complete glh _git_log
