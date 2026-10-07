@@ -294,7 +294,6 @@ alias gsp="git stash pop" # Apply the most recent stash and remove it from the s
 alias gsl="git stash list" # List all stashes
 alias gsc="git stash clear" # Clear all stashes
 alias gsa="git stash apply" # Apply a stash
-alias gsshno="git stash show --name-only" # Show names of files changed in a stash
 
 # Show changes of a specific stash
 function gssh() {
@@ -303,6 +302,15 @@ function gssh() {
     return 1
   fi
   git stash show -p "stash@{$1}"
+}
+
+# Show names of files changed in a specific stash
+function gsshno() {
+  if [[ -z "$1" ]]; then
+    echo "Usage: gsshno <stash-index>"
+    return 1
+  fi
+  git stash show --name-only "stash@{$1}"
 }
 
 # Interactively select a modified/untracked file to stash (menu)
